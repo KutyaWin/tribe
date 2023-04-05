@@ -24,11 +24,11 @@ public class City {
     @Column(name = "region", nullable = false)
     String region;
 
-    @Column(name = "latitude", nullable = false)
-    String latitude;
+    @Column(name = "latitude", nullable = false, precision = 15)
+    Double latitude;
 
-    @Column(name = "longitude", nullable = false)
-    String longitude;
+    @Column(name = "longitude", nullable = false, precision = 15)
+    Double longitude;
 
     @Column(name = "country", nullable = false)
     String country;
