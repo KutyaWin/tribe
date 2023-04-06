@@ -24,16 +24,28 @@ public class EventAddress {
     @Column(name = "longitude", nullable = false, precision = 15)
     Double longitude;
 
+    @Column(name = "country", length = 100)
+    String country;
+
+    @Column(name = "city", nullable = false, length = 100)
+    String city;
+
+    @Column(name = "region", length = 100)
+    String region;
+
     @Column(name = "street", length = 100)
     String street;
 
-    @Column(name = "house", length = 10)
-    String house;
+    @Column(name = "district", length = 100)
+    String district;
 
     @Column(name = "building", length = 10)
     String building;
 
-    @Column(name = "floor", length = 3)
+    @Column(name = "house_number", length = 10)
+    String houseNumber ;
+
+    @Column(name = "floor", length = 10)
     String floor;
 
 }
