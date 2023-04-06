@@ -24,10 +24,6 @@ public class EventAddress {
     @Column(name = "longitude", nullable = false, precision = 15)
     Double longitude;
 
-    @OneToOne
-    @JoinColumn(name = "city_id", nullable = false)
-    City city;
-
     @Column(name = "street", length = 100)
     String street;
 
