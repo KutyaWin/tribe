@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -66,7 +68,18 @@ public class Event {
     @Column(name = "eighteen_year_limit", nullable = false)
     boolean eighteenYearLimit;
 
-    // todo: set type_id
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_type")
+    @ToString.Exclude
+    EventType eventType;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "events_tags",
+            joinColumns = @JoinColumn(name = "event_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "tag_id", nullable = false)
+    )
+    @ToString.Exclude
+    Set<EventTag> eventTags = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "users_as_participants_events",
@@ -86,6 +99,8 @@ public class Event {
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<User> usersWhichAddedEventToFavorite = new ArrayList<>();
+
+    // TODO: add method "addTag"
 
     public void addUserWhichAddedEventToFavorite(User userWhichAddedEventToFavorite) {
         if (this.usersWhichAddedEventToFavorite == null) this.usersWhichAddedEventToFavorite = new ArrayList<>();
