@@ -15,7 +15,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
-
+    ports:
+      - 8083:${DEV_PORT}
   tribe_db:
     image: postgis/postgis
     container_name: tribe_db
