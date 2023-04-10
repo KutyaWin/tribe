@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
+import javax.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -138,6 +139,7 @@ public class User {
         }
     }
 
+    @Transactional
     public void addFavoriteEvent(Event favoriteEvent) {
         if (this.favoritesEvent == null) this.favoritesEvent = new ArrayList<>();
 

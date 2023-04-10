@@ -1,4 +1,4 @@
-package com.covenant.tribe.exeption.event;
+package com.covenant.tribe.exeption.user;
 
 import com.covenant.tribe.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -7,27 +7,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 
 @Slf4j
 @ControllerAdvice
-public class EventExceptionHandler {
+public class UserExceptionHandler {
 
-    @ExceptionHandler({EventTypeNotFoundException.class, EventNotFoundException.class})
+    @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorResponse> handleException(
-            RuntimeException runtimeException
+            RuntimeException userNotFoundException
     ) {
-        log.error(runtimeException.getMessage());
+        String message = String.format(
+                "User with id %s does not exist", userNotFoundException.getMessage()
+        );
+        log.error(message);
         return ResponseEntity
                 .badRequest()
                 .body(
                         new ErrorResponse(
                                 LocalDateTime.now().toString(),
                                 "NOT FOUND",
-                                runtimeException.getMessage()
+                                message
                         )
                 );
     }

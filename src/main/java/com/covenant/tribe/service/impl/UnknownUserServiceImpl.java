@@ -41,7 +41,13 @@ public class UnknownUserServiceImpl implements UnknownUserService {
         return eventTypeIds.stream()
                 .map(eventTypeId -> {
                     return eventTypeRepository.findById(eventTypeId)
-                            .orElseThrow(() -> new EventTypeNotFoundException(eventTypeId.toString()));
+                            .orElseThrow(() -> {
+                                String message = String.format(
+                                        "Event type with %s  does not exist",
+                                        eventTypeId
+                                );
+                               return new EventTypeNotFoundException(message);
+                            });
                 })
                 .collect(Collectors.toList());
     }
