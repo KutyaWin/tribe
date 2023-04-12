@@ -102,6 +102,10 @@ public class Event {
 
     // TODO: add method "addTag"
 
+    // TODO: add method "addCollectionTag"
+
+    // TODO: add method "addCollection Participant Users"
+
     public void addUserWhichAddedEventToFavorite(User userWhichAddedEventToFavorite) {
         if (this.usersWhichAddedEventToFavorite == null) this.usersWhichAddedEventToFavorite = new ArrayList<>();
 

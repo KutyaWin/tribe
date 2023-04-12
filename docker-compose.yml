@@ -1,29 +1,37 @@
 version: '3.8'
 
 services:
+
   app:
     image: docker-spring-boot-postgres:latest
     build:
       context: .
       dockerfile: ./docker/Dockerfile
-    container_name: app
+    container_name: "app"
     depends_on:
-      - tribe_db
+      - tribe-db
+    links:
+      - "tribe-db:database"
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
     environment:
-      - SPRING_DATASOURCE_URL=${DB_HOST}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-    ports:
-      - 8083:${DEV_PORT}
-  tribe_db:
+      - APP_PORT=${APP_PORT}
+
+  tribe-db:
     image: postgis/postgis
-    container_name: tribe_db
+    container_name: "tribe-db"
+    restart: always
     ports:
-      - ${DB_PORT}:5432
+      - "${EXTERNAL_DB_PORT}:5432"
     volumes:
-      - ./docker/.data/postgres:/var/lib/postgresql/data:cached
+      - pgdata:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=tribe
+
+volumes:
+  pgdata:

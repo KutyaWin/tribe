@@ -1,9 +1,9 @@
 server:
-  port: 8081
+  port: ${APP_PORT}
 
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/tribe_db
+    url: jdbc:postgresql://database:5432/tribe
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
@@ -15,9 +15,12 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
-  sql:
-    init:
-      mode: always
+    hibernate:
+      ddl-auto: create
+#  sql:
+#    init:
+#      mode: always
+
 logging:
   level:
     root: info
