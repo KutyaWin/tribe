@@ -60,9 +60,6 @@ public class User {
     @Column(name = "bluetooth_id", length = 100, nullable = false)
     String bluetoothId;
 
-    @Enumerated(EnumType.STRING)
-    Gender gender;
-
     @OneToMany(mappedBy = "organizer", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)

@@ -45,4 +45,14 @@ public class UserExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleUserExistException(UsernameDataAlreadyExistException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ErrorResponse.builder()
+                .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
 }
