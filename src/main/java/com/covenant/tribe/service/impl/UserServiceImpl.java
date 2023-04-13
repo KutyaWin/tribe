@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
                             "Event type with %s  does not exist",
                             eventId
                     );
-                    return new EventNotFoundException(message);
+                    throw new EventNotFoundException(message);
                 });
         user.addFavoriteEvent(event);
     }

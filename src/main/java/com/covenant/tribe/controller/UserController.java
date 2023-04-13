@@ -1,5 +1,6 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.user.UserDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.service.UserService;
 import lombok.AccessLevel;
@@ -13,15 +14,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@AllArgsConstructor
+import javax.validation.Valid;
+
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
-@RequestMapping("api/v1")
+@RequestMapping("api/v1/user")
 public class UserController {
 
     UserService userService;
 
-    @PostMapping("/user/favorite")
+    /*@PostMapping
+    public ResponseEntity<?> saveNewUser(@Valid @RequestBody UserDTO userDTO) {
+        return null;
+    }*/
+
+    @PostMapping("/favorite")
     public ResponseEntity<?> saveEventToFavorites(@RequestBody UserFavoriteEventDTO userFavoriteEventDTO) {
         userService.saveEventToFavorite(userFavoriteEventDTO.getUserId(), userFavoriteEventDTO.getEventId());
         return ResponseEntity

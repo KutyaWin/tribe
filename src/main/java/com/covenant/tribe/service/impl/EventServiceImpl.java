@@ -37,7 +37,7 @@ public class EventServiceImpl implements EventService {
                             "Event with id %s  does not exist",
                             eventId
                     );
-                    return new EventNotFoundException(message);
+                    throw new EventNotFoundException(message);
                 });
         return mapEventEntityToEventDTO(event, userId);
     }

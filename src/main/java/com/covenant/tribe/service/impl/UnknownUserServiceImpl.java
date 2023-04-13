@@ -46,7 +46,7 @@ public class UnknownUserServiceImpl implements UnknownUserService {
                                         "Event type with %s  does not exist",
                                         eventTypeId
                                 );
-                               return new EventTypeNotFoundException(message);
+                               throw new EventTypeNotFoundException(message);
                             });
                 })
                 .collect(Collectors.toList());
