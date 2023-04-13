@@ -9,29 +9,34 @@ services:
       dockerfile: ./docker/Dockerfile
     container_name: "app"
     depends_on:
-      - tribe-db
-    links:
-      - "tribe-db:database"
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tribe
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_PORT: ${APP_PORT}
     ports:
       - "${APP_PORT}:${APP_PORT}"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - APP_PORT=${APP_PORT}
 
-  tribe-db:
+  db:
     image: postgis/postgis
-    container_name: "tribe-db"
+    container_name: "db"
     restart: always
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: tribe
     ports:
       - "${EXTERNAL_DB_PORT}:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=tribe
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d tribe" ]
+      interval: 8s
+      timeout: 4s
+      retries: 4
 
 volumes:
-  pgdata:
+  pg_data:

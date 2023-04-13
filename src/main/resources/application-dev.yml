@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://database:5432/tribe
+    url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
@@ -16,7 +16,7 @@ spring:
         format_sql: true
         dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 #  sql:
 #    init:
 #      mode: always
