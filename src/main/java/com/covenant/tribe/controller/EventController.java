@@ -28,4 +28,15 @@ public class EventController {
                 .body(eventDTO);
     }
 
+    @PostMapping("/{event_id}/{user_id}")
+    public ResponseEntity<?> addUserToEvent(
+            @PathVariable("event_id") Long eventId,
+            @PathVariable("user_id") Long userId
+    ) {
+        eventService.addUserToEvent(eventId, userId);
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
 }
