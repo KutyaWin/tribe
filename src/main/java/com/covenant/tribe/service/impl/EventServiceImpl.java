@@ -6,7 +6,9 @@ import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.EventDTO;
 import com.covenant.tribe.dto.user.ParticipantPreviewDTO;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
+import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventRepository;
+import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,6 +28,7 @@ import java.util.Locale;
 public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
+    UserRepository userRepository;
 
     @Transactional
     @Override
@@ -40,6 +43,26 @@ public class EventServiceImpl implements EventService {
                     throw new EventNotFoundException(message);
                 });
         return mapEventEntityToEventDTO(event, userId);
+    }
+
+    @Transactional
+    @Override
+    public void addUserToEvent(Long eventId, Long userId) {
+        Event event = eventRepository
+                .findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException(
+                        String.format(
+                                "Event with id %s  does not exist",
+                                eventId)
+                ));
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format(
+                                "User with id %s  does not exist",
+                                eventId)
+                ));
+        event.addUserAsAsParticipantsEvent(user);
     }
 
     private EventDTO mapEventEntityToEventDTO(Event event, Long userId) {
