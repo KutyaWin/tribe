@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.persistence.*;
 import javax.transaction.Transactional;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +53,7 @@ public class User {
     @Column(length = 100, nullable = false, unique = true)
     String username;
 
-    LocalDateTime birthday;
+    LocalDate birthday;
 
     @Column(name = "user_avatar", length = 100)
     String userAvatar;

@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Builder
@@ -45,9 +46,9 @@ public class UserDTO {
     @Size(max = 100, message = "last_name must not consist of more than 100 characters")
     String lastName;
 
-    @DateTimeFormat(pattern = "MM/dd/yyyy")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Past(message = "birthday date should be past")
-    LocalDateTime birthday;
+    LocalDate birthday;
 
     @JsonProperty("user_avatar")
     @Size(max = 100, message = "user_avatar must not consist of more than 100 characters")

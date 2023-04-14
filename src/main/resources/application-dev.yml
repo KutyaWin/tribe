@@ -24,3 +24,6 @@ spring:
 logging:
   level:
     root: info
+
+springdoc:
+  default-produces-media-type: application/json
