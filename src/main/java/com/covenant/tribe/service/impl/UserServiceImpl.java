@@ -71,4 +71,20 @@ public class UserServiceImpl implements UserService {
                 )));
         user.addFavoriteEvent(event);
     }
+
+    @Transactional
+    @Override
+    public void removeEventFromFavorite(Long userId, Long eventId) {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+        Event event = eventRepository
+                .findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException(
+                        String.format(
+                                "Event type with %s  does not exist",
+                                eventId
+                        )));
+        user.removeFavoriteEvent(event);
+    }
 }

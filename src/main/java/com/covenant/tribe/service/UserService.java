@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface UserService {
     void saveEventToFavorite(Long userId, Long eventId);
+    void removeEventFromFavorite(Long userId, Long eventId);
 
     User saveUser(UserDTO userDTO);
 }
