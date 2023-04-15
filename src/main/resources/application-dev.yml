@@ -17,6 +17,10 @@ spring:
         dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
     hibernate:
       ddl-auto: update
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
 #  sql:
 #    init:
 #      mode: always
@@ -27,3 +31,11 @@ logging:
 
 springdoc:
   default-produces-media-type: application/json
+
+path:
+  main: tribe
+  tmp: temp
+  image: image
+  avatar: avatar
+  event: event
+  user: user
