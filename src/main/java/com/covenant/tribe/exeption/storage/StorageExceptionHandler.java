@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
 @Slf4j
@@ -21,6 +22,17 @@ public class StorageExceptionHandler {
         return ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .errorMessage(List.of(fileNotSavedException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleFileNotFoundException(Exception fileNotFoundException) {
+        log.error("[EXCEPTION] message: " + fileNotFoundException.getMessage());
+
+        return ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .errorMessage(List.of(fileNotFoundException.getMessage()))
                 .build();
     }
 }

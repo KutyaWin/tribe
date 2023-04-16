@@ -1,5 +1,6 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.event.EventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.service.EventService;
@@ -8,8 +9,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.FileNotFoundException;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -44,12 +48,25 @@ public class EventController {
 
     @PostMapping("/avatar")
     public ResponseEntity<?> addEventAvatarToTempDirectory(
-            @RequestHeader("Content-Type") String contentType, @RequestBody byte[] avatar
+            @RequestBody ImageDTO imageDTO
     ) {
-        String uniqueTempFileName = storageService.saveFileToTmpDir(contentType, avatar);
+        String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .body(new TempFileDTO(uniqueTempFileName));
     }
+
+    @GetMapping("/avatar/{added_date}/{avatar_file_name}")
+    public ResponseEntity<?> getEventAvatar(
+            @PathVariable(value = "added_date") String addedDate,
+            @PathVariable(value = "avatar_file_name") String avatarFileName
+    ) throws FileNotFoundException {
+        ImageDTO imageDTO = storageService.getEventAvatar(addedDate + "/" + avatarFileName);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.parseMediaType(imageDTO.getContentType()))
+                .body(imageDTO.getImage());
+    }
+
 
 }
