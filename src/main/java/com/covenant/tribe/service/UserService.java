@@ -15,4 +15,5 @@ public interface UserService {
     void removeEventFromFavorite(Long userId, Long eventId);
 
     User saveUser(UserDTO userDTO);
+    boolean isEmailExist(String email);
 }

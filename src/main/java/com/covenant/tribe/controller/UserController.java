@@ -82,4 +82,14 @@ public class UserController {
                 .body(eventDTOs);
     }
 
+    @GetMapping("/email/check/{email}")
+    public ResponseEntity<?> isEmailExistCheck(
+            @PathVariable String email
+    ) {
+        boolean isEmailExist = userService.isEmailExist(email);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(isEmailExist);
+    }
+
 }

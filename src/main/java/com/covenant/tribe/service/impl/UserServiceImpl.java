@@ -58,6 +58,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public boolean isEmailExist(String email) {
+        return userRepository.existsUserByUserEmail(email);
+    }
+
     @Transactional
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {
@@ -70,11 +75,10 @@ public class UserServiceImpl implements UserService {
                         String.format(
                                 "Event type with %s  does not exist",
                                 eventId
-                )));
+                        )));
         user.addFavoriteEvent(event);
     }
 
-    @Transactional
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
         User user = userRepository
