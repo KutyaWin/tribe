@@ -1,5 +1,6 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.event.EventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.service.EventService;
@@ -44,12 +45,13 @@ public class EventController {
 
     @PostMapping("/avatar")
     public ResponseEntity<?> addEventAvatarToTempDirectory(
-            @RequestHeader("Content-Type") String contentType, @RequestBody byte[] avatar
+            @RequestBody ImageDTO imageDTO
     ) {
-        String uniqueTempFileName = storageService.saveFileToTmpDir(contentType, avatar);
+        String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .body(new TempFileDTO(uniqueTempFileName));
     }
+
 
 }
