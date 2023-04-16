@@ -63,6 +63,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsUserByUserEmail(email);
     }
 
+    @Override
+    public boolean isUsernameExist(String username) {
+        return userRepository.existsUserByUsername(username);
+    }
+
     @Transactional
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {

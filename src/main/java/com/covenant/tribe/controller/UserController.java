@@ -92,4 +92,14 @@ public class UserController {
                 .body(isEmailExist);
     }
 
+    @GetMapping("/username/check/{username}")
+    public ResponseEntity<?> isUsernameExistCheck(
+            @PathVariable String username
+    ) {
+        boolean isUsernameExist = userService.isUsernameExist(username);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(isUsernameExist);
+    }
+
 }

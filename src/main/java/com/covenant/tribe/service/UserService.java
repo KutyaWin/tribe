@@ -16,4 +16,5 @@ public interface UserService {
 
     User saveUser(UserDTO userDTO);
     boolean isEmailExist(String email);
+    boolean isUsernameExist(String username);
 }
