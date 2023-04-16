@@ -29,7 +29,11 @@ public class EventTypeServiceImpl implements EventTypeService {
 
     private List<EventTypeDTO> mapEventTypeListToEventTypesDTOList(List<EventType> eventTypes) {
         return eventTypes.stream()
-                .map(eventType -> new EventTypeDTO(eventType.getId(), eventType.getName()))
+                .map(eventType -> new EventTypeDTO(
+                        eventType.getId(),
+                        eventType.getName(),
+                        eventType.getAnimationJson())
+                )
                 .collect(Collectors.toList());
     }
 }

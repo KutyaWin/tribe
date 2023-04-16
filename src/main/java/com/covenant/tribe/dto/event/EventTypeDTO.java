@@ -13,4 +13,5 @@ import lombok.experimental.FieldDefaults;
 public class EventTypeDTO {
     Long id;
     String name;
+    String animationJson;
 }

@@ -27,6 +27,9 @@ public class  EventType {
     @Column(name = "name", nullable = false, length = 50, unique = true)
     String name;
 
+    @Column(columnDefinition = "TEXT", name = "animation_json")
+    String animationJson;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "event_type_tags",
