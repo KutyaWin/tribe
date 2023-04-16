@@ -1,8 +1,11 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.event.EventDTO;
 import com.covenant.tribe.dto.user.UserDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
+import com.covenant.tribe.mapper.EventMapper;
 import com.covenant.tribe.mapper.UserMapper;
 import com.covenant.tribe.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,9 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,6 +35,7 @@ import javax.validation.Valid;
 public class UserController {
 
     UserService userService;
+    EventMapper eventMapper;
 
     @PostMapping
     @Operation(
@@ -60,6 +67,19 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
+    }
+
+    @GetMapping("/favorite/{user_id}")
+    @Transactional
+    public ResponseEntity<?> getAllFavoritesByUserId(
+            @PathVariable(value = "user_id") Long userId
+    ) {
+        List<Event> userFavorites = userService.getAllFavoritesByUserId(userId);
+        List<EventDTO> eventDTOs = userFavorites
+                .stream().map(event -> eventMapper.mapEventToEventDTO(event, userId)).toList();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(eventDTOs);
     }
 
 }
