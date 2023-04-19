@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.event;
 
+import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -37,7 +38,7 @@ public class Event {
     @Column(name = "created_at")
     LocalDateTime createdAt = LocalDateTime.now();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "event_address_id")
     @ToString.Exclude
     EventAddress eventAddress;
@@ -55,15 +56,13 @@ public class Event {
     LocalDateTime endTime;
 
     @Column(name = "event_avatar", length = 200)
-    String eventAvatar;
+    String eventPhoto;
 
-    Double amount;
+    @Column(name = "show_event_in_search", nullable = false)
+    boolean showEventInSearch;
 
-    @Column(length = 10)
-    String currency;
-
-    @Column(name = "event_active", nullable = false)
-    boolean eventActive;
+    @Column(name = "send_to_all_users_by_interests", nullable = false)
+    boolean sendToAllUsersByInterests;
 
     @Column(name = "eighteen_year_limit", nullable = false)
     boolean eighteenYearLimit;
@@ -79,7 +78,8 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "tag_id", nullable = false)
     )
     @ToString.Exclude
-    Set<EventTag> eventTags = new HashSet<>();
+    @Setter(AccessLevel.PRIVATE)
+    Set<Tag> tagSet = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "users_as_participants_events",
@@ -88,23 +88,111 @@ public class Event {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
-    List<User> usersAsParticipantsEvent = new ArrayList<>();
+    Set<User> usersAsParticipantsEvent = new HashSet<>();
 
-    @ManyToMany(mappedBy = "viewedEvents")
+    @ManyToMany(mappedBy = "viewedEvents", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<User> usersWhichViewedEvent = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "favoritesEvent")
+    @ManyToMany(mappedBy = "favoritesEvent", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<User> usersWhichAddedEventToFavorite = new ArrayList<>();
 
-    // TODO: add method "addTag"
+    @ManyToMany(mappedBy = "invitationToEvent", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
+    Set<User> usersWhoInvitedToEvent = new HashSet<>();
 
-    // TODO: add method "addCollectionTag"
+    public void addUserWhoInvitedToEvent(User passedUserWhoInvited) {
+        if (this.usersWhoInvitedToEvent == null) this.usersWhoInvitedToEvent = new HashSet<>();
 
-    // TODO: add method "addCollection Participant Users"
+        if (!this.usersWhoInvitedToEvent.contains(passedUserWhoInvited)) {
+            this.usersWhoInvitedToEvent.add(passedUserWhoInvited);
+            passedUserWhoInvited.getInvitationToEvent().add(this);
+        } else {
+            log.error(
+                    String.format("There's already a passed user in the event usersWhoInvitedToEvent." +
+                                    "Event usersWhoInvitedToEvent: %s. Passed userWhoInvitedToEvent: %s",
+                            usersWhoInvitedToEvent.stream().map(User::getId).toList(), passedUserWhoInvited.getId()));
+            throw new IllegalArgumentException(
+                    String.format("There's already a passed user in the event usersWhoInvitedToEvent." +
+                                    "Event usersWhoInvitedToEvent: %s. Passed userWhoInvitedToEvent: %s",
+                            usersWhoInvitedToEvent.stream().map(User::getId).toList(), passedUserWhoInvited.getId())
+            );
+        }
+    }
+
+    public void addUsersWhoInvitedToEvent(Set<User> passedUsersWhoInvited) {
+        if (this.usersWhoInvitedToEvent == null) this.usersWhoInvitedToEvent = new HashSet<>();
+
+        if (!this.usersWhoInvitedToEvent.stream()
+                .map(User::getUsername)
+                .anyMatch(passedUsersWhoInvited::contains)) {
+
+            for (User passedUser : passedUsersWhoInvited) {
+                this.usersWhoInvitedToEvent.add(passedUser);
+                passedUser.getInvitationToEvent().add(this);
+            }
+        } else {
+            log.error(
+                    String.format("There's already a passed users in the event usersWhoInvitedToEvent." +
+                                    "Event usersWhoInvitedToEvent: %s. Passed usersWhoInvited: %s",
+                            usersWhoInvitedToEvent.stream().map(User::getId).toList(),
+                            passedUsersWhoInvited.stream().map(User::getId).toList()));
+            throw new IllegalArgumentException(
+                    String.format("There's already a passed users in the event usersWhoInvitedToEvent." +
+                                    "Event usersWhoInvitedToEvent: %s. Passed usersWhoInvited: %s",
+                            usersWhoInvitedToEvent.stream().map(User::getId).toList(),
+                            passedUsersWhoInvited.stream().map(User::getId).toList())
+            );
+        }
+    }
+
+    public void addTag(Tag tag) {
+        if (this.tagSet == null) this.tagSet = new HashSet<>();
+
+        if (!this.tagSet.contains(tag)) {
+            this.tagSet.add(tag);
+            tag.getEventListWithTag().add(this);
+        } else {
+            log.error(
+                    String.format("There's already a passed tag in the event tagSet." +
+                                    "Event tagSet: %s. Passed tag: %s",
+                            this.tagSet.stream().map(Tag::getId).toList(), tag.getId()));
+            throw new IllegalArgumentException(
+                    String.format("There's already a passed tag in the event tagSet." +
+                                    "Event tagSet: %s. Passed tag: %s",
+                            this.tagSet.stream().map(Tag::getId).toList(), tag.getId())
+            );
+        }
+    }
+
+    public void addTagSet(Set<Tag> passedTags) {
+        if (this.tagSet == null) this.tagSet = new HashSet<>();
+
+        if (!this.tagSet.stream()
+                .map(Tag::getTagName)
+                .anyMatch(passedTags::contains)) {
+
+            for (Tag tag : passedTags) {
+                this.tagSet.add(tag);
+                tag.getEventListWithTag().add(this);
+            }
+        } else {
+            log.error(
+                    String.format("There is already exist a passed tag in the event tagSet." +
+                            "Event tagSet: %s. Passed passedTagSet: %s",
+                            this.tagSet.stream().map(Tag::getId).toList(), passedTags.stream().map(Tag::getId).toList())
+            );
+            throw new IllegalArgumentException(
+                    String.format("There is already exist a passed tag in the event tagSet." +
+                                    "Event tagSet: %s. Passed passedTagSet: %s",
+                            this.tagSet.stream().map(Tag::getId).toList(), passedTags.stream().map(Tag::getId).toList())
+            );
+        }
+    }
 
     public void addUserWhichAddedEventToFavorite(User userWhichAddedEventToFavorite) {
         if (this.usersWhichAddedEventToFavorite == null) this.usersWhichAddedEventToFavorite = new ArrayList<>();
@@ -145,7 +233,7 @@ public class Event {
     }
 
     public void addUserAsAsParticipantsEvent(User userAsParticipantsEvent) {
-        if (this.usersAsParticipantsEvent == null) this.usersAsParticipantsEvent = new ArrayList<>();
+        if (this.usersAsParticipantsEvent == null) this.usersAsParticipantsEvent = new HashSet<>();
 
         if (!this.usersAsParticipantsEvent.contains(userAsParticipantsEvent)) {
             this.usersAsParticipantsEvent.add(userAsParticipantsEvent);
@@ -159,6 +247,33 @@ public class Event {
                     String.format(String.format("Event already have passed user as participant event. " +
                                     "UsersAsParticipantsEvent: %s, Passed User: %s",
                     this.usersAsParticipantsEvent.stream().map(User::getId).toList(), userAsParticipantsEvent.getId())));
+        }
+    }
+
+    public void addUserSetAsParticipants(Set<User> passedUserAsParticipantsEvent) {
+        if (this.usersAsParticipantsEvent == null) this.usersAsParticipantsEvent = new HashSet<>();
+
+        if (!this.usersAsParticipantsEvent.stream()
+                .map(User::getUsername)
+                .anyMatch(passedUserAsParticipantsEvent::contains)) {
+
+            for (User passedUser : passedUserAsParticipantsEvent) {
+                this.usersAsParticipantsEvent.add(passedUser);
+                passedUser.getEventsWhereUserAsParticipant().add(this);
+            }
+        } else {
+            log.error(
+                    String.format("There is already exist a passed user in the event userListParticipants." +
+                                    "Event userListParticipants: %s. Passed passedListParticipants: %s",
+                            this.usersAsParticipantsEvent.stream().map(User::getId),
+                            passedUserAsParticipantsEvent.stream().map(User::getId).toList())
+            );
+            throw new IllegalArgumentException(
+                    String.format("There is already exist a passed user in the event userListParticipants." +
+                                    "Event userListParticipants: %s. Passed passedListParticipants: %s",
+                            this.usersAsParticipantsEvent.stream().map(User::getId),
+                            passedUserAsParticipantsEvent.stream().map(User::getId).toList())
+            );
         }
     }
 
