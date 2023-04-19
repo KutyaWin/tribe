@@ -1,27 +1,26 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.EventDTO;
-import com.covenant.tribe.dto.user.ParticipantPreviewDTO;
+import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
+import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.Set;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -29,20 +28,51 @@ public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
     UserRepository userRepository;
+    EventMapper eventMapper;
 
     @Transactional
     @Override
-    public EventDTO getEventById(Long eventId, Long userId) {
-        Event event = eventRepository
-                .findById(eventId)
+    public Event saveNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        Event event = eventMapper.mapToEvent(eventDto);
+        event = saveEvent(event);
+
+        log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
+        return event;
+    }
+
+    @Transactional(readOnly = true)
+    public DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        Event event = getEventById(eventId);
+        DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper.mapToDetailedEventInSearchDTO(event, userId);
+
+        log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
+        return detailedEventInSearchDTO;
+    }
+
+    public Event saveEvent(Event event) {
+        return eventRepository.save(event);
+    }
+
+    @Override
+    public Event getEventById(Long eventId) {
+        return eventRepository.findById(eventId)
                 .orElseThrow(() -> {
-                    String message = String.format(
-                            "Event with id %s  does not exist",
-                            eventId
-                    );
-                    throw new EventNotFoundException(message);
+                    log.error("[EXCEPTION] event with id {}, does not exist", eventId);
+                    return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                 });
-        return mapEventEntityToEventDTO(event, userId);
+    }
+
+    @Transactional
+    @Override
+    public Set<User> inviteUsersAsParticipantsToEvent(
+            UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId) {
+
+        //todo: refactor method
+        return null;
     }
 
     @Transactional
@@ -63,60 +93,5 @@ public class EventServiceImpl implements EventService {
                                 eventId)
                 ));
         event.addUserAsAsParticipantsEvent(user);
-    }
-
-    private EventDTO mapEventEntityToEventDTO(Event event, Long userId) {
-        EventDTO eventDTO = new EventDTO();
-        User organizer = event.getOrganizer();
-        EventAddress eventAddress = event.getEventAddress();
-        List<User> participants = event.getUsersAsParticipantsEvent();
-        eventDTO.setId(event.getId());
-        eventDTO.setName(event.getEventName());
-        eventDTO.setOrganizerNickname(organizer.getUsername());
-        eventDTO.setOrganizerAvatarUrl(organizer.getUserAvatar());
-        eventDTO.setEventPhotoUrl(event.getEventAvatar());
-        eventDTO.setIsInUserFavoriteEvents(isEventInUserFavorites(userId, event.getUsersWhichAddedEventToFavorite()));
-        eventDTO.setCity(eventAddress.getCity());
-        eventDTO.setStartDate(getEventStartDate(event.getStartTime()));
-        eventDTO.setStartTime(getEventStartTime(event.getStartTime()));
-        eventDTO.setDescription(event.getEventDescription());
-        eventDTO.setLatitude(eventAddress.getEventLatitude());
-        eventDTO.setLongitude(eventAddress.getEventLongitude());
-        eventDTO.setLostTenParticipantIds(getLostTenEventParticipants(participants));
-        eventDTO.setParticipantsAmount(participants.size());
-        eventDTO.setIsFinished(!event.isEventActive());
-        return eventDTO;
-    }
-
-    private Boolean isEventInUserFavorites(Long userId, List<User> usersWhichAddedEventToFavorite) {
-        if (userId == null) return false;
-        return usersWhichAddedEventToFavorite.stream()
-                .anyMatch(user -> user.getId().equals(userId));
-    }
-
-    private List<ParticipantPreviewDTO> getLostTenEventParticipants(List<User> participants) {
-        ArrayList<ParticipantPreviewDTO> lostTenParticipants = new ArrayList<>();
-        for (int i = 10, j = participants.size() - 1; i > 0; i--, j--) {
-            if (j >= 0) {
-                User currentParticipant = participants.get(j);
-                ParticipantPreviewDTO participantPreviewDTO = new ParticipantPreviewDTO();
-                participantPreviewDTO.setParticipantId(currentParticipant.getId());
-                participantPreviewDTO.setParticipantAvatarUrl(currentParticipant.getUserAvatar());
-                lostTenParticipants.add(participantPreviewDTO);
-            } else {
-                return lostTenParticipants;
-            }
-        }
-        return lostTenParticipants;
-    }
-
-    private String getEventStartDate(LocalDateTime localDateTime) {
-        DateTimeFormatter dateFormatterPattern = DateTimeFormatter.ofPattern("dd MMMM").localizedBy(new Locale("ru"));
-        return localDateTime.format(dateFormatterPattern);
-    }
-
-    private String getEventStartTime(LocalDateTime localDateTime) {
-        DateTimeFormatter dateFormatterPattern = DateTimeFormatter.ofPattern("HH:mm").localizedBy(new Locale("ru"));
-        return localDateTime.format(dateFormatterPattern);
     }
 }

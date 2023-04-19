@@ -1,9 +1,8 @@
-package com.covenant.tribe.dto.event;
+package com.covenant.tribe.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -14,12 +13,9 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventTypeDTO implements Serializable {
+public class UserWhoInvitedToEventAsParticipantDTO implements Serializable {
 
-    Long id;
-
-    @JsonProperty(value = "type_name")
-    @NotBlank(message = "type_name should not be null or empty")
-    @Size(max = 50)
-    String typeName;
+    @Size(max = 100, message = "username must not consist of more than 100 characters")
+    @NotBlank(message = "username should not be null or empty or empty")
+    String username;
 }
