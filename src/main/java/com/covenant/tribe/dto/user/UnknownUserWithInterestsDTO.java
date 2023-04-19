@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.List;
 
@@ -15,8 +16,11 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UnknownUserWithInterestsDTO implements Serializable {
-    @JsonProperty(value = "bluetooth_id")
+
+    @JsonProperty("bluetooth_id")
+    @Size(max = 100, message = "bluetooth_id must not consist of more than 100 characters")
     String bluetoothId;
+
     @JsonProperty(value = "event_type_ids")
     List<Long> eventTypeIds;
 }
