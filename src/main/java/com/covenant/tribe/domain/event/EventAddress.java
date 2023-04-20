@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.event;
 
+import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +51,8 @@ public class EventAddress {
     @Column(length = 10)
     String building;
 
-    @Column(length = 10)
-    String house_number;
+    @Column(name = "house_number", length = 10)
+    String houseNumber;
 
     @Column(length = 10)
     String floor;
@@ -65,7 +66,7 @@ public class EventAddress {
     static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), SRID);
 
     public EventAddress(Long id, Double eventLatitude, Double eventLongitude, String city, String region, String street,
-                        String district, String building, String house_number, String floor) {
+                        String district, String building, String houseNumber, String floor) {
         this.id = id;
         this.eventLatitude = eventLatitude;
         this.eventLongitude = eventLongitude;
@@ -74,7 +75,7 @@ public class EventAddress {
         this.street = street;
         this.district = district;
         this.building = building;
-        this.house_number = house_number;
+        this.houseNumber = houseNumber;
         this.floor = floor;
         this.eventPosition = geometryFactory.createPoint(new Coordinate(eventLongitude, eventLatitude));
     }
@@ -91,7 +92,7 @@ public class EventAddress {
                             "listEvent: %s. Passed event: %s",
                             this.listEvents.stream().map(Event::getId).toList(), event.getId())
             );
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("EventAddress already has passed event." +
                                     "listEvent: %s. Passed event: %s",
                             this.listEvents.stream().map(Event::getId).toList(), event.getId())

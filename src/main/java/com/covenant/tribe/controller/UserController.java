@@ -1,31 +1,26 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.EventDTO;
-import com.covenant.tribe.dto.user.UserDTO;
+import com.covenant.tribe.dto.event.EventInFavoriteDTO;
+import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
-import com.covenant.tribe.mapper.EventMapper;
-import com.covenant.tribe.mapper.UserMapper;
+import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.util.mapper.EventMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,20 +32,40 @@ public class UserController {
     UserService userService;
     EventMapper eventMapper;
 
-    @PostMapping
     @Operation(
             tags = "User",
-            description = "Create a new user",
+            description = "Create a new user")
+    @PostMapping
+    public ResponseEntity<?> createNewUser(@Valid @RequestBody TESTUserForSignUpDTO requestUser) {
+        log.info("[CONTROLLER] start endpoint createNewUser with param: {}", requestUser);
+
+        TESTUserForSignUpDTO responseUser = userService.saveTestNewUser(requestUser);
+
+        log.info("[CONTROLLER] end endpoint createNewUser with response: {}", responseUser);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseUser);
+    }
+
+    @Operation(
+            tags = "User",
+            description = "Android Small 39 screen. Get a User by username.",
             responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            content = @Content(
-                                    schema = @Schema(implementation = UserDTO.class)))})
-    public ResponseEntity<?> saveNewUser(@Valid @RequestBody UserDTO userDTO) {
-        log.debug("[CONTROLLER] start endpoint saveNewUser with param: {}", userDTO);
-        User savedUser = userService.saveUser(userDTO);
-        log.debug("[CONTROLLER] end endpoint saveNewUser with response: {}", savedUser);
-        return new ResponseEntity<>(UserMapper.mapUserToUserDTO(savedUser), HttpStatus.OK);
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            schema = @Schema(implementation = UserToSendInvitationDTO.class)))})
+    @GetMapping
+    public ResponseEntity<?> findUserByUsernameForSendInvite(@RequestParam(value = "username") String username) {
+        log.info("[CONTROLLER] start endpoint findUserByUsernameForSendInvite with param: {}", username);
+
+        UserToSendInvitationDTO responseUser =
+                userService.findUserByUsernameForSendInvite(username);
+
+        log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite with response: {}", responseUser);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseUser);
     }
 
     @PostMapping("/favorite")
@@ -69,17 +84,29 @@ public class UserController {
                 .build();
     }
 
+    @Operation(
+            tags = "User",
+            description = "Favorite screen. Get all favorite events by user_id.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = EventInFavoriteDTO.class)))})
     @GetMapping("/favorite/{user_id}")
     @Transactional
     public ResponseEntity<?> getAllFavoritesByUserId(
             @PathVariable(value = "user_id") Long userId
     ) {
-        List<Event> userFavorites = userService.getAllFavoritesByUserId(userId);
-        List<EventDTO> eventDTOs = userFavorites
-                .stream().map(event -> eventMapper.mapEventToEventDTO(event, userId)).toList();
+        log.info("[CONTROLLER] start endpoint getAllFavoritesByUserId with param: {}", userId);
+
+        List<EventInFavoriteDTO> userFavorites = userService.getAllFavoritesByUserId(userId).stream()
+                .map(eventMapper::mapToEventInFavoriteDTO)
+                .toList();
+
+        log.info("[CONTROLLER] end endpoint getAllFavoritesByUserId with response: {}", userFavorites);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(eventDTOs);
+                .body(userFavorites);
     }
 
     @GetMapping("/email/check/{email}")

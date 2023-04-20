@@ -39,12 +39,14 @@ public class Friendship {
     LocalDateTime addedToBlock_At;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "relationship_owner_id")
-    User relationshipOwnerId;
+    @JoinColumn(name = "user_who_made_following")
+    @ToString.Exclude
+    User userWhoMadeFollowing;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_id")
-    User friendId;
+    @JoinColumn(name = "user_who_get_follower")
+    @ToString.Exclude
+    User userWhoGetFollower;
 
     @Override
     public boolean equals(Object o){

@@ -2,14 +2,18 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.user.UserDTO;
+import com.covenant.tribe.dto.event.EventInFavoriteDTO;
+import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
+import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.user.UsernameDataAlreadyExistException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.mapper.UserMapper;
 import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.util.mapper.EventMapper;
+import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,43 +33,56 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     EventRepository eventRepository;
+    UserMapper userMapper;
 
     @Transactional
-    @Override
-    public User saveUser(UserDTO userDTO) {
-        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName() + ", method: saveUser()");
-        if (!userRepository.existsUserByUserEmail(userDTO.getEmail())) {
-            if (!userRepository.existsUserByUsername(userDTO.getUsername())) {
-                if (!userRepository.existsUserByPhoneNumber(userDTO.getPhoneNumber())) {
-                    User newUser = UserMapper.mapUserDTOtoUser(userDTO);
+    public TESTUserForSignUpDTO saveTestNewUser(TESTUserForSignUpDTO user) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
-                    log.debug("[REPOSITORY] Trying to save a new user: {}", newUser);
-                    newUser = userRepository.save(newUser);
+        User userToSave = userMapper.mapToUser(user);
+        userToSave = saveUser(userToSave);
+        TESTUserForSignUpDTO userToReturn = userMapper.mapToTESTUserForSignUpDTO(userToSave);
 
-                    log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName() + ", method: saveUser()");
-                    return newUser;
-                } else {
-                    log.error("[EXCEPTION] User with passed phoneNumber already exists. User phoneNumber: {}", userDTO.getPhoneNumber());
-                    throw new UsernameDataAlreadyExistException(String.format("Passed phoneNumber already exists in DB: %s", userDTO.getPhoneNumber()));
-                }
-            } else {
-                log.error("[EXCEPTION] User with passed username already exists. User username: {}", userDTO.getUsername());
-                throw new UsernameDataAlreadyExistException(String.format("Passed username already exists in DB: %s", userDTO.getUsername()));
-            }
-        } else {
-            log.error("[EXCEPTION] User with passed email already exists. User email: {}", userDTO.getEmail());
-            throw new UsernameDataAlreadyExistException(String.format("Passed email already exists in DB: %s", userDTO.getEmail()));
+        log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+        return userToReturn;
+    }
+
+    public User saveUser(User user) {
+        if (isUsernameExist(user.getUsername())) {
+            log.error("[EXCEPTION] User with passed username already exists. Username: {}", user.getUsername());
+            throw new UsernameDataAlreadyExistException(
+                    String.format("Passed username already exists: %s", user.getUsername()));
         }
+        if (isEmailExist(user.getUserEmail())) {
+            log.error("[EXCEPTION] User with passed email already exists. Email: {}", user.getUserEmail());
+            throw new UsernameDataAlreadyExistException(
+                    String.format("Passed email already exists: %s", user.getUserEmail()));
+        }
+        if (isPhoneNumberExist(user.getPhoneNumber())) {
+            log.error("[EXCEPTION] User with passed phoneNumber already exists. PhoneNumber: {}", user.getPhoneNumber());
+            throw new UsernameDataAlreadyExistException(
+                    String.format("Passed phoneNumber already exists: %s", user.getPhoneNumber()));
+        }
+
+        user = userRepository.save(user);
+        return user;
     }
 
     @Override
-    public boolean isEmailExist(String email) {
-        return userRepository.existsUserByUserEmail(email);
+    public User findUserById(Long userId) {
+        return userRepository.findUserById(userId).orElseThrow( () -> {
+            log.error("[EXCEPTION] User with id: " + userId + " not found.");
+            return new UserNotFoundException("User with id: " + userId + " not found.");
+        });
     }
 
     @Override
-    public boolean isUsernameExist(String username) {
-        return userRepository.existsUserByUsername(username);
+    public User findUserByUsername(String username) {
+        return userRepository.findUserByUsername(username)
+                .orElseThrow(() -> {
+                    log.error("[EXCEPTION] User with username: " + username + " not found.");
+                    return new UserNotFoundException("User with username: " + username + " not found.");
+                });
     }
 
     @Transactional
@@ -84,12 +101,27 @@ public class UserServiceImpl implements UserService {
         user.addFavoriteEvent(event);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public UserToSendInvitationDTO findUserByUsernameForSendInvite(String username) {
+        return userMapper.mapToUserToSendInvitationDTO(findUserByUsername(username));
+    }
+
+    public boolean isPhoneNumberExist(String phoneNumber) {
+        return userRepository.existsUserByPhoneNumber(phoneNumber);
+    }
+
+    public boolean isEmailExist(String email) {
+        return userRepository.existsUserByUserEmail(email);
+    }
+
+    public boolean isUsernameExist(String username) {
+        return userRepository.existsUserByUsername(username);
+    }
+
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
-        return user.getFavoritesEvent();
+        return findUserById(userId).getFavoritesEvent();
     }
 
     @Transactional

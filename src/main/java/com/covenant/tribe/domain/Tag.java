@@ -1,10 +1,11 @@
-package com.covenant.tribe.domain.event;
+package com.covenant.tribe.domain;
 
+import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.user.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -15,35 +16,27 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "event_tags")
-public class EventTag {
+@Table(name = "tags")
+public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 50)
-    String name;
+    @Column(name = "tag_name", nullable = false, unique = true, length = 50)
+    String tagName;
 
-    @ManyToMany(mappedBy = "tagList", fetch = FetchType.LAZY)
-    @ToString.Exclude
-    List<EventType> listType = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "eventTags", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "tagSet", fetch = FetchType.LAZY)
     @ToString.Exclude
     List<Event> eventListWithTag;
-
-    // TODO: add method addTagToEventListWithTag
-
-    // TODO: add method addTypeToListType
 
     @Override
     public boolean equals(Object o){
         if (this == o) return true;
         if (o == null || this.getClass() != o.getClass()) return false;
 
-        EventTag eventTag = (EventTag) o;
-        return this.id != null && this.id.equals(eventTag.id);
+        Tag tag = (Tag) o;
+        return this.id != null && this.id.equals(tag.id);
     }
 
     @Override
