@@ -1,6 +1,6 @@
 package com.covenant.tribe.exeption.storage;
 
-import com.covenant.tribe.dto.ErrorResponse;
+import com.covenant.tribe.dto.ResponseErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,10 +16,10 @@ public class StorageExceptionHandler {
 
     @ExceptionHandler(FileNotSavedException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleFileNotSavedException(RuntimeException fileNotSavedException) {
+    public ResponseErrorDTO handleFileNotSavedException(RuntimeException fileNotSavedException) {
         log.error("[EXCEPTION] message: " + fileNotSavedException.getMessage());
 
-        return ErrorResponse.builder()
+        return ResponseErrorDTO.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .errorMessage(List.of(fileNotSavedException.getMessage()))
                 .build();
@@ -27,10 +27,10 @@ public class StorageExceptionHandler {
 
     @ExceptionHandler(FileNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleFileNotFoundException(Exception fileNotFoundException) {
+    public ResponseErrorDTO handleFileNotFoundException(Exception fileNotFoundException) {
         log.error("[EXCEPTION] message: " + fileNotFoundException.getMessage());
 
-        return ErrorResponse.builder()
+        return ResponseErrorDTO.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .errorMessage(List.of(fileNotFoundException.getMessage()))
                 .build();

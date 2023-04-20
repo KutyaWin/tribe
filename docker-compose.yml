@@ -4,6 +4,7 @@ services:
 
   app:
     image: docker-spring-boot-postgres:latest
+    network_mode: bridge
     build:
       context: .
       dockerfile: ./docker/Dockerfile
@@ -11,6 +12,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    links:
+      - db
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tribe
@@ -24,6 +27,7 @@ services:
 
   db:
     image: postgis/postgis
+    network_mode: bridge
     container_name: "db"
     restart: always
     volumes:

@@ -2,6 +2,10 @@ package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.event.EventTypeDTO;
 import com.covenant.tribe.service.EventTypeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +26,16 @@ import java.util.List;
 public class EventTypeController {
 
     EventTypeService eventTypeService;
+
+    @Operation(
+            tags = "EventType",
+            description = "Like me screen. Get all event types.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = EventTypeDTO.class)))}
+    )
     @GetMapping("/event/type")
     public ResponseEntity<?> getAllEventTypes() {
         List<EventTypeDTO> eventTypeDTOs = eventTypeService.getAllEventTypes();

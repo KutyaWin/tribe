@@ -1,6 +1,6 @@
 package com.covenant.tribe.exeption.user;
 
-import com.covenant.tribe.dto.ErrorResponse;
+import com.covenant.tribe.dto.ResponseErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,7 +16,7 @@ public class UserExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFoundException(
+    public ResponseErrorDTO handleUserNotFoundException(
             RuntimeException userNotFoundException
     ) {
         String message = String.format(
@@ -25,7 +25,7 @@ public class UserExceptionHandler {
 
         log.error("[EXCEPTION] message: " + message);
 
-        return ErrorResponse.builder()
+        return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(message))
                 .build();
@@ -33,13 +33,13 @@ public class UserExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseErrorDTO handleMethodArgNotValidException(MethodArgumentNotValidException ex) {
         List<String> errorList = ex.getBindingResult().getFieldErrors().stream()
                 .map(fE -> fE.getDefaultMessage()).toList();
 
         log.error("[EXCEPTION] message: " + errorList);
 
-        return ErrorResponse.builder()
+        return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(errorList)
                 .build();
@@ -47,10 +47,10 @@ public class UserExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleUserExistException(UsernameDataAlreadyExistException e) {
+    public ResponseErrorDTO handleUserExistException(UsernameDataAlreadyExistException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
-        return ErrorResponse.builder()
+        return ResponseErrorDTO.builder()
                 .status(HttpStatus.CONFLICT)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
