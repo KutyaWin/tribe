@@ -1,8 +1,12 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.event.EventDTO;
+import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.service.EventService;
+import com.covenant.tribe.service.PhotoStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,12 +16,15 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 @Slf4j
+import java.io.FileNotFoundException;
+
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
@@ -25,6 +32,7 @@ import javax.validation.Valid;
 public class EventController {
 
     EventService eventService;
+    PhotoStorageService storageService;
 
     @Operation(
             tags = "Event",
@@ -81,4 +89,28 @@ public class EventController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<?> addEventAvatarToTempDirectory(
+            @RequestBody ImageDTO imageDTO
+    ) {
+        String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(new TempFileDTO(uniqueTempFileName));
+    }
+
+    @GetMapping("/avatar/{added_date}/{avatar_file_name}")
+    public ResponseEntity<?> getEventAvatar(
+            @PathVariable(value = "added_date") String addedDate,
+            @PathVariable(value = "avatar_file_name") String avatarFileName
+    ) throws FileNotFoundException {
+        ImageDTO imageDTO = storageService.getEventAvatar(addedDate + "/" + avatarFileName);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.parseMediaType(imageDTO.getContentType()))
+                .body(imageDTO.getImage());
+    }
+
+
 }

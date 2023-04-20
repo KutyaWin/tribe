@@ -22,6 +22,8 @@ services:
       APP_PORT: ${APP_PORT}
     ports:
       - "${APP_PORT}:${APP_PORT}"
+    volumes:
+      - ~/tribe:/tribe
 
   db:
     image: postgis/postgis

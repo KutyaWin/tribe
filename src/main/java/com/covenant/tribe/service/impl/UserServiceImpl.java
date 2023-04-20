@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
@@ -93,7 +95,7 @@ public class UserServiceImpl implements UserService {
                         String.format(
                                 "Event type with %s  does not exist",
                                 eventId
-                )));
+                        )));
         user.addFavoriteEvent(event);
     }
 
@@ -103,15 +105,39 @@ public class UserServiceImpl implements UserService {
         return userMapper.mapToUserToSendInvitationDTO(findUserByUsername(username));
     }
 
-    private boolean isPhoneNumberExist(String phoneNumber) {
+    public boolean isPhoneNumberExist(String phoneNumber) {
         return userRepository.existsUserByPhoneNumber(phoneNumber);
     }
 
-    private boolean isEmailExist(String email) {
+    public boolean isEmailExist(String email) {
         return userRepository.existsUserByUserEmail(email);
     }
 
-    private boolean isUsernameExist(String username) {
+    public boolean isUsernameExist(String username) {
         return userRepository.existsUserByUsername(username);
+    }
+
+    @Override
+    public List<Event> getAllFavoritesByUserId(Long userId) {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+        return user.getFavoritesEvent();
+    }
+
+    @Transactional
+    @Override
+    public void removeEventFromFavorite(Long userId, Long eventId) {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+        Event event = eventRepository
+                .findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException(
+                        String.format(
+                                "Event type with %s  does not exist",
+                                eventId
+                        )));
+        user.removeFavoriteEvent(event);
     }
 }

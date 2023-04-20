@@ -265,6 +265,19 @@ public class User {
             );
         }
     }
+    public void removeFavoriteEvent(Event favoriteEvent) {
+        if (this.favoritesEvent == null) this.favoritesEvent = new ArrayList<>();
+
+        if (!this.favoritesEvent.contains(favoriteEvent)) {
+            String message = format("The event cannot be deleted because user with id " +
+                    "- %s doesn't have event with id - %s in his favorites.", this.id, favoriteEvent.getId());
+            log.error(message);
+            throw new IllegalArgumentException(message);
+        } else {
+            this.favoritesEvent.remove(favoriteEvent);
+            favoriteEvent.getUsersAsParticipantsEvent().remove(this);
+        }
+    }
 
     public void addViewedEvent(Event viewedEvent) {
         if (this.viewedEvents == null) this.viewedEvents = new ArrayList<>();

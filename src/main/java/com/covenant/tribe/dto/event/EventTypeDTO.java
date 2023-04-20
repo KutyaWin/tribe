@@ -22,4 +22,6 @@ public class EventTypeDTO implements Serializable {
     @NotBlank(message = "type_name should not be null or empty")
     @Size(max = 50)
     String typeName;
+
+    String animationJson;
 }

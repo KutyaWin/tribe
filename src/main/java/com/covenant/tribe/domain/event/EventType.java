@@ -32,6 +32,9 @@ public class EventType {
     @Column(name = "type_name", nullable = false, length = 50, unique = true)
     String typeName;
 
+    @Column(columnDefinition = "TEXT", name = "animation_json")
+    String animationJson;
+
     @OneToMany(mappedBy = "eventType", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)

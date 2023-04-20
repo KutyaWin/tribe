@@ -22,6 +22,13 @@ spring:
     init:
       mode: always #unlock init sql from data.sql
       continue-on-error: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+#  sql:
+#    init:
+#      mode: always
 
 logging:
   level:
@@ -31,3 +38,10 @@ logging:
 springdoc:
   default-produces-media-type: application/json
 
+path:
+  main: tribe
+  tmp: temp
+  image: image
+  avatar: avatar
+  event: event
+  user: user
