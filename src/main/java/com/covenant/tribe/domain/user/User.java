@@ -2,6 +2,7 @@ package com.covenant.tribe.domain.user;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -129,7 +130,7 @@ public class User {
                     String.format("There's already a passed friendship in the user following." +
                                     "User followings: %s. Passed friendship: %s",
                             this.following.stream().map(Friendship::getId), friendship.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed friendship in the user following." +
                                     "User followings: %s. Passed friendship: %s",
                             this.following.stream().map(Friendship::getId), friendship.getId())
@@ -148,7 +149,7 @@ public class User {
                     String.format("There's already a passed friendship in the user followers." +
                                     "User followers: %s. Passed friendship: %s",
                             this.followers.stream().map(Friendship::getId), friendship.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed friendship in the user followers." +
                                     "User followers: %s. Passed friendship: %s",
                             this.followers.stream().map(Friendship::getId), friendship.getId())
@@ -167,7 +168,7 @@ public class User {
                     String.format("There's already a passed eventType in the user interestingEventType." +
                                     "User interestingEventType: %s. Passed eventType: %s",
                             interestingEventType.stream().map(EventType::getId).toList(), eventType.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed eventType in the user interestingEventType." +
                                     "User interestingEventType: %s. Passed eventType: %s",
                             interestingEventType.stream().map(EventType::getId).toList(), eventType.getId())
@@ -192,7 +193,7 @@ public class User {
                                     "User interestingEventTypes: %s. Passed eventTypes: %s",
                             interestingEventType.stream().map(EventType::getId).toList(),
                             passedInterestingEventTypes.stream().map(EventType::getId).toList()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed eventType in the user interestingEventType." +
                                     "User interestingEventTypes: %s. Passed eventTypes: %s",
                             interestingEventType.stream().map(EventType::getId).toList(),
@@ -212,7 +213,7 @@ public class User {
                     String.format("There's already a passed event in the user invitationToEvent." +
                                     "User invitationsToEvents: %s. Passed invitationToEvent: %s",
                             invitationToEvent.stream().map(Event::getId).toList(), passedInvitationToEvent.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed event in the user invitationToEvent." +
                                     "User invitationsToEvents: %s. Passed invitationToEvent: %s",
                             invitationToEvent.stream().map(Event::getId).toList(), passedInvitationToEvent.getId())
@@ -237,7 +238,7 @@ public class User {
                                     "User invitationsToEvents: %s. Passed invitationsToEvents: %s",
                             invitationToEvent.stream().map(Event::getId).toList(),
                             passedInvitationsToEvents.stream().map(Event::getId).toList()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed event in the user invitationToEvent." +
                                     "User invitationsToEvents: %s. Passed invitationsToEvents: %s",
                             invitationToEvent.stream().map(Event::getId).toList(),
@@ -257,7 +258,7 @@ public class User {
                     format("User already has passed event in favorites." +
                             "User favorites: %s. Passed favorite event: %s",
                             this.favoritesEvent.stream().map(Event::getId).toList(), favoriteEvent.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     format("User already has passed event in favorites." +
                                     "User favorites: %s. Passed favorite event: %s",
                             this.favoritesEvent.stream().map(Event::getId).toList(), favoriteEvent.getId())
@@ -276,7 +277,7 @@ public class User {
                     format("User already hase viewed passed event." +
                             "User viewedEvents: %s. Passed event: %s",
                             this.viewedEvents.stream().map(Event::getId).toList(), viewedEvent.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     format("User already hase viewed passed event." +
                                     "User viewedEvents: %s. Passed event: %s",
                             this.viewedEvents.stream().map(Event::getId).toList(), viewedEvent.getId())
@@ -296,7 +297,7 @@ public class User {
                                     "User eventWhereUserAsParticipant: %s, Passed eventWhereUserAsParticipant: %s",
                     this.eventsWhereUserAsParticipant.stream().map(Event::getId).toList(),
                     eventWhereUserAsParticipant.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     format("User already have event where he is participant. " +
                                     "User eventWhereUserAsParticipant: %s, Passed eventWhereUserAsParticipant: %s",
                     this.eventsWhereUserAsParticipant.stream().map(Event::getId).toList(),
@@ -316,7 +317,7 @@ public class User {
                     this.eventsWhereUserAsOrganizer.stream().map(Event::getId).toList(),
                     eventWhereUserAsOrganizer.getId()
                     ));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     format("User already have event with same id. User events: %s, Passed event: %s",
                             this.eventsWhereUserAsOrganizer.stream().map(Event::getId).toList(),
                             eventWhereUserAsOrganizer.getId()));

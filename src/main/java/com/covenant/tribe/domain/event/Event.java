@@ -2,6 +2,7 @@ package com.covenant.tribe.domain.event;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +117,7 @@ public class Event {
                     String.format("There's already a passed user in the event usersWhoInvitedToEvent." +
                                     "Event usersWhoInvitedToEvent: %s. Passed userWhoInvitedToEvent: %s",
                             usersWhoInvitedToEvent.stream().map(User::getId).toList(), passedUserWhoInvited.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed user in the event usersWhoInvitedToEvent." +
                                     "Event usersWhoInvitedToEvent: %s. Passed userWhoInvitedToEvent: %s",
                             usersWhoInvitedToEvent.stream().map(User::getId).toList(), passedUserWhoInvited.getId())
@@ -141,7 +142,7 @@ public class Event {
                                     "Event usersWhoInvitedToEvent: %s. Passed usersWhoInvited: %s",
                             usersWhoInvitedToEvent.stream().map(User::getId).toList(),
                             passedUsersWhoInvited.stream().map(User::getId).toList()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed users in the event usersWhoInvitedToEvent." +
                                     "Event usersWhoInvitedToEvent: %s. Passed usersWhoInvited: %s",
                             usersWhoInvitedToEvent.stream().map(User::getId).toList(),
@@ -161,7 +162,7 @@ public class Event {
                     String.format("There's already a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed tag: %s",
                             this.tagSet.stream().map(Tag::getId).toList(), tag.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed tag: %s",
                             this.tagSet.stream().map(Tag::getId).toList(), tag.getId())
@@ -186,7 +187,7 @@ public class Event {
                             "Event tagSet: %s. Passed passedTagSet: %s",
                             this.tagSet.stream().map(Tag::getId).toList(), passedTags.stream().map(Tag::getId).toList())
             );
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There is already exist a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed passedTagSet: %s",
                             this.tagSet.stream().map(Tag::getId).toList(), passedTags.stream().map(Tag::getId).toList())
@@ -205,7 +206,7 @@ public class Event {
                     String.format("There is already user who has added event to the favorite." +
                             "UsersWhichAddedEventToFavorite: %s. Passed User: %s",
                             this.usersWhichAddedEventToFavorite.stream().map(User::getId).toList(), userWhichAddedEventToFavorite.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There is already user which has added event to the favorite." +
                                     "UsersWhichAddedEventToFavorite: %s. Passed User: %s",
                             this.usersWhichAddedEventToFavorite.stream().map(User::getId).toList(), userWhichAddedEventToFavorite.getId())
@@ -224,7 +225,7 @@ public class Event {
                     String.format("There's already a user who has viewed event." +
                             "UserWhichViewedEvent: %s. Passed User: %s",
                             this.usersWhichViewedEvent.stream().map(User::getId).toList(), userWhichViewedEvent.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a user who has viewed event." +
                                     "UserWhichViewedEvent: %s. Passed User: %s",
                             this.usersWhichViewedEvent.stream().map(User::getId).toList(), userWhichViewedEvent.getId())
@@ -243,7 +244,7 @@ public class Event {
                     String.format("Event already have passed user as participant event. " +
                                     "UsersAsParticipantsEvent: %s, Passed User: %s",
                     this.usersAsParticipantsEvent.stream().map(User::getId).toList(), userAsParticipantsEvent.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format(String.format("Event already have passed user as participant event. " +
                                     "UsersAsParticipantsEvent: %s, Passed User: %s",
                     this.usersAsParticipantsEvent.stream().map(User::getId).toList(), userAsParticipantsEvent.getId())));
@@ -268,7 +269,7 @@ public class Event {
                             this.usersAsParticipantsEvent.stream().map(User::getId),
                             passedUserAsParticipantsEvent.stream().map(User::getId).toList())
             );
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There is already exist a passed user in the event userListParticipants." +
                                     "Event userListParticipants: %s. Passed passedListParticipants: %s",
                             this.usersAsParticipantsEvent.stream().map(User::getId),

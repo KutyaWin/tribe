@@ -2,6 +2,7 @@ package com.covenant.tribe.domain.event;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class EventType {
                     String.format("There's already a passed event in the eventListWithType" +
                                     "EventType eventListWithType: %s. Passed passedEvent: %s",
                             this.eventListWithType.stream().map(Event::getId).toList(), passedEvent.getId()));
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed event in the eventListWithType" +
                                     "EventType eventListWithType: %s. Passed passedEvent: %s",
                             this.eventListWithType.stream().map(Event::getId).toList(), passedEvent.getId())

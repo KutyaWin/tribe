@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.event;
 
+import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +92,7 @@ public class EventAddress {
                             "listEvent: %s. Passed event: %s",
                             this.listEvents.stream().map(Event::getId).toList(), event.getId())
             );
-            throw new IllegalArgumentException(
+            throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("EventAddress already has passed event." +
                                     "listEvent: %s. Passed event: %s",
                             this.listEvents.stream().map(Event::getId).toList(), event.getId())
