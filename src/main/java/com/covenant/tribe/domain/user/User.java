@@ -119,6 +119,38 @@ public class User {
     @Setter(AccessLevel.PRIVATE)
     Set<EventType> interestingEventType = new HashSet<>();
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
+    List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
+
+    public void addUserRelationsWithEvent(UserRelationsWithEvent userRelationsWithEvent) {
+        if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
+
+        if (!this.userRelationsWithEvents.contains(userRelationsWithEvent)) {
+            this.userRelationsWithEvents.add(userRelationsWithEvent);
+            userRelationsWithEvent.setUser(this);
+        } else {
+            log.error(
+                    String.format("There's already a passed userRelationsWithEvent in the User." +
+                                    "User userRelationsWithEvents: %s. Passed userRelationsWithEvent: %s",
+                            this.userRelationsWithEvents.stream().map(UserRelationsWithEvent::getId),
+                            userRelationsWithEvent.getId()));
+            throw new AlreadyExistArgumentForAddToEntityException(
+                    String.format("There's already a passed userRelationsWithEvent in the user userRelationsWithEvents." +
+                                    "User userRelationsWithEvents: %s. Passed userRelationsWithEvent: %s",
+                            this.userRelationsWithEvents.stream().map(UserRelationsWithEvent::getId),
+                            userRelationsWithEvent.getId())
+            );
+        }
+    }
+
+    public void addUsersRelationsWithEvent(List<UserRelationsWithEvent> userRelationsWithEvents) {
+        if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
+
+        userRelationsWithEvents.forEach(this::addUserRelationsWithEvent);
+    }
+
     public void addFollowing(Friendship friendship) {
         if (this.following == null) this.following = new HashSet<>();
 
