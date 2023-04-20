@@ -2,6 +2,7 @@ package com.covenant.tribe.domain.event;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserRelationsWithEvent;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -105,6 +106,38 @@ public class Event {
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     Set<User> usersWhoInvitedToEvent = new HashSet<>();
+
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
+    List<UserRelationsWithEvent> eventRelationsWithUser = new ArrayList<>();
+
+    public void addEventRelationsWithUser(UserRelationsWithEvent userRelationsWithEvent) {
+        if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
+
+        if (!this.eventRelationsWithUser.contains(userRelationsWithEvent)) {
+            this.eventRelationsWithUser.add(userRelationsWithEvent);
+            userRelationsWithEvent.setEvent(this);
+        } else {
+            log.error(
+                    String.format("There's already a passed user relations with event in the event." +
+                                    "Event eventRelationsWithUser: %s. Passed userRelationsWithEvent: %s",
+                            eventRelationsWithUser.stream().map(UserRelationsWithEvent::getId).toList(),
+                            userRelationsWithEvent.getId()));
+            throw new AlreadyExistArgumentForAddToEntityException(
+                    String.format("There's already a passed user relations with event in the event eventRelationsWithUser." +
+                                    "Event eventRelationsWithUser: %s. Passed userRelationsWithEvent: %s",
+                            eventRelationsWithUser.stream().map(UserRelationsWithEvent::getId).toList(),
+                            userRelationsWithEvent.getId())
+            );
+        }
+    }
+
+    public void addEventsRelationsWithUsers(List<UserRelationsWithEvent> userRelationsWithEvents) {
+        if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
+
+        userRelationsWithEvents.forEach(this::addEventRelationsWithUser);
+    }
 
     public void addUserWhoInvitedToEvent(User passedUserWhoInvited) {
         if (this.usersWhoInvitedToEvent == null) this.usersWhoInvitedToEvent = new HashSet<>();
