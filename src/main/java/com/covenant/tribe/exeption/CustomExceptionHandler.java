@@ -1,6 +1,6 @@
 package com.covenant.tribe.exeption;
 
-import com.covenant.tribe.dto.ErrorResponse;
+import com.covenant.tribe.dto.ResponseErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,10 +15,10 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(AlreadyExistArgumentForAddToEntityException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleUserExistException(AlreadyExistArgumentForAddToEntityException e) {
+    public ResponseErrorDTO handleUserExistException(AlreadyExistArgumentForAddToEntityException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
-        return ErrorResponse.builder()
+        return ResponseErrorDTO.builder()
                 .status(HttpStatus.CONFLICT)
                 .errorMessage(List.of(e.getMessage()))
                 .build();

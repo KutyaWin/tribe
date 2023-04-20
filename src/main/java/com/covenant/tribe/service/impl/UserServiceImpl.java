@@ -2,6 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
@@ -11,6 +12,7 @@ import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -119,10 +121,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
-        return user.getFavoritesEvent();
+        return findUserById(userId).getFavoritesEvent();
     }
 
     @Transactional

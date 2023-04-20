@@ -3,6 +3,7 @@ package com.covenant.tribe.util.mapper.impl;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.service.EventAddressService;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,8 +34,21 @@ public class EventMapperImpl implements EventMapper {
     EventTypeService eventTypeService;
     TagService tagService;
     EventAddressService eventAddressService;
-
     EventAddressMapper eventAddressMapper;
+
+    @Override
+    public EventInFavoriteDTO mapToEventInFavoriteDTO(Event event) {
+        log.info("map Event to EventInFavoriteDTO. Passed event: {}", event);
+
+        return EventInFavoriteDTO.builder()
+                .eventId(event.getId())
+                .eventPhoto(event.getEventAvatar())
+                .eventName(event.getEventName())
+                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .startTime(event.getStartTime())
+                .isFinished(event.getEndTime().isBefore(LocalDateTime.now()))
+                .build();
+    }
 
     public Event mapToEvent(
             RequestTemplateForCreatingEventDTO dto) {
@@ -45,7 +60,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventDescription(dto.getDescription())
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
-                .eventPhoto(dto.getEventPhoto())
+                .eventAvatar(dto.getEventPhoto())
                 .showEventInSearch(dto.getShowEventInSearch())
                 .sendToAllUsersByInterests(dto.getSendToAllUsersByInterests())
                 .eighteenYearLimit(dto.getEighteenYearLimit())
@@ -59,7 +74,7 @@ public class EventMapperImpl implements EventMapper {
                         .map(userDTO -> userService.findUserByUsername(userDTO.getUsername()))
                         .collect(Collectors.toSet()));
         event.addTagSet(dto.getEventTagsNames().stream()
-                .map(tagService::findTagOrSaveByTagName).collect(Collectors.toSet()));
+                .map(tagService::getTagOrSaveByTagName).collect(Collectors.toSet()));
 
         event.getOrganizer().addEventWhereUserAsOrganizer(event);
         event.getEventAddress().addEvent(event);
@@ -74,7 +89,7 @@ public class EventMapperImpl implements EventMapper {
 
         DetailedEventInSearchDTO detailedEvent = DetailedEventInSearchDTO.builder()
                 .eventId(event.getId())
-                .eventPhoto(event.getEventPhoto())
+                .eventPhoto(event.getEventAvatar())
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .eventName(event.getEventName())
                 .organizerUsername(event.getOrganizer().getUsername())

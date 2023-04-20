@@ -2,6 +2,7 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,6 @@ public interface UserService {
     TESTUserForSignUpDTO saveTestNewUser(TESTUserForSignUpDTO user);
 
     User saveUser(User user);
-
-    User saveUser(UserDTO userDTO);
 
     User findUserById(Long userId);
 

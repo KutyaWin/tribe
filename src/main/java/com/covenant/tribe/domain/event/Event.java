@@ -57,7 +57,7 @@ public class Event {
     LocalDateTime endTime;
 
     @Column(name = "event_avatar", length = 200)
-    String eventPhoto;
+    String eventAvatar;
 
     @Column(name = "show_event_in_search", nullable = false)
     boolean showEventInSearch;

@@ -1,10 +1,9 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDTO;
-import com.covenant.tribe.dto.event.EventDTO;
-import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,14 +20,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-
-@Slf4j
 import java.io.FileNotFoundException;
 
+@Slf4j
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
-@RequestMapping("api/v1/event")
+@RequestMapping("api/v1/events")
 public class EventController {
 
     EventService eventService;
@@ -90,7 +88,7 @@ public class EventController {
                 .build();
     }
 
-    @PostMapping("/avatar")
+    @PostMapping("/avatars")
     public ResponseEntity<?> addEventAvatarToTempDirectory(
             @RequestBody ImageDTO imageDTO
     ) {
@@ -100,7 +98,7 @@ public class EventController {
                 .body(new TempFileDTO(uniqueTempFileName));
     }
 
-    @GetMapping("/avatar/{added_date}/{avatar_file_name}")
+    @GetMapping("/avatars/{added_date}/{avatar_file_name}")
     public ResponseEntity<?> getEventAvatar(
             @PathVariable(value = "added_date") String addedDate,
             @PathVariable(value = "avatar_file_name") String avatarFileName
