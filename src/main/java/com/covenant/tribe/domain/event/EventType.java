@@ -1,13 +1,12 @@
 package com.covenant.tribe.domain.event;
 
-import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
