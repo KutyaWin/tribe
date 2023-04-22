@@ -2,10 +2,10 @@ package com.covenant.tribe.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.validation.constraints.*;
 import java.io.Serializable;
 
 @Builder
