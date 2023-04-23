@@ -1,9 +1,12 @@
-package com.covenant.tribe.domain.user;
+package com.covenant.tribe.domain;
 
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.query.Param;
 
 import javax.persistence.*;
 
@@ -16,7 +19,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "friends")
+@Table(name = "users_relations_with_events")
 public class UserRelationsWithEvent {
 
     @Id
@@ -25,23 +28,46 @@ public class UserRelationsWithEvent {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_status", nullable = false)
-    UserStatus userStatus;
+    @Builder.Default
+    UserStatus userStatus = UserStatus.NONE;
 
-    @Column(name = "is_favorite_event", nullable = false)
-    boolean isFavoriteEvent;
+    @Column(name = "favorite_event", nullable = false)
+    boolean favoriteEvent;
 
-    @Column(name = "is_viewed_event", nullable = false)
-    boolean isViewedEvent;
+    @Column(name = "viewed_event", nullable = false)
+    boolean viewedEvent;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
     User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
     @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
     Event event;
+
+    public void setUser(User user) {
+        if (this.user != null) {
+            this.user.getUserRelationsWithEvents().remove(this);
+        }
+        this.user = user;
+        if (!user.getUserRelationsWithEvents().contains(this)) {
+            user.getUserRelationsWithEvents().add(this);
+        }
+    }
+
+    public void setEvent(Event event) {
+        if (this.event != null) {
+            this.event.getEventRelationsWithUser().remove(this);
+        }
+        this.event = event;
+        if (!event.getEventRelationsWithUser().contains(this)) {
+            event.getEventRelationsWithUser().add(this);
+        }
+    }
 
     @Override
     public boolean equals(Object o){

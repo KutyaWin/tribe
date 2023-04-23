@@ -70,7 +70,11 @@ public class UserController {
 
     @PostMapping("/favorite")
     public ResponseEntity<?> saveEventToFavorites(@RequestBody UserFavoriteEventDTO userFavoriteEventDTO) {
+        log.info("[CONTROLLER] start endpoint saveEventToFavorites with param: {}", userFavoriteEventDTO);
+
         userService.saveEventToFavorite(userFavoriteEventDTO.getUserId(), userFavoriteEventDTO.getEventId());
+
+        log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite");
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();
