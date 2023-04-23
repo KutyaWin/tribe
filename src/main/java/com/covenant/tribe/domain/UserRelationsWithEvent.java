@@ -6,9 +6,8 @@ import com.covenant.tribe.domain.user.UserStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.query.Param;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -18,7 +17,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
+@Entity(name = "UserRelationsWithEvent")
 @Table(name = "users_relations_with_events")
 public class UserRelationsWithEvent {
 
@@ -38,34 +37,32 @@ public class UserRelationsWithEvent {
     boolean viewedEvent;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(nullable = false)
     @ToString.Exclude
-    @Setter(AccessLevel.PRIVATE)
-    User user;
+    User userRelations;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
+    @JoinColumn(nullable = false)
     @ToString.Exclude
-    @Setter(AccessLevel.PRIVATE)
-    Event event;
+    Event eventRelations;
 
-    public void setUser(User user) {
-        if (this.user != null) {
-            this.user.getUserRelationsWithEvents().remove(this);
+    public void setUserRelations(User userRelations) {
+        if (this.userRelations != null) {
+            this.userRelations.getUserRelationsWithEvents().remove(this);
         }
-        this.user = user;
-        if (!user.getUserRelationsWithEvents().contains(this)) {
-            user.getUserRelationsWithEvents().add(this);
+        this.userRelations = userRelations;
+        if (!userRelations.getUserRelationsWithEvents().contains(this)) {
+            userRelations.getUserRelationsWithEvents().add(this);
         }
     }
 
-    public void setEvent(Event event) {
-        if (this.event != null) {
-            this.event.getEventRelationsWithUser().remove(this);
+    public void setEventRelations(Event eventRelations) {
+        if (this.eventRelations != null) {
+            this.eventRelations.getEventRelationsWithUser().remove(this);
         }
-        this.event = event;
-        if (!event.getEventRelationsWithUser().contains(this)) {
-            event.getEventRelationsWithUser().add(this);
+        this.eventRelations = eventRelations;
+        if (!eventRelations.getEventRelationsWithUser().contains(this)) {
+            eventRelations.getEventRelationsWithUser().add(this);
         }
     }
 

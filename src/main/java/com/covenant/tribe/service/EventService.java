@@ -14,7 +14,7 @@ public interface EventService {
 
     Event saveEvent(Event event);
 
-    Event saveNewEvent(RequestTemplateForCreatingEventDTO eventDto);
+    DetailedEventInSearchDTO saveNewEvent(RequestTemplateForCreatingEventDTO eventDto);
 
     Event getEventById(Long eventId);
 

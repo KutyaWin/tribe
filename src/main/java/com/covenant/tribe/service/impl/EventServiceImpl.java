@@ -31,14 +31,16 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public Event saveNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
+    public DetailedEventInSearchDTO saveNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = eventMapper.mapToEvent(eventDto);
         event = saveEvent(event);
+        DetailedEventInSearchDTO detailedEventInSearchDTO =
+                eventMapper.mapToDetailedEventInSearchDTO(event, event.getOrganizer().getId());
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
-        return event;
+        return detailedEventInSearchDTO;
     }
 
     @Transactional(readOnly = true)

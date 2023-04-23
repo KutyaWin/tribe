@@ -1,11 +1,10 @@
 package com.covenant.tribe.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.Column;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 @Builder
