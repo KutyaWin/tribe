@@ -5,7 +5,7 @@ import com.covenant.tribe.domain.user.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)

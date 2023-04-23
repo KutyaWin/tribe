@@ -7,7 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,6 +33,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(name = "social_id", unique = true)
+    String socialId;
+
+    @Column(name = "firebase_id", nullable = false)
+    String firebaseId;
+
     @Builder.Default
     @Column(name = "created_at")
     Instant createdAt = Instant.now();
@@ -52,7 +58,7 @@ public class User {
     @Column(name = "last_name", length = 100)
     String lastName;
 
-    @Column(length = 100, nullable = false, unique = true)
+    @Column(length = 100, unique = true)
     String username;
 
     @Column(name = "birthday", columnDefinition = "DATE  ")
