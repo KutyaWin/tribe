@@ -1,8 +1,11 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
+import com.covenant.tribe.dto.user.SignUpResponse;
 import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
@@ -10,6 +13,8 @@ import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.user.UsernameDataAlreadyExistException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventRepository;
+import com.covenant.tribe.repository.EventTypeRepository;
+import com.covenant.tribe.repository.UnknownUserRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventMapper;
@@ -21,7 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -33,18 +41,29 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     EventRepository eventRepository;
+    EventTypeRepository eventTypeRepository;
+    UnknownUserRepository unknownUserRepository;
     UserMapper userMapper;
 
     @Transactional
-    public TESTUserForSignUpDTO saveTestNewUser(TESTUserForSignUpDTO user) {
+    public SignUpResponse saveTestNewUser(TESTUserForSignUpDTO user, String socialType) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
-        User userToSave = userMapper.mapToUser(user);
+        User userToSave = userMapper.mapToUser(user, socialType);
+        UnknownUser unknownUserWithUserToSaveBluetoothId = unknownUserRepository
+                .findUnknownUserByBluetoothId(user.getBluetoothId());
+        if (unknownUserWithUserToSaveBluetoothId != null) {
+            userToSave.addInterestingEventTypes(new HashSet<>(unknownUserWithUserToSaveBluetoothId
+                    .getUserInterests()));
+        } else {
+            List<EventType> allEventTypes = eventTypeRepository.findAll();
+            userToSave.addInterestingEventTypes(new HashSet<>(allEventTypes));
+        }
+
         userToSave = saveUser(userToSave);
-        TESTUserForSignUpDTO userToReturn = userMapper.mapToTESTUserForSignUpDTO(userToSave);
 
         log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
-        return userToReturn;
+        return new SignUpResponse(userToSave.getId());
     }
 
     public User saveUser(User user) {
@@ -70,7 +89,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findUserById(Long userId) {
-        return userRepository.findUserById(userId).orElseThrow( () -> {
+        return userRepository.findUserById(userId).orElseThrow(() -> {
             log.error("[EXCEPTION] User with id: " + userId + " not found.");
             return new UserNotFoundException("User with id: " + userId + " not found.");
         });
