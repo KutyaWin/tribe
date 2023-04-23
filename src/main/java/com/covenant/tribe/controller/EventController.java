@@ -78,11 +78,11 @@ public class EventController {
     }
 
     @PostMapping("/{event_id}/{user_id}")
-    public ResponseEntity<?> addUserToEvent(
+    public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
             @PathVariable("user_id") Long userId
     ) {
-        eventService.addUserToEvent(eventId, userId);
+        eventService.addUserToEventAsParticipant(eventId, userId);
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();

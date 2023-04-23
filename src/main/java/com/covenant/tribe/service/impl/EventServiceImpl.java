@@ -27,7 +27,6 @@ import java.util.Set;
 public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
-    UserRepository userRepository;
     EventMapper eventMapper;
 
     @Transactional
@@ -77,8 +76,8 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public void addUserToEvent(Long eventId, Long userId) {
-        Event event = eventRepository
+    public void addUserToEventAsParticipant(Long eventId, Long userId) {
+        /*Event event = eventRepository
                 .findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException(
                         String.format(
@@ -92,6 +91,6 @@ public class EventServiceImpl implements EventService {
                                 "User with id %s  does not exist",
                                 eventId)
                 ));
-        event.addUserAsAsParticipantsEvent(user);
+        event.addUserAsAsParticipantsEvent(user);*/
     }
 }

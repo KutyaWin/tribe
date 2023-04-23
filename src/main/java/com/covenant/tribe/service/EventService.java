@@ -20,7 +20,7 @@ public interface EventService {
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);
 
-    void addUserToEvent(Long eventId, Long userId);
+    void addUserToEventAsParticipant(Long eventId, Long userId);
 
     Set<User> inviteUsersAsParticipantsToEvent(
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);
