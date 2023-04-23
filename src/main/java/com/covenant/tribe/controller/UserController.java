@@ -1,15 +1,21 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
+import com.covenant.tribe.dto.user.SignUpResponse;
 import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -34,12 +39,25 @@ public class UserController {
 
     @Operation(
             tags = "User",
-            description = "Create a new user")
+            description = "Create a new user"
+    )
+    @Parameter(
+            name = "Type",
+            description = "Social type",
+            required = true,
+            in = ParameterIn.HEADER,
+            schema = @Schema(implementation = String.class)
+    )
     @PostMapping
-    public ResponseEntity<?> createNewUser(@Valid @RequestBody TESTUserForSignUpDTO requestUser) {
+    public ResponseEntity<?> createNewUser(
+            @Valid @RequestBody TESTUserForSignUpDTO requestUser,
+            HttpServletRequest request
+    ) {
         log.info("[CONTROLLER] start endpoint createNewUser with param: {}", requestUser);
+        String type = request.getHeader("Type");
+        if (type == null) throw new IllegalArgumentException("The 'Type' header is missing");
 
-        TESTUserForSignUpDTO responseUser = userService.saveTestNewUser(requestUser);
+        SignUpResponse responseUser = userService.saveTestNewUser(requestUser, type);
 
         log.info("[CONTROLLER] end endpoint createNewUser with response: {}", responseUser);
         return ResponseEntity
@@ -51,10 +69,10 @@ public class UserController {
             tags = "User",
             description = "Android Small 39 screen. Get a User by username.",
             responses = {
-            @ApiResponse(
-                    responseCode = "200",
-                    content = @Content(
-                            schema = @Schema(implementation = UserToSendInvitationDTO.class)))})
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = UserToSendInvitationDTO.class)))})
     @GetMapping
     public ResponseEntity<?> findUserByUsernameForSendInvite(@RequestParam(value = "username") String username) {
         log.info("[CONTROLLER] start endpoint findUserByUsernameForSendInvite with param: {}", username);

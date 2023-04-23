@@ -4,11 +4,11 @@ import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -83,7 +83,11 @@ public class Event {
     @Setter(AccessLevel.PRIVATE)
     Set<Tag> tagSet = new HashSet<>();
 
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @OneToMany(
+            mappedBy = "eventRelations",
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
+    )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<UserRelationsWithEvent> eventRelationsWithUser = new ArrayList<>();
@@ -93,9 +97,9 @@ public class Event {
 
         if (!this.eventRelationsWithUser.contains(userRelationsWithEvent)) {
             this.eventRelationsWithUser.add(userRelationsWithEvent);
-            userRelationsWithEvent.setEvent(this);
-            if (!userRelationsWithEvent.getUser().getUserRelationsWithEvents().contains(userRelationsWithEvent)) {
-                userRelationsWithEvent.getUser().getUserRelationsWithEvents().add(userRelationsWithEvent);
+            userRelationsWithEvent.setEventRelations(this);
+            if (!userRelationsWithEvent.getUserRelations().getUserRelationsWithEvents().contains(userRelationsWithEvent)) {
+                userRelationsWithEvent.getUserRelations().getUserRelationsWithEvents().add(userRelationsWithEvent);
             }
         } else {
             log.error(

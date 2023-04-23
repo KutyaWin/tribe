@@ -6,7 +6,7 @@ import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 
 public interface UserMapper {
 
-    User mapToUser(TESTUserForSignUpDTO testUserForSignUpDTO);
+    User mapToUser(TESTUserForSignUpDTO testUserForSignUpDTO, String socialTypeFromHeader);
 
     TESTUserForSignUpDTO mapToTESTUserForSignUpDTO(User user);
 

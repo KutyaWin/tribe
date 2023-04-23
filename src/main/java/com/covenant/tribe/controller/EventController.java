@@ -10,6 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.annotation.security.PermitAll;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.io.FileNotFoundException;
 
 @Slf4j
@@ -36,17 +38,19 @@ public class EventController {
             tags = "Event",
             description = "CreateEvent screen. Create a new event by body. Response eventId.",
             responses = {
-            @ApiResponse(
-                    responseCode = "200",
-                    content = @Content(
-                            schema = @Schema(implementation = RequestTemplateForCreatingEventDTO.class)))})
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = DetailedEventInSearchDTO.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
     @PostMapping
     public ResponseEntity<?> createEvent(
             @RequestBody @Valid RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
     ) {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 
-        Long response = eventService.saveNewEvent(requestTemplateForCreatingEventDTO).getId();
+        DetailedEventInSearchDTO response = eventService.saveNewEvent(requestTemplateForCreatingEventDTO);
 
         log.info("[CONTROLLER] end endpoint createEvent with response: {}", response);
         return ResponseEntity
