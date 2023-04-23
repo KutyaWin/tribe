@@ -8,13 +8,13 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
   jpa:
-    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show_sql: true
     open-in-view: true #lock auto start transactional anywhere
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true #откладывает инициализацию данных в бд, пока хибер не сделает таблицы
@@ -26,6 +26,14 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 11MB
+  security:
+    oauth2:
+      resourceserver:
+        opaquetoken:
+          introspection-uri: ${SPRING_VK_INTROSPECTION_URI}
+          client-id: ${SPRING_VK_CLIENT_ID}
+          client-secret: ${SPRING_VK_CLIENT_SECRET}
+          api-version: ${SPRING_VK_API_VERSION}
 #  sql:
 #    init:
 #      mode: always

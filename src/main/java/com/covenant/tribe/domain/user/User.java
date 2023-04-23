@@ -8,7 +8,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -34,6 +34,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(name = "social_id", unique = true)
+    String socialId;
+
+    @Column(name = "firebase_id", nullable = false)
+    String firebaseId;
+
     @Builder.Default
     @Column(name = "created_at")
     Instant createdAt = Instant.now();
@@ -53,7 +59,7 @@ public class User {
     @Column(name = "last_name", length = 100)
     String lastName;
 
-    @Column(length = 100, nullable = false, unique = true)
+    @Column(length = 100, unique = true)
     String username;
 
     @Column(name = "birthday", columnDefinition = "DATE  ")
@@ -68,17 +74,26 @@ public class User {
     @Column(name = "enable_geolocation", nullable = false)
     boolean enableGeolocation;
 
-    @OneToMany(mappedBy = "organizer", fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "organizer",
+            fetch = FetchType.LAZY
+    )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<Event> eventsWhereUserAsOrganizer = new ArrayList<>();
 
-    @OneToMany(mappedBy = "userWhoMadeFollowing", fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "userWhoMadeFollowing",
+            fetch = FetchType.LAZY
+    )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     Set<Friendship> following = new HashSet<>();
 
-    @OneToMany(mappedBy = "userWhoGetFollower", fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "userWhoGetFollower",
+            fetch = FetchType.LAZY
+    )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     Set<Friendship> followers = new HashSet<>();
@@ -91,7 +106,11 @@ public class User {
     @Setter(AccessLevel.PRIVATE)
     Set<EventType> interestingEventType = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @OneToMany(
+            mappedBy = "userRelations",
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
+    )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
@@ -101,9 +120,9 @@ public class User {
 
         if (!this.userRelationsWithEvents.contains(userRelationsWithEvent)) {
             this.userRelationsWithEvents.add(userRelationsWithEvent);
-            userRelationsWithEvent.setUser(this);
-            if (!userRelationsWithEvent.getEvent().getEventRelationsWithUser().contains(userRelationsWithEvent)) {
-                userRelationsWithEvent.getEvent().getEventRelationsWithUser().add(userRelationsWithEvent);
+            userRelationsWithEvent.setUserRelations(this);
+            if (!userRelationsWithEvent.getEventRelations().getEventRelationsWithUser().contains(userRelationsWithEvent)) {
+                userRelationsWithEvent.getEventRelations().getEventRelationsWithUser().add(userRelationsWithEvent);
             }
         } else {
             log.error(

@@ -77,8 +77,8 @@ public class EventMapperImpl implements EventMapper {
                 dto.getUsersWhoInvited().stream()
                         .map(user -> userRelationsWithEventService.saveUserRelationsWithEvent(
                                 UserRelationsWithEvent.builder()
-                                        .user(organizer)
-                                        .event(event)
+                                        .userRelations(organizer)
+                                        .eventRelations(event)
                                         .userStatus(UserStatus.INVITED_TO_EVENT)
                                         .build()
                         )).toList());
@@ -110,7 +110,7 @@ public class EventMapperImpl implements EventMapper {
                         mapUsersToUsersWhoParticipantsOfEventDTO(
                                 event.getEventRelationsWithUser().stream()
                                         .filter(userRelationsWithEvent -> userRelationsWithEvent.getUserStatus().equals(UserStatus.PARTICIPANT_OF_EVENT))
-                                        .map(UserRelationsWithEvent::getUser).collect(Collectors.toSet())))
+                                        .map(UserRelationsWithEvent::getUserRelations).collect(Collectors.toSet())))
                 .build();
     }
 

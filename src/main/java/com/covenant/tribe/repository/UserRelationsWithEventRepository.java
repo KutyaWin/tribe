@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface UserRelationsWithEventRepository extends JpaRepository<UserRelationsWithEvent, Long> {
 
-    Optional<UserRelationsWithEvent> getByUserIdAndEventId(Long userId, Long eventId);
+    Optional<UserRelationsWithEvent> getByUserRelationsIdAndEventRelationsId(Long userId, Long eventId);
 }
