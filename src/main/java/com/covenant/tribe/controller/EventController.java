@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.io.FileNotFoundException;
 
 @Slf4j
@@ -34,12 +34,7 @@ public class EventController {
 
     @Operation(
             tags = "Event",
-            description = "CreateEvent screen. Create a new event by body. Response eventId.",
-            responses = {
-            @ApiResponse(
-                    responseCode = "200",
-                    content = @Content(
-                            schema = @Schema(implementation = RequestTemplateForCreatingEventDTO.class)))})
+            description = "CreateEvent screen. Create a new event by body. Response eventId.")
     @PostMapping
     public ResponseEntity<?> createEvent(
             @RequestBody @Valid RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
