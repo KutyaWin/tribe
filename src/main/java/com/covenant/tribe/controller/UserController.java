@@ -1,6 +1,7 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
+import com.covenant.tribe.dto.user.SignUpResponse;
 import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
@@ -36,10 +37,17 @@ public class UserController {
             tags = "User",
             description = "Create a new user")
     @PostMapping
-    public ResponseEntity<?> createNewUser(@Valid @RequestBody TESTUserForSignUpDTO requestUser) {
-        log.info("[CONTROLLER] start endpoint createNewUser with param: {}", requestUser);
+    public ResponseEntity<?> createNewUser(
+            @Valid @RequestBody TESTUserForSignUpDTO requestUser,
+            @RequestHeader(name = "type") String socialType
+    ) {
+        log.info(
+                "[CONTROLLER] start endpoint createNewUser with param: {} and social type header: {}",
+                requestUser,
+                socialType
+        );
 
-        TESTUserForSignUpDTO responseUser = userService.saveTestNewUser(requestUser);
+        SignUpResponse responseUser = userService.saveTestNewUser(requestUser, socialType);
 
         log.info("[CONTROLLER] end endpoint createNewUser with response: {}", responseUser);
         return ResponseEntity
@@ -51,10 +59,10 @@ public class UserController {
             tags = "User",
             description = "Android Small 39 screen. Get a User by username.",
             responses = {
-            @ApiResponse(
-                    responseCode = "200",
-                    content = @Content(
-                            schema = @Schema(implementation = UserToSendInvitationDTO.class)))})
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = UserToSendInvitationDTO.class)))})
     @GetMapping
     public ResponseEntity<?> findUserByUsernameForSendInvite(@RequestParam(value = "username") String username) {
         log.info("[CONTROLLER] start endpoint findUserByUsernameForSendInvite with param: {}", username);

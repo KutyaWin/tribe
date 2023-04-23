@@ -16,16 +16,29 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapperImpl implements UserMapper {
 
-    public User mapToUser(TESTUserForSignUpDTO userDto) {
-        log.debug("map TESTUserForSignUpDTO to User. TESTUserForSignUpDTO: {}", userDto);
+    private final String VK_PREFIX = "vk";
+    private final String GOOGLE_PREFIX = "google";
 
+    public User mapToUser(TESTUserForSignUpDTO userDto, String socialTypeFromHeader) {
+        log.debug("map TESTUserForSignUpDTO to User. TESTUserForSignUpDTO: {}", userDto);
+        String socialId = "";
+        if (socialTypeFromHeader.equals(VK_PREFIX)) socialId = VK_PREFIX + userDto.getUserId();
+        if (socialTypeFromHeader.equals(GOOGLE_PREFIX)) socialId = GOOGLE_PREFIX + userDto.getUserId();
+        //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
         return User.builder()
+                .socialId(socialId)
+                .firebaseId(userDto.getFirebaseId())
                 .bluetoothId(userDto.getBluetoothId())
-                .username(userDto.getUsername())
-                .userEmail(userDto.getEmail())
-                .password(userDto.getPassword())
-                .phoneNumber(userDto.getPhoneNumber())
+                .username(makeFakeDataIfNeededIsEmpty("", socialId))
+                .userEmail(makeFakeDataIfNeededIsEmpty(userDto.getEmail(), socialId))
+                .password(makeFakeDataIfNeededIsEmpty(userDto.getPassword(), socialId))
+                .phoneNumber(makeFakeDataIfNeededIsEmpty(userDto.getPhoneNumber(), socialId))
                 .build();
+    }
+
+    private String makeFakeDataIfNeededIsEmpty(String data, String socialId) {
+        if (data.isEmpty()) return socialId;
+        return data;
     }
 
     public TESTUserForSignUpDTO mapToTESTUserForSignUpDTO(User user) {
@@ -33,7 +46,6 @@ public class UserMapperImpl implements UserMapper {
 
         return TESTUserForSignUpDTO.builder()
                 .bluetoothId(user.getBluetoothId())
-                .username(user.getUsername())
                 .email(user.getUserEmail())
                 .password(user.getPassword())
                 .phoneNumber(user.getPhoneNumber())
