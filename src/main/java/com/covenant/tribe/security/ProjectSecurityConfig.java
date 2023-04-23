@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.authentication.ProviderManager;
@@ -36,7 +37,15 @@ public class ProjectSecurityConfig {
                 )
         );
 
-        http.authorizeHttpRequests().anyRequest().authenticated();
+        http.authorizeHttpRequests()
+                .requestMatchers(HttpMethod.GET, "api/v1/events/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
+                .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "api/v1/unknown-user/interests").permitAll()
+                .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "api/v1/user/username/check/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
+                .anyRequest().authenticated();
 
         return http.build();
     }
