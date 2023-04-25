@@ -23,4 +23,15 @@ public class CustomExceptionHandler {
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleMissingRequestHeaderException(MissingRequestHeaderException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
 }

@@ -27,19 +27,20 @@ import java.util.Set;
 public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
-    UserRepository userRepository;
     EventMapper eventMapper;
 
     @Transactional
     @Override
-    public Event saveNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
+    public DetailedEventInSearchDTO saveNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = eventMapper.mapToEvent(eventDto);
         event = saveEvent(event);
+        DetailedEventInSearchDTO detailedEventInSearchDTO =
+                eventMapper.mapToDetailedEventInSearchDTO(event, event.getOrganizer().getId());
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
-        return event;
+        return detailedEventInSearchDTO;
     }
 
     @Transactional(readOnly = true)
@@ -77,8 +78,8 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public void addUserToEvent(Long eventId, Long userId) {
-        Event event = eventRepository
+    public void addUserToEventAsParticipant(Long eventId, Long userId) {
+        /*Event event = eventRepository
                 .findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException(
                         String.format(
@@ -92,6 +93,6 @@ public class EventServiceImpl implements EventService {
                                 "User with id %s  does not exist",
                                 eventId)
                 ));
-        event.addUserAsAsParticipantsEvent(user);
+        event.addUserAsAsParticipantsEvent(user);*/
     }
 }

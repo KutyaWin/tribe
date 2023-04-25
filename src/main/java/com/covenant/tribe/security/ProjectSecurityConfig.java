@@ -2,6 +2,7 @@ package com.covenant.tribe.security;
 
 import com.covenant.tribe.security.introspector.VkTokenIntrospector;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
@@ -18,6 +20,8 @@ import org.springframework.security.oauth2.server.resource.introspection.OpaqueT
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableWebSecurity
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ProjectSecurityConfig {
 
     @Value("${spring.security.oauth2.resourceserver.opaquetoken.introspection-uri}")
@@ -47,7 +51,6 @@ public class ProjectSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated();
-
         return http.build();
     }
     @Bean

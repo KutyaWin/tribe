@@ -1,15 +1,14 @@
 package com.covenant.tribe.util.mapper.impl;
 
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserStatus;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
-import com.covenant.tribe.service.EventAddressService;
-import com.covenant.tribe.service.EventTypeService;
-import com.covenant.tribe.service.TagService;
-import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.service.*;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventMapper;
 import lombok.AccessLevel;
@@ -35,6 +34,7 @@ public class EventMapperImpl implements EventMapper {
     TagService tagService;
     EventAddressService eventAddressService;
     EventAddressMapper eventAddressMapper;
+    UserRelationsWithEventService userRelationsWithEventService;
 
     @Override
     public EventInFavoriteDTO mapToEventInFavoriteDTO(Event event) {
@@ -54,8 +54,9 @@ public class EventMapperImpl implements EventMapper {
             RequestTemplateForCreatingEventDTO dto) {
         log.debug("map RequestTemplateForCreatingEventDTO to Event. Passed dto: {}", dto);
 
+        User organizer = userService.findUserByUsername(dto.getOrganizerUsername());
         Event event = Event.builder()
-                .organizer(userService.findUserByUsername(dto.getOrganizerUsername()))
+                .organizer(organizer)
                 .eventName(dto.getEventName())
                 .eventDescription(dto.getDescription())
                 .startTime(dto.getStartTime())
@@ -69,12 +70,18 @@ public class EventMapperImpl implements EventMapper {
         event.setEventAddress(
                 eventAddressService.saveNewEventAddress(
                         eventAddressMapper.mapToEventAddress(dto.getEventAddress())));
-        event.addUsersWhoInvitedToEvent(
-                dto.getUsersWhoInvited().stream()
-                        .map(userDTO -> userService.findUserByUsername(userDTO.getUsername()))
-                        .collect(Collectors.toSet()));
         event.addTagSet(dto.getEventTagsNames().stream()
                 .map(tagService::getTagOrSaveByTagName).collect(Collectors.toSet()));
+
+        event.addEventsRelationsWithUsers(
+                dto.getUsersWhoInvited().stream()
+                        .map(user -> userRelationsWithEventService.saveUserRelationsWithEvent(
+                                UserRelationsWithEvent.builder()
+                                        .userRelations(organizer)
+                                        .eventRelations(event)
+                                        .userStatus(UserStatus.INVITED_TO_EVENT)
+                                        .build()
+                        )).toList());
 
         event.getOrganizer().addEventWhereUserAsOrganizer(event);
         event.getEventAddress().addEvent(event);
@@ -87,27 +94,24 @@ public class EventMapperImpl implements EventMapper {
     public DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, Long userId) {
         log.debug("map Event to DetailedEventInSearchDTO. Event: {}", event);
 
-        DetailedEventInSearchDTO detailedEvent = DetailedEventInSearchDTO.builder()
+        return DetailedEventInSearchDTO.builder()
                 .eventId(event.getId())
                 .eventPhoto(event.getEventAvatar())
+                .favoriteEvent(userService.isFavoriteEventForUser(userId, event.getId()))
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .eventName(event.getEventName())
                 .organizerUsername(event.getOrganizer().getUsername())
-                .eventAddress(
-                        eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
                 .eventDuration(
                         Duration.between(event.getStartTime(), event.getEndTime()).toString())
                 .description(event.getEventDescription())
                 .usersWhoParticipantsOfEvent(
-                        mapUsersToUsersWhoParticipantsOfEventDTO(event.getUsersAsParticipantsEvent()))
+                        mapUsersToUsersWhoParticipantsOfEventDTO(
+                                event.getEventRelationsWithUser().stream()
+                                        .filter(userRelationsWithEvent -> userRelationsWithEvent.getUserStatus().equals(UserStatus.PARTICIPANT_OF_EVENT))
+                                        .map(UserRelationsWithEvent::getUserRelations).collect(Collectors.toSet())))
                 .build();
-
-        detailedEvent.setFavoriteEvent(
-                userService.findUserById(userId).getFavoritesEvent().stream()
-                        .map(Event::getId).anyMatch(id -> id.equals(event.getId())));
-
-        return detailedEvent;
     }
 
     private Set<SearchEventDTO.UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {

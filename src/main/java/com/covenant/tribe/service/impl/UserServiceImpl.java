@@ -1,23 +1,22 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.user.SignUpResponse;
 import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
-import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
-import com.covenant.tribe.exeption.user.UsernameDataAlreadyExistException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
+import com.covenant.tribe.exeption.user.UsernameDataAlreadyExistException;
 import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.UnknownUserRepository;
 import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.service.UserRelationsWithEventService;
 import com.covenant.tribe.service.UserService;
-import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,10 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @Service
@@ -44,6 +39,7 @@ public class UserServiceImpl implements UserService {
     EventTypeRepository eventTypeRepository;
     UnknownUserRepository unknownUserRepository;
     UserMapper userMapper;
+    UserRelationsWithEventService userRelationsWithEventService;
 
     @Transactional
     public SignUpResponse saveTestNewUser(TESTUserForSignUpDTO user, String socialType) {
@@ -107,17 +103,31 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
-        Event event = eventRepository
-                .findById(eventId)
-                .orElseThrow(() -> new EventNotFoundException(
-                        String.format(
-                                "Event type with %s  does not exist",
-                                eventId
-                        )));
-        user.addFavoriteEvent(event);
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        User user = findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
+                .findFirst()
+                .map(userRelationsWithEvent -> {
+                    userRelationsWithEvent.setFavoriteEvent(true);
+                    return userRelationsWithEvent.getUserRelations();
+                })
+                .orElseGet(() -> {
+                    UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
+                            .favoriteEvent(true).build();
+                    userRelationsWithEvent.setEventRelations(eventRepository.findById(eventId)
+                            .orElseThrow(() -> {
+                                log.error("[EXCEPTION] event with id {}, does not exist", eventId);
+                                return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
+                            }));
+                    userRelationsWithEvent.setUserRelations(findUserById(userId));
+                    userRelationsWithEventService.saveUserRelationsWithEvent(userRelationsWithEvent);
+                    return userRelationsWithEvent.getUserRelations();
+                });
+
+        userRepository.save(user);
+
+        log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
     }
 
     @Transactional(readOnly = true)
@@ -139,23 +149,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean isFavoriteEventForUser(Long userId, Long eventId) {
+        return findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
+                .findFirst()
+                .map(UserRelationsWithEvent::isFavoriteEvent)
+                .orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
-        return findUserById(userId).getFavoritesEvent();
+        return findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(UserRelationsWithEvent::isFavoriteEvent)
+                .map(UserRelationsWithEvent::getEventRelations)
+                .toList();
     }
 
     @Transactional
     @Override
     public void removeEventFromFavorite(Long userId, Long eventId) {
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
-        Event event = eventRepository
-                .findById(eventId)
-                .orElseThrow(() -> new EventNotFoundException(
-                        String.format(
-                                "Event type with %s  does not exist",
-                                eventId
-                        )));
-        user.removeFavoriteEvent(event);
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        User user = findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
+                .findFirst()
+                .map(userRelationsWithEvent -> {
+                    userRelationsWithEvent.setFavoriteEvent(false);
+                    return userRelationsWithEvent.getUserRelations();
+                })
+                .orElseThrow(() -> {
+                    log.error("[EXCEPTION] Event with id: " + eventId + " not found.");
+                    return new EventNotFoundException("Event with id: " + eventId + " not found.");
+                });
+
+        userRepository.save(user);
+
+        log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
     }
 }

@@ -44,4 +44,6 @@ public class EventTypeController {
                 .body(eventTypeDTOs);
     }
 
+    //todo: fetch all tags by event type name
+
 }
