@@ -14,13 +14,13 @@ public interface EventService {
 
     Event saveEvent(Event event);
 
-    Event saveNewEvent(RequestTemplateForCreatingEventDTO eventDto);
+    DetailedEventInSearchDTO saveNewEvent(RequestTemplateForCreatingEventDTO eventDto);
 
     Event getEventById(Long eventId);
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);
 
-    void addUserToEvent(Long eventId, Long userId);
+    void addUserToEventAsParticipant(Long eventId, Long userId);
 
     Set<User> inviteUsersAsParticipantsToEvent(
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);

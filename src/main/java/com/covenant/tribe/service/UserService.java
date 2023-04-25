@@ -29,6 +29,8 @@ public interface UserService {
 
     void removeEventFromFavorite(Long userId, Long eventId);
 
+    boolean isFavoriteEventForUser(Long userId, Long eventId);
+
     boolean isEmailExist(String email);
 
     boolean isUsernameExist(String username);
