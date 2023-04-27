@@ -1,0 +1,51 @@
+package com.covenant.tribe.exeption.auth;
+
+import com.covenant.tribe.dto.ResponseErrorDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
+
+@Slf4j
+@RestControllerAdvice
+public class AuthExceptionHandler {
+
+    @ExceptionHandler(JwtDecoderException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseErrorDTO handleJwtDecoderException(JwtDecoderException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(UnexpectedTokenTypeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleJwtDecoderException(UnexpectedTokenTypeException e) {
+        String message = String.format("Token with %s token type does not exist", e.getMessage());
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(VkIntrospectionException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleVkIntrospectionException(VkIntrospectionException e) {
+        String message = String.format("Token is invalid because vk return error with message: %s", e.getMessage());
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+}
