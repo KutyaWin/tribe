@@ -1,7 +1,7 @@
 package com.covenant.tribe.util.mapper.impl;
 
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.user.TESTUserForSignUpDTO;
+import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
@@ -19,20 +19,17 @@ public class UserMapperImpl implements UserMapper {
     private final String VK_PREFIX = "vk";
     private final String GOOGLE_PREFIX = "google";
 
-    public User mapToUser(TESTUserForSignUpDTO userDto, String socialTypeFromHeader) {
-        log.debug("map TESTUserForSignUpDTO to User. TESTUserForSignUpDTO: {}", userDto);
-        String socialId = "";
-        if (socialTypeFromHeader.equals(VK_PREFIX)) socialId = VK_PREFIX + userDto.getUserId();
-        if (socialTypeFromHeader.equals(GOOGLE_PREFIX)) socialId = GOOGLE_PREFIX + userDto.getUserId();
+    public User mapToUser(UserForSignInUpDTO userDto, String socialUserId) {
+        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userDto);
         //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
         return User.builder()
-                .socialId(socialId)
+                .socialId(socialUserId)
                 .firebaseId(userDto.getFirebaseId())
                 .bluetoothId(userDto.getBluetoothId())
-                .username(makeFakeDataIfNeededIsEmpty("", socialId))
-                .userEmail(makeFakeDataIfNeededIsEmpty(userDto.getEmail(), socialId))
-                .password(makeFakeDataIfNeededIsEmpty(userDto.getPassword(), socialId))
-                .phoneNumber(makeFakeDataIfNeededIsEmpty(userDto.getPhoneNumber(), socialId))
+                .username(makeFakeDataIfNeededIsEmpty("", socialUserId))
+                .userEmail(makeFakeDataIfNeededIsEmpty(userDto.getEmail(), socialUserId))
+                .password(makeFakeDataIfNeededIsEmpty(userDto.getPassword(), socialUserId))
+                .phoneNumber(makeFakeDataIfNeededIsEmpty(userDto.getPhoneNumber(), socialUserId))
                 .build();
     }
 
@@ -41,10 +38,10 @@ public class UserMapperImpl implements UserMapper {
         return data;
     }
 
-    public TESTUserForSignUpDTO mapToTESTUserForSignUpDTO(User user) {
+    public UserForSignInUpDTO mapToTESTUserForSignUpDTO(User user) {
         log.debug("map User to TESTUserForSignUpDTO. User: {}", user);
 
-        return TESTUserForSignUpDTO.builder()
+        return UserForSignInUpDTO.builder()
                 .bluetoothId(user.getBluetoothId())
                 .email(user.getUserEmail())
                 .password(user.getPassword())

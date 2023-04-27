@@ -1,8 +1,9 @@
 package com.covenant.tribe.security;
 
-import com.covenant.tribe.security.introspector.VkTokenIntrospector;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,35 +16,45 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.authentication.OpaqueTokenAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 
 @Configuration
 @EnableWebSecurity
+@NoArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ProjectSecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.opaquetoken.introspection-uri}")
-    String introspectionUri;
+    private KeysReader keysReader;
+    @Value("${keys.access-public}")
+    private String accessPublicKeyPath;
+    @Value("${keys.refresh-public}")
+    private String refreshPublicKeyPath;
 
-    @Value("${spring.security.oauth2.resourceserver.opaquetoken.client-id}")
-    String clientId;
-
-    @Value("${spring.security.oauth2.resourceserver.opaquetoken.client-secret}")
-    String clientSecret;
+    @Autowired
+    public ProjectSecurityConfig(KeysReader keysReader) {
+        this.keysReader = keysReader;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.oauth2ResourceServer(
                 j -> j.authenticationManagerResolver(
-                        authenticationManagerResolver(jwtDecoder(), opaqueTokenIntrospector())
+                        authenticationManagerResolver(accessJwtDecoder(), refreshJwtDecoder())
                 )
         );
+        http.csrf().disable();
+
+
 
         http.authorizeHttpRequests()
+                .requestMatchers("api/v1/auth/social-login").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/events/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
+              //  .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "api/v1/unknown-user/interests").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
@@ -54,35 +65,49 @@ public class ProjectSecurityConfig {
         return http.build();
     }
     @Bean
-    public AuthenticationManagerResolver<HttpServletRequest> authenticationManagerResolver(
-            JwtDecoder jwtDecoder, OpaqueTokenIntrospector opaqueTokenIntrospector
-    ) {
-        AuthenticationManager jwtAuth = new ProviderManager(
-                new JwtAuthenticationProvider(jwtDecoder)
-        );
-
-        AuthenticationManager opaqueAuth = new ProviderManager(
-                new OpaqueTokenAuthenticationProvider(opaqueTokenIntrospector)
-        );
-
-        return (request) -> {
-            if ("jwt".equals(request.getHeader("type"))) {
-                return jwtAuth;
-            } else {
-                return opaqueAuth;
-            }
-        };
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder() {
+    public JwtDecoder accessJwtDecoder() {
+        RSAPublicKey publicKey = null;
+        try {
+            publicKey = keysReader.getPublicKey(accessPublicKeyPath);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new NullPointerException(e.getMessage());
+        }
         return NimbusJwtDecoder
-                .withJwkSetUri("https://accounts.google.com")
+                .withPublicKey(publicKey)
                 .build();
     }
 
     @Bean
-    public OpaqueTokenIntrospector opaqueTokenIntrospector() {
-        return new VkTokenIntrospector(introspectionUri, clientId, clientSecret);
+    public JwtDecoder refreshJwtDecoder() {
+        RSAPublicKey publicKey = null;
+        try {
+            publicKey = keysReader.getPublicKey(refreshPublicKeyPath);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new NullPointerException(e.getMessage());
+        }
+        return NimbusJwtDecoder
+                .withPublicKey(publicKey)
+                .build();
+    }
+
+    @Bean
+    public AuthenticationManagerResolver<HttpServletRequest> authenticationManagerResolver(
+            JwtDecoder accessJwtDecoder, JwtDecoder refreshJwtDecoder
+    ) {
+        AuthenticationManager accessJwtAuth = new ProviderManager(
+                new JwtAuthenticationProvider(accessJwtDecoder)
+        );
+
+        AuthenticationManager refreshJwtAuth = new ProviderManager(
+                new JwtAuthenticationProvider(refreshJwtDecoder)
+        );
+
+        return (request) -> {
+            if ("refresh".contains(request.getRequestURL())) {
+                return refreshJwtAuth;
+            } else {
+                return accessJwtAuth;
+            }
+        };
     }
 }
