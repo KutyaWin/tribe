@@ -4,11 +4,11 @@ import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class User {
     @Column(length = 500, nullable = false)
     String password;
 
-    @Column(name = "phone_number", length = 17, unique = true)
+    @Column(name = "phone_number", unique = true)
     String phoneNumber;
 
     @Column(name = "first_name", length = 100)

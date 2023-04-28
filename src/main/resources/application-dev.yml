@@ -7,10 +7,10 @@ spring:
       client:
         config:
           vk-client:
-            url: https://api.vk.com/method/secure.checkToken
-            client-id: 51617420
-            client-secret: 6894e5a96894e5a96894e5a9796b877b25668946894e5a90ca9d5fac35101cbf1489ea7
-            api-version: 5.131
+            url: ${SPRING_VK_INTROSPECTION_URI}
+            client-id: ${SPRING_VK_CLIENT_ID}
+            client-secret: ${SPRING_VK_CLIENT_SECRET}
+            api-version: ${SPRING_VK_API_VERSION}
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -61,3 +61,6 @@ keys:
   access-public: access_public.pem
   refresh-private: refresh_private.der
   refresh-public: refresh_public.pem
+google:
+#  client-id: 407408718192.apps.googleusercontent.com for tests Nikita
+  client-id: ${SPRING_GOOGLE_CLIENT_ID}
