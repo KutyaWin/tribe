@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -52,6 +53,28 @@ public class AuthController {
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
 
+    }
+
+    @Operation(
+            tags = "Auth",
+            description = "Every screens when token needed. Return new access and refresh token",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = TokensDTO.class)
+                            )
+
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/token/refresh")
+    public ResponseEntity<?> refreshTokens(@RequestHeader(name = "Authorization") String token) {
+        TokensDTO tokensDTO = authService.refreshTokens(token);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(tokensDTO);
     }
 
 }

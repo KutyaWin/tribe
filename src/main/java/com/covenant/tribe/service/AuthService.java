@@ -8,4 +8,5 @@ import org.springframework.stereotype.Service;
 @Service
 public interface AuthService {
     TokensDTO getTokensToUserFromSocialNetworks(String token, String tokenType, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException;
+    TokensDTO refreshTokens(String token);
 }
