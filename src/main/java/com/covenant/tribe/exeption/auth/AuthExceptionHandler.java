@@ -37,9 +37,21 @@ public class AuthExceptionHandler {
     }
 
     @ExceptionHandler(VkIntrospectionException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseErrorDTO handleVkIntrospectionException(VkIntrospectionException e) {
         String message = String.format("Token is invalid because vk return error with message: %s", e.getMessage());
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(GoogleIntrospectionException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseErrorDTO handleGoogleIntrospectionException(GoogleIntrospectionException e) {
+        String message = String.format("Token is invalid because google return error with message: %s", e.getMessage());
         log.error("[EXCEPTION] message: " + message);
 
         return ResponseErrorDTO.builder()

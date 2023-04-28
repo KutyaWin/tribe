@@ -9,6 +9,7 @@ import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
+import com.covenant.tribe.exeption.auth.GoogleIntrospectionException;
 import com.covenant.tribe.exeption.auth.JwtDecoderException;
 import com.covenant.tribe.exeption.auth.UnexpectedTokenTypeException;
 import com.covenant.tribe.exeption.auth.VkIntrospectionException;
@@ -21,11 +22,15 @@ import com.covenant.tribe.service.AuthService;
 import com.covenant.tribe.util.mapper.UserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashSet;
@@ -48,6 +54,7 @@ import java.util.Objects;
 public class AuthServiceImpl implements AuthService {
 
     VkClient vkClient;
+    GoogleIdTokenVerifier googleIdTokenVerifier;
     JwtProvider jwtProvider;
     UserRepository userRepository;
     UserMapper userMapper;
@@ -66,6 +73,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     public AuthServiceImpl(VkClient vkClient,
+                           GoogleIdTokenVerifier googleIdTokenVerifier,
                            JwtProvider jwtProvider,
                            UserRepository userRepository,
                            UserMapper userMapper,
@@ -73,6 +81,7 @@ public class AuthServiceImpl implements AuthService {
                            EventTypeRepository eventTypeRepository
     ) {
         this.vkClient = vkClient;
+        this.googleIdTokenVerifier = googleIdTokenVerifier;
         this.jwtProvider = jwtProvider;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
@@ -83,12 +92,18 @@ public class AuthServiceImpl implements AuthService {
     private final String GOOGLE_TOKEN_TYPE = "google";
     private final String VK_TOKEN_TYPE = "vk";
 
+    @Transactional
     @Override
     public TokensDTO getTokensToUserFromSocialNetworks(
             String token, String tokenType, UserForSignInUpDTO userForSignInUpDTO
     ) throws JsonProcessingException {
-        if (tokenType.equals(GOOGLE_TOKEN_TYPE)) return getTokensForGoogleUser(tokenType);
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        if (tokenType.equals(GOOGLE_TOKEN_TYPE)) return getTokensForGoogleUser(token, userForSignInUpDTO);
         if (tokenType.equals(VK_TOKEN_TYPE)) return getTokenForVkUser(token, userForSignInUpDTO);
+
+        log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+
         throw new UnexpectedTokenTypeException(tokenType);
     }
 
@@ -106,13 +121,26 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private TokensDTO getTokensForGoogleUser(String token) {
-        return new TokensDTO();
+    private TokensDTO getTokensForGoogleUser(String token, UserForSignInUpDTO userForSignInUpDTO)  {
+        try {
+            GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
+            if (idToken != null) {
+                Payload tokenPayload = idToken.getPayload();
+                String socialId = GOOGLE_TOKEN_TYPE + tokenPayload.getSubject();
+                String email = tokenPayload.getEmail() == null ? "" : tokenPayload.getEmail();
+                userForSignInUpDTO.setEmail(email);
+                return getTokensDTO(userForSignInUpDTO, socialId);
+            } else {
+                throw new GoogleIntrospectionException("Invalid idToken");
+            }
+        } catch (GeneralSecurityException e) {
+            throw new GoogleIntrospectionException(e.getMessage());
+        } catch (IOException e) {
+            throw new JwtDecoderException(e.getMessage());
+        }
     }
 
-    @Transactional
     public TokensDTO getTokenForVkUser(String token, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException {
-        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         VkValidationParams vkValidationParams = new VkValidationParams(token, clientSecret, apiVersion);
         ResponseEntity<String> vkResponse = vkClient.isTokenValid(vkValidationParams);
@@ -121,27 +149,30 @@ public class AuthServiceImpl implements AuthService {
                 && Objects.requireNonNull(vkResponse.getBody()).contains("response")
         ) {
             response = mapStringToVkValidationResponseDTO(vkResponse.getBody());
-            String vkUserId = VK_TOKEN_TYPE + response.getResponse().getUserId();
-            try {
-                User user = userRepository.findBySocialId(vkUserId);
-                if (user != null) {
-                    TokensDTO tokensDTO = getTokenDTO(user.getId());
-                    tokensDTO.setUserId(user.getId());
-                    log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
-                    return tokensDTO;
-                } else {
-                    Long userId = registerNewUser(userForSignInUpDTO, vkUserId);
-                    TokensDTO tokensDTO = getTokenDTO(userId);
-                    tokensDTO.setUserId(userId);
-                    log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
-                    return tokensDTO;
-                }
-            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new JwtDecoderException(e.getMessage());
-            }
+            String socialId = VK_TOKEN_TYPE + response.getResponse().getUserId();
+            return getTokensDTO(userForSignInUpDTO, socialId);
         } else {
             VkValidationErrorDTO vkValidationResponseDTO = mapStringToVkValidationErrorDTO(vkResponse.getBody());
             throw new VkIntrospectionException(vkValidationResponseDTO.getError().getErrorMessage());
+        }
+    }
+
+    @NotNull
+    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
+        try {
+            User user = userRepository.findBySocialId(socialId);
+            if (user != null) {
+                TokensDTO tokensDTO = getTokenDTO(user.getId());
+                tokensDTO.setUserId(user.getId());
+                return tokensDTO;
+            } else {
+                Long userId = registerNewUser(userForSignInUpDTO, socialId);
+                TokensDTO tokensDTO = getTokenDTO(userId);
+                tokensDTO.setUserId(userId);
+                return tokensDTO;
+            }
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new JwtDecoderException(e.getMessage());
         }
     }
 
