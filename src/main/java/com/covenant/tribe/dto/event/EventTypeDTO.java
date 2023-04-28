@@ -21,5 +21,6 @@ public class EventTypeDTO implements Serializable {
     @Size(max = 50)
     String typeName;
 
+    @JsonProperty(value = "animation_json")
     String animationJson;
 }
