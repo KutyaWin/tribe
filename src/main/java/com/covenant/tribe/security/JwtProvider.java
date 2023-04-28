@@ -35,6 +35,9 @@ public class JwtProvider {
     @Value("${keys.access-public}")
     private String accessPublicKeyPath;
 
+    @Value("${keys.refresh-public}")
+    private String refreshPublicKeyPath;
+
     @Value("${keys.refresh-private}")
     private String refreshPrivateKeyPath;
 
@@ -67,12 +70,23 @@ public class JwtProvider {
                 .signWith(privateKey, algorithm)
                 .compact();
     }
-    private Claims getAccessTokenClaims(@NonNull String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public Claims getAccessTokenClaims(@NonNull String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         RSAPublicKey publicKey = keysReader.getPublicKey(accessPublicKeyPath);
+        String tokenWithoutBearerStr = token.substring(7);
         return Jwts.parserBuilder()
                 .setSigningKey(publicKey)
                 .build()
-                .parseClaimsJws(token)
+                .parseClaimsJws(tokenWithoutBearerStr)
+                .getBody();
+    }
+
+    public Claims getRefreshTokenClaims(@NonNull String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        String tokenWithoutBearerStr = token.substring(7);
+        RSAPublicKey publicKey = keysReader.getPublicKey(refreshPublicKeyPath);
+        return Jwts.parserBuilder()
+                .setSigningKey(publicKey)
+                .build()
+                .parseClaimsJws(tokenWithoutBearerStr)
                 .getBody();
     }
 }

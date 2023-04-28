@@ -50,11 +50,10 @@ public class ProjectSecurityConfig {
         http.csrf().disable();
 
 
-
         http.authorizeHttpRequests()
                 .requestMatchers("api/v1/auth/social-login").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/events/**").permitAll()
-              //  .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
+                //  .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "api/v1/unknown-user/interests").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
@@ -64,6 +63,7 @@ public class ProjectSecurityConfig {
                 .anyRequest().authenticated();
         return http.build();
     }
+
     @Bean
     public JwtDecoder accessJwtDecoder() {
         RSAPublicKey publicKey = null;
@@ -97,13 +97,15 @@ public class ProjectSecurityConfig {
         AuthenticationManager accessJwtAuth = new ProviderManager(
                 new JwtAuthenticationProvider(accessJwtDecoder)
         );
+        System.out.println(accessJwtAuth.toString());
 
         AuthenticationManager refreshJwtAuth = new ProviderManager(
                 new JwtAuthenticationProvider(refreshJwtDecoder)
         );
+        System.out.println(refreshJwtAuth.toString());
 
         return (request) -> {
-            if ("refresh".contains(request.getRequestURL())) {
+            if (String.valueOf(request.getRequestURL()).contains("refresh")) {
                 return refreshJwtAuth;
             } else {
                 return accessJwtAuth;

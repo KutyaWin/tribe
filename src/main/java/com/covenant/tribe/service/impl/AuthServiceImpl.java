@@ -9,6 +9,7 @@ import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
+import com.covenant.tribe.exeption.auth.JwtDecoderException;
 import com.covenant.tribe.exeption.auth.UnexpectedTokenTypeException;
 import com.covenant.tribe.exeption.auth.VkIntrospectionException;
 import com.covenant.tribe.exeption.user.UsernameDataAlreadyExistException;
@@ -91,6 +92,20 @@ public class AuthServiceImpl implements AuthService {
         throw new UnexpectedTokenTypeException(tokenType);
     }
 
+    @Override
+    public TokensDTO refreshTokens(String token) {
+        try {
+            Long userId = Long.parseLong(jwtProvider.getRefreshTokenClaims(token).getSubject());
+            TokensDTO tokensDTO = new TokensDTO();
+            tokensDTO.setUserId(userId);
+            tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId));
+            tokensDTO.setRefreshToken(jwtProvider.generateRefreshToken(userId));
+            return tokensDTO;
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new JwtDecoderException(e.getMessage());
+        }
+    }
+
     private TokensDTO getTokensForGoogleUser(String token) {
         return new TokensDTO();
     }
@@ -108,19 +123,21 @@ public class AuthServiceImpl implements AuthService {
             response = mapStringToVkValidationResponseDTO(vkResponse.getBody());
             String vkUserId = VK_TOKEN_TYPE + response.getResponse().getUserId();
             try {
-                String accessToken = jwtProvider.generateAccessToken(123456L);
-                String refreshToken = jwtProvider.generateRefreshToken(123456L);
                 User user = userRepository.findBySocialId(vkUserId);
                 if (user != null) {
+                    TokensDTO tokensDTO = getTokenDTO(user.getId());
+                    tokensDTO.setUserId(user.getId());
                     log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
-                    return new TokensDTO(user.getId(), accessToken, refreshToken);
+                    return tokensDTO;
                 } else {
                     Long userId = registerNewUser(userForSignInUpDTO, vkUserId);
+                    TokensDTO tokensDTO = getTokenDTO(userId);
+                    tokensDTO.setUserId(userId);
                     log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
-                    return new TokensDTO(userId, accessToken, refreshToken);
+                    return tokensDTO;
                 }
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new RuntimeException(e);
+                throw new JwtDecoderException(e.getMessage());
             }
         } else {
             VkValidationErrorDTO vkValidationResponseDTO = mapStringToVkValidationErrorDTO(vkResponse.getBody());
@@ -152,6 +169,13 @@ public class AuthServiceImpl implements AuthService {
         }
         userToSave = saveUser(userToSave);
         return userToSave.getId();
+    }
+
+    private TokensDTO getTokenDTO(Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        TokensDTO tokensDTO = new TokensDTO();
+        tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId));
+        tokensDTO.setRefreshToken(jwtProvider.generateRefreshToken(userId));
+        return tokensDTO;
     }
 
     private User saveUser(User user) {
