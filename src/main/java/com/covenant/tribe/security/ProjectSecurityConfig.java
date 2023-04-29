@@ -13,6 +13,8 @@ import org.springframework.security.authentication.AuthenticationManagerResolver
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
@@ -52,6 +54,7 @@ public class ProjectSecurityConfig {
 
         http.authorizeHttpRequests()
                 .requestMatchers("api/v1/auth/social-login").permitAll()
+                .requestMatchers("api/v1/auth/registration/email/code").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
@@ -97,12 +100,10 @@ public class ProjectSecurityConfig {
         AuthenticationManager accessJwtAuth = new ProviderManager(
                 new JwtAuthenticationProvider(accessJwtDecoder)
         );
-        System.out.println(accessJwtAuth.toString());
 
         AuthenticationManager refreshJwtAuth = new ProviderManager(
                 new JwtAuthenticationProvider(refreshJwtDecoder)
         );
-        System.out.println(refreshJwtAuth.toString());
 
         return (request) -> {
             if (String.valueOf(request.getRequestURL()).contains("refresh")) {
@@ -111,5 +112,10 @@ public class ProjectSecurityConfig {
                 return accessJwtAuth;
             }
         };
+    }
+
+    @Bean
+    public PasswordEncoder encoder() {
+        return new BCryptPasswordEncoder();
     }
 }

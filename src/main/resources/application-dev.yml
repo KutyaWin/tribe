@@ -35,6 +35,21 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 11MB
+  mail:
+    host: mail.jino.ru
+    port: 587
+    username: tribe@tribual.ru
+    password: M5T&ojn@PF$Czx*b
+    protocol: smtp
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+        starttls:
+          enable: true
+        debug: true
 #  sql:
 #    init:
 #      mode: always

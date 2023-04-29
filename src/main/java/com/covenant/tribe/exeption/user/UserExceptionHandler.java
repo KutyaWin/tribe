@@ -47,7 +47,7 @@ public class UserExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseErrorDTO handleUserExistException(UsernameDataAlreadyExistException e) {
+    public ResponseErrorDTO handleUserExistException(UserAlreadyExistException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
