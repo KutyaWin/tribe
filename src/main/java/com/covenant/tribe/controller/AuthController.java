@@ -1,6 +1,8 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.auth.TokensDTO;
+import com.covenant.tribe.dto.user.RegistrantRequestDTO;
+import com.covenant.tribe.dto.user.RegistrantResponseDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.service.AuthService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -75,6 +77,34 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
+    }
+
+    @Operation(
+            tags = "Auth",
+            description = "Email registration screen. Start registration flow and send verify_code to email",
+            responses = {
+                    @ApiResponse(
+                            responseCode= "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = RegistrantResponseDTO.class)
+                            )
+                    )
+            }
+    )
+    @PostMapping("/registration/email/code")
+    public ResponseEntity<?> addRegistrantWithEmail(
+            @RequestBody RegistrantRequestDTO registrantRequestDTO
+            ) {
+        log.info("[CONTROLLER] start endpoint add registrant with registrantDTO {} ",registrantRequestDTO);
+
+        Long registrantId = authService.addRegistrantWithEmail(registrantRequestDTO);
+        RegistrantResponseDTO registrantResponseDTO = new RegistrantResponseDTO(registrantId);
+
+        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody: {}", registrantResponseDTO);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(registrantResponseDTO);
     }
 
 }
