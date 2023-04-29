@@ -1,4 +1,4 @@
-package com.covenant.tribe.dto.user;
+package com.covenant.tribe.dto.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

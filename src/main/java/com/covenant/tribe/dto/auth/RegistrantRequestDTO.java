@@ -1,4 +1,4 @@
-package com.covenant.tribe.dto.user;
+package com.covenant.tribe.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,6 +16,7 @@ public class RegistrantRequestDTO {
     String email;
 
     @NotBlank(message = "password should not be null or empty")
+    @ToString.Exclude
     String password;
 
     @Size(max = 100, message = "username must not consist of more than 100 characters")

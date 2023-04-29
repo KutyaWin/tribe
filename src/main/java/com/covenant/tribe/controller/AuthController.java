@@ -1,8 +1,9 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
 import com.covenant.tribe.dto.auth.TokensDTO;
-import com.covenant.tribe.dto.user.RegistrantRequestDTO;
-import com.covenant.tribe.dto.user.RegistrantResponseDTO;
+import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
+import com.covenant.tribe.dto.auth.RegistrantResponseDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.service.AuthService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -42,7 +43,7 @@ public class AuthController {
     )
     @PostMapping("/social-login")
     public ResponseEntity<?> signInUpUser(
-            @RequestHeader(name = "Type")  String tokenType,
+            @RequestHeader(name = "Type") String tokenType,
             @RequestHeader(name = "Authorization") String token,
             @RequestBody UserForSignInUpDTO userLoginDTO
     ) throws JsonProcessingException {
@@ -84,7 +85,7 @@ public class AuthController {
             description = "Email registration screen. Start registration flow and send verify_code to email",
             responses = {
                     @ApiResponse(
-                            responseCode= "200",
+                            responseCode = "200",
                             content = @Content(
                                     schema = @Schema(implementation = RegistrantResponseDTO.class)
                             )
@@ -94,8 +95,8 @@ public class AuthController {
     @PostMapping("/registration/email/code")
     public ResponseEntity<?> addRegistrantWithEmail(
             @RequestBody RegistrantRequestDTO registrantRequestDTO
-            ) {
-        log.info("[CONTROLLER] start endpoint add registrant with registrantDTO {} ",registrantRequestDTO);
+    ) {
+        log.info("[CONTROLLER] start endpoint add registrant with registrantDTO {} ", registrantRequestDTO);
 
         Long registrantId = authService.addRegistrantWithEmail(registrantRequestDTO);
         RegistrantResponseDTO registrantResponseDTO = new RegistrantResponseDTO(registrantId);
@@ -107,4 +108,31 @@ public class AuthController {
                 .body(registrantResponseDTO);
     }
 
+    @Operation(
+            tags = "Auth",
+            description = "Email confirm registration screen. Confirm email registration with verify_code;",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            content = @Content(
+                                    schema = @Schema(implementation = TokensDTO.class)
+                            )
+
+                    )
+            }
+    )
+    @PostMapping("/registration/email/confirm")
+    public ResponseEntity<?> confirmEmailRegistration(
+            @RequestBody ConfirmRegistrationDTO confirmRegistrationDTO
+    ) {
+        log.info("[CONTROLLER] start endpoint confirm email with confirmRegistrationDTO {} ", confirmRegistrationDTO);
+
+        TokensDTO tokensDTO = authService.confirmEmailRegistration(confirmRegistrationDTO);
+
+        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody: {}", tokensDTO);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(tokensDTO);
+    }
 }

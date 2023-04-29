@@ -9,14 +9,13 @@ import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.RegistrantStatus;
 import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
 import com.covenant.tribe.dto.auth.TokensDTO;
-import com.covenant.tribe.dto.user.RegistrantRequestDTO;
+import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
-import com.covenant.tribe.exeption.auth.GoogleIntrospectionException;
-import com.covenant.tribe.exeption.auth.JwtDecoderException;
-import com.covenant.tribe.exeption.auth.UnexpectedTokenTypeException;
-import com.covenant.tribe.exeption.auth.VkIntrospectionException;
+import com.covenant.tribe.exeption.auth.*;
 import com.covenant.tribe.exeption.user.UserAlreadyExistException;
+import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.RegistrantRepository;
 import com.covenant.tribe.repository.UnknownUserRepository;
@@ -49,10 +48,9 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -63,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final String FROM_EMAIL = "tribe@tribual.ru";
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
+    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
 
     RegistrantRepository registrantRepository;
     JavaMailSender mailSender;
@@ -139,24 +138,70 @@ public class AuthServiceImpl implements AuthService {
 
         int verificationCode = getRandomVerificationNumber(1000, 9999);
         Registrant registrant = registrantRepository.findByEmail(registrantRequestDTO.getEmail());
+        String emailMessage = String.format("Код подтверждения: %s", verificationCode);
         if (registrant == null) {
             registrant = registrantMapper.mapToRegistrant(registrantRequestDTO, verificationCode);
             Registrant newRegistrant = registrantRepository.save(registrant);
+            sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             return newRegistrant.getId();
         } else {
             if (registrant.getStatus() == RegistrantStatus.CONFIRMED) {
                 String message = String.format("User with email: %s already exists", registrantRequestDTO.getEmail());
                 throw new UserAlreadyExistException(message);
             }
-            String emailMessage = String.format("Код подтверждения: %s", verificationCode);
             sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             registrant.setVerificationCode(verificationCode);
             registrant.setStatus(RegistrantStatus.AWAITED);
+            registrant.setCreatedAt(Instant.now());
             registrantRepository.save(registrant);
 
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
 
             return registrant.getId();
+        }
+    }
+
+    @Transactional
+    @Override
+    public TokensDTO confirmEmailRegistration(ConfirmRegistrationDTO confirmRegistrationDTO) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+        Registrant registrant = registrantRepository
+                .findById(confirmRegistrationDTO.getRegistrantId())
+                .orElseThrow(() -> new UserNotFoundException(
+                                String.format(
+                                        "Registrant with id: %s don't exist'", confirmRegistrationDTO.getRegistrantId()
+                                )
+                        )
+                );
+        Instant codeCreated = registrant.getCreatedAt();
+        Instant now = Instant.now();
+        if (codeCreated.plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(now)) {
+            System.out.println(codeCreated.plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES));
+            System.out.println(Instant.now());
+            throw new ExpiredCodeException(confirmRegistrationDTO.getRegistrantId().toString());
+        }
+        if (registrant.getVerificationCode().intValue() != confirmRegistrationDTO.getVerificationCode().intValue()) {
+            throw new WrongCodeException(confirmRegistrationDTO.getVerificationCode().toString());
+        }
+        UnknownUser unknownUser = unknownUserRepository
+                .findUnknownUserByBluetoothId(confirmRegistrationDTO.getBluetoothId());
+        Set<EventType> userInterests;
+        if (unknownUser != null) {
+            userInterests = new HashSet<>(unknownUser.getUserInterests());
+        } else {
+            userInterests = new HashSet<>(eventTypeRepository.findAll());
+        }
+        User newUser = userMapper.buildUserFromConfirmRegistrationDTORegistrantAndUserInterests(
+                confirmRegistrationDTO, userInterests, registrant
+        );
+        User savedUser = saveUser(newUser);
+
+        try {
+            TokensDTO tokensDTO = getTokenDTO(savedUser.getId());
+            log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
+            return tokensDTO;
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new MakeTokenException(e.getMessage());
         }
     }
 
@@ -173,7 +218,7 @@ public class AuthServiceImpl implements AuthService {
         return new Random().nextInt(max - min) + min;
     }
 
-    private TokensDTO getTokensForGoogleUser(String token, UserForSignInUpDTO userForSignInUpDTO)  {
+    private TokensDTO getTokensForGoogleUser(String token, UserForSignInUpDTO userForSignInUpDTO) {
         try {
             GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
             if (idToken != null) {
@@ -240,7 +285,7 @@ public class AuthServiceImpl implements AuthService {
 
     public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
 
-        User userToSave = userMapper.mapToUser(userForSignInUpDTO, socialId);
+        User userToSave = userMapper.mapToUserFromUserForSignInUpDTO(userForSignInUpDTO, socialId);
         UnknownUser unknownUserWithUserToSaveBluetoothId = unknownUserRepository
                 .findUnknownUserByBluetoothId(userForSignInUpDTO.getBluetoothId());
         if (unknownUserWithUserToSaveBluetoothId != null) {
@@ -256,6 +301,7 @@ public class AuthServiceImpl implements AuthService {
 
     private TokensDTO getTokenDTO(Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         TokensDTO tokensDTO = new TokensDTO();
+        tokensDTO.setUserId(userId);
         tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId));
         tokensDTO.setRefreshToken(jwtProvider.generateRefreshToken(userId));
         return tokensDTO;
