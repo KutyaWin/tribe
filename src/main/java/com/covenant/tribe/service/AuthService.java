@@ -1,6 +1,7 @@
 package com.covenant.tribe.service;
 
 import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
+import com.covenant.tribe.dto.auth.EmailLoginDTO;
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
@@ -13,4 +14,6 @@ public interface AuthService {
     TokensDTO refreshTokens(String token);
     Long addRegistrantWithEmail(RegistrantRequestDTO registrantRequestDTO);
     TokensDTO confirmEmailRegistration(ConfirmRegistrationDTO confirmRegistrationDTO);
+
+    TokensDTO loginUserWithEmail(EmailLoginDTO emailLoginDTO);
 }

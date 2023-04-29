@@ -10,6 +10,7 @@ import com.covenant.tribe.domain.user.RegistrantStatus;
 import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
+import com.covenant.tribe.dto.auth.EmailLoginDTO;
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
@@ -41,6 +42,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
 
     RegistrantRepository registrantRepository;
+    PasswordEncoder encoder;
     JavaMailSender mailSender;
     VkClient vkClient;
     GoogleIdTokenVerifier googleIdTokenVerifier;
@@ -85,8 +89,9 @@ public class AuthServiceImpl implements AuthService {
     String apiVersion;
 
     @Autowired
-    public AuthServiceImpl(RegistrantRepository registrantRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(RegistrantRepository registrantRepository, PasswordEncoder encoder, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
+        this.encoder = encoder;
         this.mailSender = mailSender;
         this.vkClient = vkClient;
         this.googleIdTokenVerifier = googleIdTokenVerifier;
@@ -149,6 +154,8 @@ public class AuthServiceImpl implements AuthService {
                 String message = String.format("User with email: %s already exists", registrantRequestDTO.getEmail());
                 throw new UserAlreadyExistException(message);
             }
+            registrant.setPassword(encoder.encode(registrantRequestDTO.getPassword()));
+            registrant.setUsername(registrantRequestDTO.getUsername());
             sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             registrant.setVerificationCode(verificationCode);
             registrant.setStatus(RegistrantStatus.AWAITED);
@@ -176,8 +183,7 @@ public class AuthServiceImpl implements AuthService {
         Instant codeCreated = registrant.getCreatedAt();
         Instant now = Instant.now();
         if (codeCreated.plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(now)) {
-            System.out.println(codeCreated.plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES));
-            System.out.println(Instant.now());
+            registrant.setStatus(RegistrantStatus.EXPIRED);
             throw new ExpiredCodeException(confirmRegistrationDTO.getRegistrantId().toString());
         }
         if (registrant.getVerificationCode().intValue() != confirmRegistrationDTO.getVerificationCode().intValue()) {
@@ -195,11 +201,29 @@ public class AuthServiceImpl implements AuthService {
                 confirmRegistrationDTO, userInterests, registrant
         );
         User savedUser = saveUser(newUser);
-
+        registrant.setStatus(RegistrantStatus.CONFIRMED);
+        
         try {
             TokensDTO tokensDTO = getTokenDTO(savedUser.getId());
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
             return tokensDTO;
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new MakeTokenException(e.getMessage());
+        }
+    }
+
+    @Override
+    public TokensDTO loginUserWithEmail(EmailLoginDTO emailLoginDTO) {
+        User user = userRepository
+                .findUserByUserEmail(emailLoginDTO.getEmail())
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User with email: %s, does not exist", emailLoginDTO.getEmail())
+                ));
+        if (!encoder.matches(emailLoginDTO.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Credentials is wrong");
+        }
+        try {
+            return getTokenDTO(user.getId());
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new MakeTokenException(e.getMessage());
         }
