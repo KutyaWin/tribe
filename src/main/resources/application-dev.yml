@@ -49,7 +49,6 @@ spring:
           auth: true
         starttls:
           enable: true
-        debug: true
 #  sql:
 #    init:
 #      mode: always

@@ -2,7 +2,7 @@ package com.covenant.tribe.util.mapper.impl;
 
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.RegistrantStatus;
-import com.covenant.tribe.dto.user.RegistrantRequestDTO;
+import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
 import com.covenant.tribe.util.mapper.RegistrantMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

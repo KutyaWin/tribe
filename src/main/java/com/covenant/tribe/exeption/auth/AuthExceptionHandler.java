@@ -32,7 +32,7 @@ public class AuthExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
-                .errorMessage(List.of(e.getMessage()))
+                .errorMessage(List.of(message))
                 .build();
     }
 
@@ -44,7 +44,7 @@ public class AuthExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.UNAUTHORIZED)
-                .errorMessage(List.of(e.getMessage()))
+                .errorMessage(List.of(message))
                 .build();
     }
 
@@ -56,7 +56,43 @@ public class AuthExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.UNAUTHORIZED)
-                .errorMessage(List.of(e.getMessage()))
+                .errorMessage(List.of(message))
+                .build();
+    }
+
+    @ExceptionHandler(ExpiredCodeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleGoogleIntrospectionException(ExpiredCodeException e) {
+        String message = String.format("Code %s is expired", e.getMessage());
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(message))
+                .build();
+    }
+
+    @ExceptionHandler(MakeTokenException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseErrorDTO handleMakeTokenException(MakeTokenException e) {
+        String message = String.format("Something went wrong during making token: %s", e.getMessage());
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .errorMessage(List.of(message))
+                .build();
+    }
+
+    @ExceptionHandler(WrongCodeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleWrongCodeException(WrongCodeException e) {
+        String message = String.format("Code %s is not valid", e.getMessage());
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(message))
                 .build();
     }
 

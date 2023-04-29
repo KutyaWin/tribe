@@ -54,7 +54,7 @@ public class ProjectSecurityConfig {
 
         http.authorizeHttpRequests()
                 .requestMatchers("api/v1/auth/social-login").permitAll()
-                .requestMatchers("api/v1/auth/registration/email/code").permitAll()
+                .requestMatchers("api/v1/auth/registration/email/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/event/type").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
