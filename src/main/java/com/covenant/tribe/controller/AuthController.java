@@ -1,9 +1,6 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
-import com.covenant.tribe.dto.auth.TokensDTO;
-import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
-import com.covenant.tribe.dto.auth.RegistrantResponseDTO;
+import com.covenant.tribe.dto.auth.*;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.service.AuthService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,7 +28,7 @@ public class AuthController {
 
     @Operation(
             tags = "Auth",
-            description = "Login screen. Register or login user who came from a social network access and refresh token",
+            description = "Login screen. Register or login user who came from a social network",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -41,7 +38,7 @@ public class AuthController {
                     )
             }
     )
-    @PostMapping("/social-login")
+    @PostMapping("/login/social")
     public ResponseEntity<?> signInUpUser(
             @RequestHeader(name = "Type") String tokenType,
             @RequestHeader(name = "Authorization") String token,
@@ -55,8 +52,34 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
-
     }
+
+    @Operation(
+            tags = "Auth",
+            description = "Login screen. Login user with email and password",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = TokensDTO.class)
+                            )
+                    )
+            }
+    )
+    @PostMapping("/login/email")
+    public ResponseEntity<?> loginUserWithEmail(
+            @RequestBody EmailLoginDTO emailLoginDTO
+    ) {
+        log.info("[CONTROLLER] start endpoint loginUserWithEmail with emailLoginDTO: {}", emailLoginDTO);
+
+        TokensDTO tokensDTO = authService.loginUserWithEmail(emailLoginDTO);
+
+        log.info("[CONTROLLER] end endpoint loginUserWithEmail with ResponseBody: {}", tokensDTO);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(tokensDTO);
+    }
+
 
     @Operation(
             tags = "Auth",

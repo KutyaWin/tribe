@@ -3,6 +3,7 @@ package com.covenant.tribe.exeption.auth;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -85,14 +86,24 @@ public class AuthExceptionHandler {
     }
 
     @ExceptionHandler(WrongCodeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseErrorDTO handleWrongCodeException(WrongCodeException e) {
-        String message = String.format("Code %s is not valid", e.getMessage());
-        log.error("[EXCEPTION] message: " + message);
+        log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.BAD_REQUEST)
-                .errorMessage(List.of(message))
+                .status(HttpStatus.UNAUTHORIZED)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseErrorDTO handleBadCredentialsException(BadCredentialsException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .errorMessage(List.of(e.getMessage()))
                 .build();
     }
 
