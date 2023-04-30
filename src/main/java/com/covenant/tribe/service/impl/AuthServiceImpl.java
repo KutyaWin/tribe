@@ -112,6 +112,15 @@ public class AuthServiceImpl implements AuthService {
             String token, String tokenType, UserForSignInUpDTO userForSignInUpDTO
     ) throws JsonProcessingException {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+        String bluetoothId = userForSignInUpDTO.getBluetoothId();
+        String firebaseId = userForSignInUpDTO.getFirebaseId();
+
+        if (bluetoothId.isEmpty() || firebaseId.isBlank()) {
+            throw new BadCredentialsException(
+                    String.format("BluetoothId: %s and FirebaseId: %s  can't be empty or null'",
+                            bluetoothId, firebaseId)
+            );
+        }
 
         if (tokenType.equals(GOOGLE_TOKEN_TYPE)) return getTokensForGoogleUser(token, userForSignInUpDTO);
         if (tokenType.equals(VK_TOKEN_TYPE)) return getTokenForVkUser(token, userForSignInUpDTO);
@@ -172,6 +181,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokensDTO confirmEmailRegistration(ConfirmRegistrationDTO confirmRegistrationDTO) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+        String bluetoothId = confirmRegistrationDTO.getBluetoothId();
+        String firebaseId = confirmRegistrationDTO.getFirebaseId();
+
+        if (bluetoothId.isEmpty() || firebaseId.isBlank()) {
+            throw new BadCredentialsException(
+                    String.format("BluetoothId: %s and FirebaseId: %s  can't be empty or null'",
+                            bluetoothId, firebaseId)
+            );
+        }
+
         Registrant registrant = registrantRepository
                 .findById(confirmRegistrationDTO.getRegistrantId())
                 .orElseThrow(() -> new UserNotFoundException(
@@ -202,7 +221,7 @@ public class AuthServiceImpl implements AuthService {
         );
         User savedUser = saveUser(newUser);
         registrant.setStatus(RegistrantStatus.CONFIRMED);
-        
+
         try {
             TokensDTO tokensDTO = getTokenDTO(savedUser.getId());
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
