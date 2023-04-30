@@ -29,6 +29,7 @@ services:
       - "${APP_PORT}:${APP_PORT}"
     volumes:
       - ~/tribe:/tribe
+      - ~/tribe/logs:/home/tribe/logs
 
   db:
     image: postgis/postgis
