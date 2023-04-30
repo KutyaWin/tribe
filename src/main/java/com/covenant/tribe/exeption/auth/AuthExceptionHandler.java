@@ -15,12 +15,12 @@ import java.util.List;
 public class AuthExceptionHandler {
 
     @ExceptionHandler(JwtDecoderException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleJwtDecoderException(JwtDecoderException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.UNAUTHORIZED)
+                .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }
@@ -38,25 +38,25 @@ public class AuthExceptionHandler {
     }
 
     @ExceptionHandler(VkIntrospectionException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleVkIntrospectionException(VkIntrospectionException e) {
         String message = String.format("Token is invalid because vk return error with message: %s", e.getMessage());
         log.error("[EXCEPTION] message: " + message);
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.UNAUTHORIZED)
+                .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(message))
                 .build();
     }
 
     @ExceptionHandler(GoogleIntrospectionException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleGoogleIntrospectionException(GoogleIntrospectionException e) {
         String message = String.format("Token is invalid because google return error with message: %s", e.getMessage());
         log.error("[EXCEPTION] message: " + message);
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.UNAUTHORIZED)
+                .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(message))
                 .build();
     }
@@ -86,23 +86,23 @@ public class AuthExceptionHandler {
     }
 
     @ExceptionHandler(WrongCodeException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleWrongCodeException(WrongCodeException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.UNAUTHORIZED)
+                .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleBadCredentialsException(BadCredentialsException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }
