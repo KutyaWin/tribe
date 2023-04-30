@@ -41,6 +41,9 @@ public class JwtProvider {
     @Value("${keys.refresh-private}")
     private String refreshPrivateKeyPath;
 
+    private final Integer ACCESS_TOKEN_EXPIRATION_MINS = 30;
+    private final Integer REFRESH_TOKEN_EXPIRATION_DAYS = 2;
+
     @Autowired
     public JwtProvider(KeysReader keysReader) {
         this.keysReader = keysReader;
@@ -50,7 +53,9 @@ public class JwtProvider {
         PrivateKey privateKey = keysReader.getPrivateKey(accessPrivateKeyPath);
         SignatureAlgorithm algorithm = SignatureAlgorithm.RS256;
         final LocalDateTime now = LocalDateTime.now();
-        final Instant accessExpirationInstant = now.plusMinutes(5).atZone(ZoneId.systemDefault()).toInstant();
+        final Instant accessExpirationInstant = now
+                .plusMinutes(ACCESS_TOKEN_EXPIRATION_MINS)
+                .atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpiration = Date.from(accessExpirationInstant);
         return Jwts.builder()
                 .setSubject(userId.toString())
@@ -62,7 +67,9 @@ public class JwtProvider {
         SignatureAlgorithm algorithm = SignatureAlgorithm.RS256;
         PrivateKey privateKey = keysReader.getPrivateKey(refreshPrivateKeyPath);
         final LocalDateTime now = LocalDateTime.now();
-        final Instant refreshExpirationInstant = now.plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
+        final Instant refreshExpirationInstant = now
+                .plusDays(REFRESH_TOKEN_EXPIRATION_DAYS)
+                .atZone(ZoneId.systemDefault()).toInstant();
         final Date refreshExpiration = Date.from(refreshExpirationInstant);
         return Jwts.builder()
                 .setSubject(userId.toString())
