@@ -26,6 +26,7 @@ public class EventTypeMapperIml implements EventTypeMapper {
                 .map(eventType -> EventTypeDTO.builder()
                         .id(eventType.getId())
                         .typeName(eventType.getTypeName())
+                        .animationJson(eventType.getAnimationJson())
                         .build())
                 .collect(Collectors.toList());
     }

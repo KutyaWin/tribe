@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
 
 @Builder
@@ -21,5 +22,6 @@ public class EventTypeDTO implements Serializable {
     @Size(max = 50)
     String typeName;
 
+    @JsonProperty(value = "animation_json")
     String animationJson;
 }
