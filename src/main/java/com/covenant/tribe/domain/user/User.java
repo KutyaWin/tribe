@@ -50,7 +50,7 @@ public class User {
     @Column(length = 500, nullable = false)
     String password;
 
-    @Column(name = "phone_number", length = 17, unique = true)
+    @Column(name = "phone_number", unique = true)
     String phoneNumber;
 
     @Column(name = "first_name", length = 100)
