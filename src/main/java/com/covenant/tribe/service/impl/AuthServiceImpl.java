@@ -160,7 +160,9 @@ public class AuthServiceImpl implements AuthService {
             sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             return newRegistrant.getId();
         } else {
-            if (registrant.getStatus() == RegistrantStatus.CONFIRMED) {
+            if (registrant.getStatus() == RegistrantStatus.CONFIRMED ||
+                    userRepository.findUserByUserEmail(registrantRequestDTO.getEmail()).isPresent()
+            ) {
                 String message = String.format("User with email: %s already exists", registrantRequestDTO.getEmail());
                 throw new UserAlreadyExistException(message);
             }
