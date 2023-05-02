@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -232,7 +233,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokensDTO loginUserWithEmail(EmailLoginDTO emailLoginDTO) {
+    public TokensDTO loginUserWithEmail(@Valid EmailLoginDTO emailLoginDTO) {
         User user = userRepository
                 .findUserByUserEmail(emailLoginDTO.getEmail())
                 .orElseThrow(() -> new UserNotFoundException(
