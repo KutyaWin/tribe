@@ -27,12 +27,12 @@ import java.util.Set;
 public class UserProfileDTO implements Serializable {
 
     @JsonProperty("bluetooth_id")
-    @NotBlank(message = "bluetooth_id should not be null or empty or empty")
+    @NotBlank(message = "bluetooth_id should not be null or empty")
     @Size(max = 100, message = "bluetooth_id must not consist of more than 100 characters")
     String bluetoothId;
 
     @Size(max = 100, message = "username must not consist of more than 100 characters")
-    @NotBlank(message = "username should not be null or empty or empty")
+    @NotBlank(message = "username should not be null or empty")
     String username;
 
     @JsonProperty("first_name")

@@ -19,15 +19,11 @@ public class UserExceptionHandler {
     public ResponseErrorDTO handleUserNotFoundException(
             RuntimeException userNotFoundException
     ) {
-        String message = String.format(
-                "User with id %s does not exist", userNotFoundException.getMessage()
-        );
-
-        log.error("[EXCEPTION] message: " + message);
+        log.error("[EXCEPTION] message: " + userNotFoundException.getMessage());
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
-                .errorMessage(List.of(message))
+                .errorMessage(List.of(userNotFoundException.getMessage()))
                 .build();
     }
 
@@ -47,7 +43,7 @@ public class UserExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseErrorDTO handleUserExistException(UsernameDataAlreadyExistException e) {
+    public ResponseErrorDTO handleUserExistException(UserAlreadyExistException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
