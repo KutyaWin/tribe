@@ -6,6 +6,7 @@ target/
 
 ### Configuration ###
 .env
+/src/main/resources/keys
 
 
 ### STS ###

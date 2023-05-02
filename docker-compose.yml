@@ -23,11 +23,13 @@ services:
       SPRING_VK_CLIENT_SECRET: ${VK_CLIENT_SECRET}
       SPRING_VK_API_VERSION: ${VK_API_VERSION}
       SPRING_VK_INTROSPECTION_URI: ${VK_INTROSPECTION_URI}
+      SPRING_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       APP_PORT: ${APP_PORT}
     ports:
       - "${APP_PORT}:${APP_PORT}"
     volumes:
       - ~/tribe:/tribe
+      - ~/tribe/logs:/home/tribe/logs
 
   db:
     image: postgis/postgis

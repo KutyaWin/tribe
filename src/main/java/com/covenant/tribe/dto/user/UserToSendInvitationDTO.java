@@ -24,7 +24,7 @@ public class UserToSendInvitationDTO {
     String userAvatar;
 
     @Size(max = 100, message = "username must not consist of more than 100 characters")
-    @NotBlank(message = "username should not be null or empty or empty")
+    @NotBlank(message = "username should not be null or empty")
     String username;
 
     @JsonProperty("first_name")

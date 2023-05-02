@@ -2,7 +2,6 @@ package com.covenant.tribe.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,13 +13,13 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TESTUserForSignUpDTO implements Serializable {
+public class UserForSignInUpDTO implements Serializable {
 
     @JsonProperty("user_id")
     String userId;
 
     @JsonProperty("bluetooth_id")
-    @NotBlank(message = "bluetooth_id should not be null or empty or empty")
+    @NotBlank(message = "bluetooth_id should not be null or empty")
     @Size(max = 100, message = "bluetooth_id must not consist of more than 100 characters")
     String bluetoothId;
 
