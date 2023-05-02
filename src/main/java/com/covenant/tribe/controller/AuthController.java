@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -146,7 +147,7 @@ public class AuthController {
     )
     @PostMapping("/registration/email/confirm")
     public ResponseEntity<?> confirmEmailRegistration(
-            @RequestBody ConfirmRegistrationDTO confirmRegistrationDTO
+            @RequestBody @Valid ConfirmRegistrationDTO confirmRegistrationDTO
     ) {
         log.info("[CONTROLLER] start endpoint confirm email with confirmRegistrationDTO {} ", confirmRegistrationDTO);
 
