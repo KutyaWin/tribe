@@ -7,6 +7,7 @@ import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.util.Set;
 
 @Service
@@ -14,7 +15,7 @@ public interface EventService {
 
     Event saveEvent(Event event);
 
-    DetailedEventInSearchDTO saveNewEvent(RequestTemplateForCreatingEventDTO eventDto);
+    DetailedEventInSearchDTO handleNewEvent(RequestTemplateForCreatingEventDTO eventDto) throws FileNotFoundException;
 
     Event getEventById(Long eventId);
 

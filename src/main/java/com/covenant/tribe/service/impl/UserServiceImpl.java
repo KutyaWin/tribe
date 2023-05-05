@@ -12,6 +12,7 @@ import com.covenant.tribe.repository.UnknownUserRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.UserRelationsWithEventService;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,17 +31,8 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     EventRepository eventRepository;
-    EventTypeRepository eventTypeRepository;
-    UnknownUserRepository unknownUserRepository;
     UserMapper userMapper;
     UserRelationsWithEventService userRelationsWithEventService;
-    @Override
-    public User findUserById(Long userId) {
-        return userRepository.findUserById(userId).orElseThrow(() -> {
-            log.error("[EXCEPTION] User with id: " + userId + " not found.");
-            return new UserNotFoundException("User with id: " + userId + " not found.");
-        });
-    }
 
     @Override
     public User findUserByUsername(String username) {
@@ -55,23 +47,30 @@ public class UserServiceImpl implements UserService {
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+        User currentUser = userRepository.findUserById(userId)
+                .orElseThrow(() -> {
+                    String message = "[EXCEPTION] User with id: " + userId + " not found.";
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
 
-        User user = findUserById(userId).getUserRelationsWithEvents().stream()
+        User user = currentUser.getUserRelationsWithEvents().stream()
                 .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
                 .findFirst()
                 .map(userRelationsWithEvent -> {
-                    userRelationsWithEvent.setFavoriteEvent(true);
+                    userRelationsWithEvent.setFavorite(true);
                     return userRelationsWithEvent.getUserRelations();
                 })
                 .orElseGet(() -> {
-                    UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
-                            .favoriteEvent(true).build();
+                    UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent
+                            .builder()
+                            .isFavorite(true).build();
                     userRelationsWithEvent.setEventRelations(eventRepository.findById(eventId)
                             .orElseThrow(() -> {
                                 log.error("[EXCEPTION] event with id {}, does not exist", eventId);
                                 return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                             }));
-                    userRelationsWithEvent.setUserRelations(findUserById(userId));
+                    userRelationsWithEvent.setUserRelations(currentUser);
                     userRelationsWithEventService.saveUserRelationsWithEvent(userRelationsWithEvent);
                     return userRelationsWithEvent.getUserRelations();
                 });
@@ -104,7 +103,7 @@ public class UserServiceImpl implements UserService {
         return findUserById(userId).getUserRelationsWithEvents().stream()
                 .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
                 .findFirst()
-                .map(UserRelationsWithEvent::isFavoriteEvent)
+                .map(UserRelationsWithEvent::isFavorite)
                 .orElse(false);
     }
 
@@ -112,9 +111,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
         return findUserById(userId).getUserRelationsWithEvents().stream()
-                .filter(UserRelationsWithEvent::isFavoriteEvent)
+                .filter(UserRelationsWithEvent::isFavorite)
                 .map(UserRelationsWithEvent::getEventRelations)
                 .toList();
+    }
+
+    private User findUserById(Long userId) {
+        return userRepository.findUserById(userId)
+                .orElseThrow(() -> {
+                    log.error("[EXCEPTION] User with id: " + userId + " not found.");
+                    return new UserNotFoundException("User with id: " + userId + " not found.");
+                });
     }
 
     @Transactional
@@ -126,7 +133,7 @@ public class UserServiceImpl implements UserService {
                 .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
                 .findFirst()
                 .map(userRelationsWithEvent -> {
-                    userRelationsWithEvent.setFavoriteEvent(false);
+                    userRelationsWithEvent.setFavorite(false);
                     return userRelationsWithEvent.getUserRelations();
                 })
                 .orElseThrow(() -> {

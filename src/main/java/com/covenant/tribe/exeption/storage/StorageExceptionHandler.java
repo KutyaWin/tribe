@@ -14,7 +14,7 @@ import java.util.List;
 @RestControllerAdvice
 public class StorageExceptionHandler {
 
-    @ExceptionHandler(FileNotSavedException.class)
+    @ExceptionHandler(FilesNotHandleException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseErrorDTO handleFileNotSavedException(RuntimeException fileNotSavedException) {
         log.error("[EXCEPTION] message: " + fileNotSavedException.getMessage());
