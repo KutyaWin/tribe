@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class PathConfiguration {
+    String home;
     String main;
     String tmp;
     String image;

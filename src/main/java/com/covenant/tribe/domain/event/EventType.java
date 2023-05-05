@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.event;
 
+import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import lombok.*;
@@ -7,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,11 +41,38 @@ public class EventType {
     @Setter(AccessLevel.PRIVATE)
     List<Event> eventListWithType = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "interestingEventType",fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "event_type_tags",
+            joinColumns = {@JoinColumn(name = "type_id", nullable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "tag_id", nullable = false)}
+    )
+    @ToString.Exclude
+    Set<Tag> tagList = new HashSet<>();
+
+    @ManyToMany(mappedBy = "interestingEventType", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     Set<User> usersWhoInterestedInEventType = new HashSet<>();
 
+    public void addTag(Tag tag) {
+        if (this.tagList == null) this.tagList = new HashSet<>();
+
+        if (!this.tagList.contains(tag)) {
+            this.tagList.add(tag);
+            tag.getEventTypesToWhichTagBelong().add(this);
+        } else {
+            String message = String.format("Tag with id: %s is already exist in taglist: %s",
+                    tag.getId(),
+                    this.tagList
+                            .stream()
+                            .map(Tag::getId)
+                            .toList()
+            );
+            log.error(message);
+            throw new AlreadyExistArgumentForAddToEntityException(message);
+        }
+    }
     public void addEvent(Event passedEvent) {
         if (this.eventListWithType == null) this.eventListWithType = new ArrayList<>();
 
@@ -64,7 +93,7 @@ public class EventType {
     }
 
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || this.getClass() != o.getClass()) return false;
 

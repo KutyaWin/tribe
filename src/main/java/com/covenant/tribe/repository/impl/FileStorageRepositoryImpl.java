@@ -2,7 +2,7 @@ package com.covenant.tribe.repository.impl;
 
 import com.covenant.tribe.configuration.PathConfiguration;
 import com.covenant.tribe.dto.ImageDTO;
-import com.covenant.tribe.exeption.storage.FileNotSavedException;
+import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.repository.FileStorageRepository;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +14,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -23,16 +26,15 @@ import java.util.UUID;
 public class FileStorageRepositoryImpl implements FileStorageRepository {
 
     PathConfiguration pathConfiguration;
-
     @Override
-    public String saveFileToTmpDir(String contentType, byte[] image) throws FileNotSavedException {
+    public String saveFileToTmpDir(String contentType, byte[] image) throws FilesNotHandleException {
         String fileName = UUID.randomUUID().toString();
         String fileExtension = contentType.split("/")[1];
-        StringBuilder pathToTmpDirBuilder = new StringBuilder() // TODO После изменения пользоватебя в docker, необходимо заменить / на ~/
-                .append("/")
+        StringBuilder pathToTmpDirBuilder = new StringBuilder(pathConfiguration.getHome()) // TODO После изменения пользоватебя в docker, необходимо заменить / на ~/
                 .append(pathConfiguration.getMain())
                 .append("/")
                 .append(pathConfiguration.getTmp());
+        System.out.println("Path for avatar is " + pathToTmpDirBuilder);
         log.info("Path for avatar is {}", pathToTmpDirBuilder);
         try {
             Files.createDirectories(Path.of(pathToTmpDirBuilder.toString()));
@@ -46,13 +48,52 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
             return fileName + "." + fileExtension;
         } catch (IOException e) {
             String message = String.format("File didn't save, because %s'", e.getMessage());
-            throw new FileNotSavedException(message);
+            log.info("Path for avatar is {}", pathToTmpDirBuilder);
+            throw new FilesNotHandleException(message);
+        }
+    }
+
+    @Override
+    public List<String> addEventImages(List<String> fileNames) throws IOException {
+        String currentDate = LocalDate.now().toString();
+        ArrayList<String> paths = new ArrayList<>();
+        String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getTmp()).toString();
+        String pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getImage()).append("/")
+                .append(pathConfiguration.getEvent()).append("/")
+                .append(pathConfiguration.getAvatar()).append("/")
+                .append(currentDate).append("/")
+                .toString();
+        System.out.println("Path to new folder is " + pathToNewFolder);
+        Files.createDirectories(Path.of(pathToNewFolder));
+
+        for (String fileName : fileNames) {
+            String pathForDb = currentDate + "/" + fileName;
+            String pathForFile = pathToNewFolder + "/" + fileName;
+            paths.add(pathForDb);
+            Files.move(
+                    Path.of(pathToTmpDir + "/" + fileName),
+                    Path.of(pathForFile));
+        }
+        return paths;
+    }
+
+    @Override
+    public void deleteUnnecessaryAvatars(List<String> fileNames) throws IOException {
+        String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getTmp()).toString();
+        for (String fileName : fileNames) {
+            Files.deleteIfExists(Path.of(pathToTmpDir + "/" + fileName));
         }
     }
 
     @Override
     public ImageDTO getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException {
-        String filePath = new StringBuilder("/")
+        String filePath = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain())
                 .append("/")
                 .append(pathConfiguration.getImage())

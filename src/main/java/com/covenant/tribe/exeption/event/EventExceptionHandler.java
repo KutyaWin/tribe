@@ -1,6 +1,7 @@
 package com.covenant.tribe.exeption.event;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
+import com.google.firebase.auth.FirebaseAuthException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +23,15 @@ public class EventExceptionHandler {
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .errorMessage(List.of(runtimeException.getMessage()))
+                .build();
+    }
+    @ExceptionHandler(MessageDidntSendException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseErrorDTO handleMessageDidntSendException(MessageDidntSendException messageDidntSendException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .errorMessage(List.of(messageDidntSendException.getMessage()))
                 .build();
     }
 }

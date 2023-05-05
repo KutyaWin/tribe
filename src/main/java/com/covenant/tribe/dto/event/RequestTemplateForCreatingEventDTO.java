@@ -3,10 +3,7 @@ package com.covenant.tribe.dto.event;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.UniqueElements;
@@ -15,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Builder
@@ -24,14 +22,9 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RequestTemplateForCreatingEventDTO implements Serializable {
 
-    @JsonProperty(value = "event_type_name")
-    @NotBlank(message = "event_type_name should not be null or empty")
-    @Size(max = 50)
-    String eventTypeName;
-
-    @JsonProperty(value = "event_photo")
-    @Size(max = 200, message = "event_photo must not consist of more than 200 characters")
-    String eventPhoto;
+    @JsonProperty(value = "event_type_id")
+    @NotBlank(message = "event_type_name should not be null or 0")
+    Long eventTypeId;
 
     @JsonProperty(value = "event_name")
     @NotBlank(message = "event_name should not be null or empty")
@@ -52,20 +45,34 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @Schema(pattern = "2023-04-19T20:30")
     LocalDateTime endTime;
 
-    @JsonProperty(value = "event_tags_names")
+    @JsonProperty(value = "new_event_tags_names")
     @UniqueElements(message = "All elements in event_tags_names must be unique")
-    Set<@Size(max = 50, message = "tag_name must not consist of more than 50 characters") String> eventTagsNames = new HashSet<>();
+    Set<@Size(max = 50, message = "tag_name must not consist of more than 50 characters") String> newEventTagNames;
+
+    @JsonProperty(value = "event_tag_ids")
+    @UniqueElements(message = "All elements in event_tags_names must be unique")
+    Set<Long> eventTagIds;
 
     @JsonProperty(value = "description")
     String description;
 
-    @JsonProperty(value = "users_who_invited")
+    @JsonProperty(value = "avatars_for_deleting")
+    List<String> avatarsForDeleting;
+
+    @JsonProperty(value = "avatars_for_adding")
+    List<String> avatarsForAdding;
+
+    @JsonProperty(value = "invited_user_ids")
     @UniqueElements(message = "All elements in users_who_invited must be unique")
-    Set<UserWhoInvitedToEventAsParticipantDTO> usersWhoInvited = new HashSet<>();
+    Set<Long> invitedUserIds;
 
     @JsonProperty(value = "show_event_in_search")
     @NotNull(message = "show_event_in_search should not be null.")
     Boolean showEventInSearch;
+
+    @JsonProperty(value = "is_private")
+    @NotNull(message = "is_private should not be null")
+    Boolean isPrivate;
 
     @JsonProperty(value = "send_to_all_users_by_interests")
     @NotNull(message = "send_to_all_users_by_interests should not be null.")
@@ -75,8 +82,7 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @NotNull(message = "eighteen_year_limit should not be null.")
     Boolean eighteenYearLimit;
 
-    @JsonProperty(value = "organizer_username")
-    @NotBlank(message = "organizer_username should not be null or empty")
-    @Size(max = 100, message = "organizer_username must not consist of more than 100 characters")
-    String organizerUsername;
+    @JsonProperty(value = "organizer_id")
+    @Min(value = 1, message = "organizer_id should be greater than 0")
+    Long organizerId;
 }
