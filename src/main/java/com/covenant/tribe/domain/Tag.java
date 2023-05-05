@@ -1,12 +1,16 @@
 package com.covenant.tribe.domain;
 
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import jakarta.persistence.*;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
@@ -29,6 +33,11 @@ public class Tag {
     @ManyToMany(mappedBy = "tagSet", fetch = FetchType.LAZY)
     @ToString.Exclude
     List<Event> eventListWithTag;
+
+    @ManyToMany(mappedBy = "tagList", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
+    Set<EventType> eventTypesToWhichTagBelong = new HashSet<>();
 
     @Override
     public boolean equals(Object o){

@@ -4,6 +4,7 @@ services:
 
   app:
     image: docker-spring-boot-postgres:latest
+    user: "${UID}:${GID}"
     network_mode: bridge
     build:
       context: .
@@ -24,12 +25,14 @@ services:
       SPRING_VK_API_VERSION: ${VK_API_VERSION}
       SPRING_VK_INTROSPECTION_URI: ${VK_INTROSPECTION_URI}
       SPRING_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SPRING_LOG_DIRECTORY: ${LOG_DIRECTORY}
+      SPRING_PARENT_DIRECTORY: ${PARENT_DIRECTORY}
       APP_PORT: ${APP_PORT}
     ports:
       - "${APP_PORT}:${APP_PORT}"
     volumes:
       - ~/tribe:/tribe
-      - ~/tribe/logs:/home/tribe/logs
+      - ~/tribe/logs:/tribe/logs
 
   db:
     image: postgis/postgis

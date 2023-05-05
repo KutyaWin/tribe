@@ -4,6 +4,7 @@ import com.covenant.tribe.domain.Tag;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public interface TagService {
@@ -15,4 +16,6 @@ public interface TagService {
     List<Tag> findTagsByTagNameContaining(String tagName);
 
     List<String> getTagsByContainingName(String tagName);
+
+    Set<Tag> getAllTagsByEventTypeId(Long eventTypeId);
 }

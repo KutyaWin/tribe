@@ -1,16 +1,20 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
-import com.covenant.tribe.exeption.user.UserNotFoundException;
+import com.covenant.tribe.exeption.event.MessageDidntSendException;
+import com.covenant.tribe.exeption.storage.FilesNotHandleException;
+import com.covenant.tribe.repository.*;
+import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.util.mapper.EventMapper;
-import com.covenant.tribe.repository.EventRepository;
-import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventService;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,7 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,20 +39,115 @@ import java.util.Set;
 public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
+    EventTypeRepository eventTypeRepository;
+    FirebaseService firebaseService;
+    FileStorageRepository fileStorageRepository;
+    UserRepository userRepository;
+    TagRepository tagRepository;
     EventMapper eventMapper;
 
     @Transactional
     @Override
-    public DetailedEventInSearchDTO saveNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
+    public DetailedEventInSearchDTO handleNewEvent(RequestTemplateForCreatingEventDTO eventDto) throws FileNotFoundException {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = eventMapper.mapToEvent(eventDto);
-        event = saveEvent(event);
+        EventType eventType = eventTypeRepository
+                .findById(eventDto.getEventTypeId())
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] Event type with id %s, dont exist", eventDto.getEventTypeId()
+                    );
+                    log.error(message);
+                    return new EventNotFoundException(message);
+                });
+
+        if (eventDto.getSendToAllUsersByInterests() && !eventDto.getIsPrivate()) {
+            List<Long> userIds = userRepository
+                    .findAllByInterestingEventType(eventType)
+                    .stream()
+                    .map(User::getId)
+                    .toList();
+            sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getEighteenYearLimit());
+        }
+        if (!eventDto.getNewEventTagNames().isEmpty()) {
+            Set<Tag> newTags = eventDto.getNewEventTagNames().stream()
+                    .map(String::toLowerCase)
+                    .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
+                    .map(tagName -> Tag.builder().tagName(tagName).build())
+                    .collect(Collectors.toSet());
+            tagRepository.saveAll(newTags);
+            eventType.getTagList().addAll(newTags);
+            eventTypeRepository.save(eventType);
+            event.getTagSet().addAll(newTags);
+        }
+
+        try {
+            fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
+            event = saveEvent(event);
+            fileStorageRepository.deleteUnnecessaryAvatars(eventDto.getAvatarsForDeleting());
+
+        } catch (NoSuchFileException e) {
+            String message = String.format("File with path %s not found", e.getMessage());
+            log.error(message);
+            throw new FileNotFoundException(message);
+        } catch (IOException e) {
+            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+            log.error(message, e);
+            throw new FilesNotHandleException(message);
+        }
+
+        sendInvitationsToUsers(
+                event.getId(),
+                eventDto.getInvitedUserIds().stream().toList(),
+                eventDto.getEighteenYearLimit()
+        );
+
         DetailedEventInSearchDTO detailedEventInSearchDTO =
                 eventMapper.mapToDetailedEventInSearchDTO(event, event.getOrganizer().getId());
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;
+    }
+
+    private void sendInvitationsToUsers(Long eventId, List<Long> userIds, boolean ageRestriction) {
+        List<String> firebaseIds = getFirebaseIds(userIds, ageRestriction);
+        String message = "Текст приглашения нужно придумать, id мероприятия лежит в поле data";
+        String title = "Gazgolder ждет тебя";
+        try {
+            firebaseService.sendNotificationsByFirebaseIds(firebaseIds, title, message, eventId);
+        } catch (FirebaseMessagingException e) {
+            String errMessage = String.format("Messages dont send because firebase return: %s", e.getMessage());
+            log.error(errMessage);
+            throw new MessageDidntSendException(errMessage);
+        }
+    }
+
+    private List<String> getFirebaseIds(List<Long> userIds, boolean ageRestriction) {
+        List<String> firebaseIds = null;
+        if (ageRestriction) {
+            Instant nowMinusEighteenYears = Instant.now().minus(18, ChronoUnit.YEARS);
+            firebaseIds = userRepository
+                    .findAllById(userIds)
+                    .stream()
+                    .filter(user -> (user
+                                    .getBirthday()
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .isBefore(nowMinusEighteenYears)
+                            )
+                                    || user.getBirthday() == null
+                    )
+                    .map(User::getFirebaseId)
+                    .toList();
+        } else {
+            firebaseIds = userRepository
+                    .findAllById(userIds)
+                    .stream()
+                    .map(User::getFirebaseId)
+                    .toList();
+        }
+        return firebaseIds;
     }
 
     @Transactional(readOnly = true)

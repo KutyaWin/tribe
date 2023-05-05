@@ -1,7 +1,18 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.domain.Tag;
+import com.covenant.tribe.dto.TagDTO;
+import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventTagDTO;
 import com.covenant.tribe.service.TagService;
+import com.covenant.tribe.util.mapper.EventTagMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @AllArgsConstructor
@@ -23,20 +35,31 @@ import java.util.List;
 public class TagController {
 
     TagService tagService;
-
+    EventTagMapper eventTagMapper;
     @Operation(
-            tags = "TagController",
-            description = "Find a tag that contains a name")
-    @GetMapping("{tagName}")
-    public ResponseEntity<?> getTagsByNameContains(@PathVariable("tagName") String tagName) {
-        log.info("[CONTROLLER] start endpoint getTagsByNameContains with param: {}", tagName);
-
-        List<String> response = tagService.getTagsByContainingName(tagName);
-
-        log.info("[CONTROLLER] end endpoint getTagsByNameContains with response: {}", response);
+            tags = "Tag",
+            description = "CreateEvent screen. Returns tags by event type id.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = TagDTO.class))))}
+    )
+    @Transactional
+    @GetMapping("/{event_type_id}")
+    public ResponseEntity<?> getAllTagsByEventTypeId(
+            @PathVariable("event_type_id") Long eventTypeId
+    ) {
+        Set<Tag> eventTags = tagService.getAllTagsByEventTypeId(eventTypeId);
+        List<EventTagDTO> eventTagDTOs = eventTags
+                .stream()
+                .map(eventTag -> eventTagMapper
+                        .mapEventTagToEventTagDTO(eventTag))
+                .toList();
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(response);
+                .body(eventTagDTOs);
     }
 
 }

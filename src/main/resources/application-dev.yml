@@ -57,13 +57,14 @@ logging:
   level:
     root: info
   file:
-    path: /home/tribe/logs
+    path: ${SPRING_LOG_DIRECTORY}
 
 # swagger
 springdoc:
   default-produces-media-type: application/json
 
 path:
+  home: ${SPRING_PARENT_DIRECTORY}
   main: tribe
   tmp: temp
   image: image
