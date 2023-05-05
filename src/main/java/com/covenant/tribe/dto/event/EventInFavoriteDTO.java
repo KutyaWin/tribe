@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Data
@@ -24,7 +25,7 @@ public class EventInFavoriteDTO {
 
     @JsonProperty(value = "event_photo")
     @Size(max = 200, message = "event_photo must not consist of more than 200 characters")
-    String eventPhoto;
+    List<String> eventPhoto;
 
     @JsonProperty(value = "event_name")
     @NotBlank(message = "event_name should not be null or empty")

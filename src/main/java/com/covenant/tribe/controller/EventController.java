@@ -1,6 +1,7 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
@@ -8,10 +9,10 @@ import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,16 +42,81 @@ public class EventController {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
-                                    schema = @Schema(implementation = DetailedEventInSearchDTO.class)))},
+                                    schema = @Schema(implementation = DetailedEventInSearchDTO.class))),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Some data is not valid, please check it.",
+                            content = @Content(
+                                    schema = @Schema(implementation = ResponseErrorDTO.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    value = "{" +
+                                                            "\"time\":\"2022-01-01T00:00:00\"," +
+                                                            "\"status\":\"400 Bad Request\"," +
+                                                            " \"error_message\":[\"string\"]" +
+                                                            "}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Some data is not found.",
+                            content = @Content(
+                                    schema = @Schema(implementation = ResponseErrorDTO.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    value = "{" +
+                                                            "\"time\":\"2022-01-01T00:00:00\"," +
+                                                            "\"status\":\"404 Not Found\"," +
+                                                            " \"error_message\":[\"string\"]" +
+                                                            "}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "Some data is not unique, duplicate, or not valid.",
+                            content = @Content(
+                                    schema = @Schema(implementation = ResponseErrorDTO.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    value = "{" +
+                                                            "\"time\":\"2022-01-01T00:00:00\"," +
+                                                            "\"status\":\"409 Conflict\"," +
+                                                            " \"error_message\":[\"string\"]" +
+                                                            "}"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Error in server.",
+                            content = @Content(
+                                    schema = @Schema(implementation = ResponseErrorDTO.class),
+                                    examples = {
+                                            @ExampleObject(
+                                                    value = "{" +
+                                                            "\"time\":\"2022-01-01T00:00:00\"," +
+                                                            "\"status\":\"500 Internal Server Error\"," +
+                                                            " \"error_message\":[\"string\"]" +
+                                                            "}"
+                                            )
+                                    }
+                            )
+                    ),
+            },
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PostMapping
     public ResponseEntity<?> createEvent(
-            @RequestBody @Valid RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
-    ) {
+            @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
+    ) throws FileNotFoundException {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 
-        DetailedEventInSearchDTO response = eventService.saveNewEvent(requestTemplateForCreatingEventDTO);
+        DetailedEventInSearchDTO response = eventService.handleNewEvent(requestTemplateForCreatingEventDTO);
 
         log.info("[CONTROLLER] end endpoint createEvent with response: {}", response);
         return ResponseEntity
@@ -62,10 +128,10 @@ public class EventController {
             tags = "Event",
             description = "CardBig screen. Get a event by event_id and user_id.",
             responses = {
-            @ApiResponse(
-                    responseCode = "200",
-                    content = @Content(
-                            schema = @Schema(implementation = DetailedEventInSearchDTO.class)))})
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = DetailedEventInSearchDTO.class)))})
     @GetMapping("/{event_id}")
     public ResponseEntity<?> getEventById(
             @PathVariable("event_id") String eventId,

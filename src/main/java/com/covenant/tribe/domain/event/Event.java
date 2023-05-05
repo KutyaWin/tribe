@@ -24,7 +24,12 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "events")
+@Table(
+        name = "events",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"event_name", "start_time", "organizer_id"}
+        )
+)
 public class Event {
 
     @Id
@@ -57,8 +62,8 @@ public class Event {
     @Column(name = "end_time", nullable = false)
     LocalDateTime endTime;
 
-    @Column(name = "event_avatar", length = 200)
-    String eventAvatar;
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    Set<EventAvatar> eventAvatars = new HashSet<>();
 
     @Column(name = "show_event_in_search", nullable = false)
     boolean showEventInSearch;
@@ -68,6 +73,9 @@ public class Event {
 
     @Column(name = "eighteen_year_limit", nullable = false)
     boolean eighteenYearLimit;
+
+    @Column(name = "is_private", nullable = false)
+    boolean isPrivate;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type")
@@ -81,16 +89,31 @@ public class Event {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
-    Set<Tag> tagSet = new HashSet<>();
+    List<Tag> tagSet = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "eventRelations",
             fetch = FetchType.LAZY,
-            orphanRemoval = true
+            cascade = CascadeType.PERSIST
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     List<UserRelationsWithEvent> eventRelationsWithUser = new ArrayList<>();
+
+    public void addEventAvatar(EventAvatar eventAvatar) {
+        if (this.eventAvatars == null) this.eventAvatars = new HashSet<>();
+        if (!this.eventAvatars.contains(eventAvatar)) {
+            this.eventAvatars.add(eventAvatar);
+            eventAvatar.setEvent(this);
+        } else {
+            String message = String.format(
+                    "There's already a passed event avatar in the event. Event eventAvatars: %s. Passed eventAvatar: %s",
+                    eventAvatars.stream().map(EventAvatar::getId).toList(),
+                    eventAvatar.getId());
+            log.error(String.format(message));
+            throw new AlreadyExistArgumentForAddToEntityException(message);
+        }
+    }
 
     public void addEventRelationsWithUser(UserRelationsWithEvent userRelationsWithEvent) {
         if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
@@ -115,15 +138,13 @@ public class Event {
             );
         }
     }
-
     public void addEventsRelationsWithUsers(List<UserRelationsWithEvent> userRelationsWithEvents) {
         if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
-
         userRelationsWithEvents.forEach(this::addEventRelationsWithUser);
     }
 
     public void addTag(Tag tag) {
-        if (this.tagSet == null) this.tagSet = new HashSet<>();
+        if (this.tagSet == null) this.tagSet = new ArrayList<>();
 
         if (!this.tagSet.contains(tag)) {
             this.tagSet.add(tag);
@@ -141,14 +162,13 @@ public class Event {
         }
     }
 
-    public void addTagSet(Set<Tag> passedTags) {
-        if (this.tagSet == null) this.tagSet = new HashSet<>();
-
+    public void addTagList(List<Tag> passedTags) {
+        if (this.tagSet == null) this.tagSet = new ArrayList<>();
         passedTags.forEach(this::addTag);
     }
 
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || this.getClass() != o.getClass()) return false;
 

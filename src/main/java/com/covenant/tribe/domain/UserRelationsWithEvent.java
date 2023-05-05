@@ -2,12 +2,12 @@ package com.covenant.tribe.domain;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.domain.user.UserStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import jakarta.persistence.*;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -25,16 +25,20 @@ public class UserRelationsWithEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "user_status", nullable = false)
-    @Builder.Default
-    UserStatus userStatus = UserStatus.NONE;
+    @Column(name = "is_invited", nullable = false)
+    boolean isInvited;
 
-    @Column(name = "favorite_event", nullable = false)
-    boolean favoriteEvent;
+    @Column(name ="is_participant", nullable = false)
+    boolean isParticipant;
 
-    @Column(name = "viewed_event", nullable = false)
-    boolean viewedEvent;
+    @Column(name = "is_want_to_go", nullable = false)
+    boolean isWantToGo;
+
+    @Column(name = "is_favorite", nullable = false)
+    boolean isFavorite;
+
+    @Column(name = "is_viewed", nullable = false)
+    boolean isViewed;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)

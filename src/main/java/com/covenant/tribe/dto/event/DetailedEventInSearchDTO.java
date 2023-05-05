@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Builder
@@ -28,7 +29,7 @@ public class DetailedEventInSearchDTO {
 
     @JsonProperty(value = "event_photo")
     @Size(max = 200, message = "event_photo must not consist of more than 200 characters")
-    String eventPhoto;
+    List<String> eventPhoto;
 
     @JsonProperty(value = "favorite_event")
     @NotNull(message = "favorite_event should not be null")

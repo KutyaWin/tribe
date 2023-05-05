@@ -2,6 +2,8 @@ package com.covenant.tribe.exeption;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.NestedExceptionUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -44,6 +46,18 @@ public class CustomExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .errorMessage(List.of(message))
+                .build();
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleDataIntegrityException(DataIntegrityViolationException e) {
+        String message = NestedExceptionUtils.getMostSpecificCause(e).getMessage();
+        log.error("[EXCEPTION] message: " + message);
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.CONFLICT)
                 .errorMessage(List.of(message))
                 .build();
     }

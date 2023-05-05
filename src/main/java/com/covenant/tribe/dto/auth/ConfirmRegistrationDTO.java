@@ -2,6 +2,8 @@ package com.covenant.tribe.dto.auth;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -13,11 +15,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConfirmRegistrationDTO {
 
-    @NotBlank(message = "registrantId should not be null or empty")
+    @Min(value = 1, message = "registrantId should be at least 1")
     @JsonProperty(value = "registrant_id")
     Long registrantId;
 
-    @NotBlank(message = "verificationCode should not be null or empty")
+    @Min(value = 1000, message = "verificationCode should be at least 1000")
+    @Max(value = 9999, message = "verificationCode should be at most 9999")
     @JsonProperty(value = "verification_code")
     Integer verificationCode;
 
