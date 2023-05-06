@@ -14,8 +14,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -81,6 +83,45 @@ public class AuthController {
                 .body(tokensDTO);
     }
 
+    @Operation(
+            tags = "Auth",
+            description = "Reset password screen. Send new password to email",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "205"
+                    )
+            }
+    )
+    @PutMapping("/email/password/reset")
+    public ResponseEntity<?> resetPassword(
+        @RequestBody @Valid ResetPasswordDTO resetPasswordDTO
+    ) {
+        log.info("[CONTROLLER] start endpoint resetPassword with resetPasswordDTO: {}", resetPasswordDTO);
+        authService.resetPassword(resetPasswordDTO);
+        log.info("[CONTROLLER] end endpoint resetPassword");
+        return new ResponseEntity<>(HttpStatus.RESET_CONTENT);
+
+    }
+
+    @Operation(
+            tags = "Auth",
+            description = "Screen when user changed password. Change password",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201"
+                    )
+            }
+    )
+    @PreAuthorize("#changePasswordDTO.userId.toString().equals(authentication.getName())")
+    @PutMapping("/email/password/change")
+    public ResponseEntity<?> changePassword(
+            @RequestBody @Valid ChangePasswordDTO changePasswordDTO
+    ) {
+        log.info("[CONTROLLER] start endpoint changePassword with changePasswordDTO: {}", changePasswordDTO);
+        authService.changePassword(changePasswordDTO);
+        log.info("[CONTROLLER] end endpoint changePassword");
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
 
     @Operation(
             tags = "Auth",
