@@ -5,7 +5,6 @@ import com.covenant.tribe.dto.event.EventTypeDTO;
 import com.covenant.tribe.exeption.event.EventTypeNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.service.EventTypeService;
-import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.mapper.EventTypeMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +34,20 @@ public class EventTypeServiceImpl implements EventTypeService {
     }
 
     @Override
-    public List<EventTypeDTO> getAllEventTypes() {
+    public List<EventTypeDTO> getAllRectangleEventTypes(boolean isDark) {
         List<EventType> eventTypes = eventTypeRepository.findAll();
-        return eventTypeMapper.mapToEventTypeDTOList(eventTypes);
+        if (isDark) {
+            return eventTypeMapper.mapToDarkRectangleEventTypeDTOList(eventTypes);
+        }
+        return eventTypeMapper.mapToLightRectangleEventTypeDTOList(eventTypes);
+    }
+
+    @Override
+    public List<EventTypeDTO> getAllCircleEventTypes(boolean isDark) {
+        List<EventType> eventTypes = eventTypeRepository.findAll();
+        if (isDark) {
+            return eventTypeMapper.maptoDarkCircleEventTypeDTOList(eventTypes);
+        }
+        return eventTypeMapper.mapToLightCircleEventTypeDTOList(eventTypes);
     }
 }
