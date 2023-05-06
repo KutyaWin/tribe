@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -80,6 +81,26 @@ public class AuthController {
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
     }
+
+    @Operation(
+            tags = "Auth",
+            description = "Reset password screen. Send new password to email",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            }
+    )
+    @PutMapping("/email/password/reset")
+    public ResponseEntity<?> resetPassword(
+        @RequestBody @Valid ResetPasswordDTO resetPasswordDTO
+    ) {
+        log.info("[CONTROLLER] start endpoint resetPassword with resetPasswordDTO: {}", resetPasswordDTO);
+        authService.resetPassword(resetPasswordDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
+
 
 
     @Operation(

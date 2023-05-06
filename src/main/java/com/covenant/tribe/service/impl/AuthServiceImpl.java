@@ -9,10 +9,7 @@ import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.RegistrantStatus;
 import com.covenant.tribe.domain.user.UnknownUser;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
-import com.covenant.tribe.dto.auth.EmailLoginDTO;
-import com.covenant.tribe.dto.auth.TokensDTO;
-import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
+import com.covenant.tribe.dto.auth.*;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.exeption.auth.*;
 import com.covenant.tribe.exeption.user.UserAlreadyExistException;
@@ -66,6 +63,9 @@ public class AuthServiceImpl implements AuthService {
     private final String FROM_EMAIL = "tribe@tribual.ru";
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
     private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
+
+    private final Integer MIN_VALUE_FOR_PASSWORD = 1000;
+    private final Integer MAX_VALUE_FOR_PASSWORD = 9999;
 
     RegistrantRepository registrantRepository;
     PasswordEncoder encoder;
@@ -251,10 +251,34 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private void sendEmail(String subject, String message, String registrantEmail) {
+    @Override
+    public void resetPassword(ResetPasswordDTO resetPasswordDTO) {
+        User user = userRepository
+                .findUserByUserEmail(resetPasswordDTO.getEmail())
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User with email: %s, does not exist", resetPasswordDTO.getEmail())
+                ));
+        int newPassword = generateNewPassword();
+        String title = "Новый пароль";
+        String message = String
+                .format(
+                        "Ваш новый пароль: %s, не забудьте изменить его после входа в приложение",
+                        newPassword
+                );
+        sendEmail(title, message, resetPasswordDTO.getEmail());
+        user.setPassword(encoder.encode(String.valueOf(newPassword)));
+        userRepository.save(user);
+    }
+
+    private int generateNewPassword() {
+        return new Random()
+                .nextInt(MAX_VALUE_FOR_PASSWORD - MIN_VALUE_FOR_PASSWORD) + MIN_VALUE_FOR_PASSWORD;
+    }
+
+    private void sendEmail(String subject, String message, String email) {
         SimpleMailMessage mailMsg = new SimpleMailMessage();
         mailMsg.setFrom(FROM_EMAIL);
-        mailMsg.setTo(registrantEmail);
+        mailMsg.setTo(email);
         mailMsg.setSubject(subject);
         mailMsg.setText(message);
         mailSender.send(mailMsg);
