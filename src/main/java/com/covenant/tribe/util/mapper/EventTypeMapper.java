@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface EventTypeMapper {
 
-    List<EventTypeDTO> mapToEventTypeDTOList(List<EventType> eventTypeList);
+    List<EventTypeDTO> mapToLightRectangleEventTypeDTOList(List<EventType> eventTypeList);
+    List<EventTypeDTO> mapToLightCircleEventTypeDTOList(List<EventType> eventTypeList);
+    List<EventTypeDTO> mapToDarkRectangleEventTypeDTOList(List<EventType> eventTypeList);
+    List<EventTypeDTO> maptoDarkCircleEventTypeDTOList(List<EventType> eventTypeList);
 }

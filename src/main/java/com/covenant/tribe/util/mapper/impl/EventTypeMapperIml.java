@@ -19,14 +19,53 @@ import java.util.stream.Collectors;
 public class EventTypeMapperIml implements EventTypeMapper {
 
     @Override
-    public List<EventTypeDTO> mapToEventTypeDTOList(List<EventType> eventTypeList) {
-        log.debug("map EventTypeList to EventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
+    public List<EventTypeDTO> mapToLightRectangleEventTypeDTOList(List<EventType> eventTypeList) {
+        log.debug("map LightRectangleEventTypeList to LightRectangleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
 
         return eventTypeList.stream()
                 .map(eventType -> EventTypeDTO.builder()
                         .id(eventType.getId())
                         .typeName(eventType.getTypeName())
-                        .animationJson(eventType.getAnimationJson())
+                        .animationJson(eventType.getLightRectangleAnimation())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventTypeDTO> mapToLightCircleEventTypeDTOList(List<EventType> eventTypeList) {
+        log.debug("map LightCircleEventTypeList to LightCircleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
+
+        return eventTypeList.stream()
+                .map(eventType -> EventTypeDTO.builder()
+                        .id(eventType.getId())
+                        .typeName(eventType.getTypeName())
+                        .animationJson(eventType.getLightCircleAnimation())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventTypeDTO> mapToDarkRectangleEventTypeDTOList(List<EventType> eventTypeList) {
+        log.debug("map DarkRectangleEventTypeList to DarkRectangleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
+
+        return eventTypeList.stream()
+                .map(eventType -> EventTypeDTO.builder()
+                        .id(eventType.getId())
+                        .typeName(eventType.getTypeName())
+                        .animationJson(eventType.getDarkRectangleAnimation())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventTypeDTO> maptoDarkCircleEventTypeDTOList(List<EventType> eventTypeList) {
+        log.debug("map DarkCircleEventTypeList to DarkCircleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
+
+        return eventTypeList.stream()
+                .map(eventType -> EventTypeDTO.builder()
+                        .id(eventType.getId())
+                        .typeName(eventType.getTypeName())
+                        .animationJson(eventType.getDarkCircleAnimation())
                         .build())
                 .collect(Collectors.toList());
     }

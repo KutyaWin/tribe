@@ -33,8 +33,17 @@ public class EventType {
     @Column(name = "type_name", nullable = false, length = 50, unique = true)
     String typeName;
 
-    @Column(columnDefinition = "TEXT", name = "animation_json")
-    String animationJson;
+    @Column(columnDefinition = "TEXT", name = "light_circle_animation")
+    String lightCircleAnimation;
+
+    @Column(columnDefinition = "TEXT", name = "dark_circle_animation")
+    String darkCircleAnimation;
+
+    @Column(columnDefinition = "TEXT", name = "light_rectangle_animation")
+    String lightRectangleAnimation;
+
+    @Column(columnDefinition = "TEXT", name = "dark_rectangle_animation")
+    String darkRectangleAnimation;
 
     @OneToMany(mappedBy = "eventType", fetch = FetchType.LAZY)
     @ToString.Exclude

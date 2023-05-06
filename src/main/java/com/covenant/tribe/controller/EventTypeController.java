@@ -12,9 +12,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,21 +27,39 @@ public class EventTypeController {
 
     @Operation(
             tags = "EventType",
-            description = "Like me screen. Get all event types.",
+            description = "Like me screen. Get all dark all light rectangle event types.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
                                     schema = @Schema(implementation = EventTypeDTO.class)))}
     )
-    @GetMapping("/event/type")
-    public ResponseEntity<?> getAllEventTypes() {
-        List<EventTypeDTO> eventTypeDTOs = eventTypeService.getAllEventTypes();
+    @GetMapping("/event/type/rectangle")
+    public ResponseEntity<?> getRectangleEventTypes(
+            @RequestParam(value = "is_dark") boolean isDark
+    ) {
+        List<EventTypeDTO> eventTypeDTOs = eventTypeService.getAllRectangleEventTypes(isDark);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventTypeDTOs);
     }
 
-    //todo: fetch all tags by event type name
-
+    @Operation(
+            tags = "EventType",
+            description = "Screen: создание события. Get all dark or light circle event types.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = EventTypeDTO.class)))}
+    )
+    @GetMapping("/event/type/circle")
+    public ResponseEntity<?> getCircleEventTypes(
+            @RequestParam(value = "is_dark") boolean isDark
+    ) {
+        List<EventTypeDTO> eventTypeDTOs = eventTypeService.getAllCircleEventTypes(isDark);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(eventTypeDTOs);
+    }
 }
