@@ -112,6 +112,7 @@ public class EventServiceImpl implements EventService {
 
     private void sendInvitationsToUsers(Long eventId, List<Long> userIds, boolean ageRestriction) {
         List<String> firebaseIds = getFirebaseIds(userIds, ageRestriction);
+        if (firebaseIds.isEmpty()) return;
         String message = "Текст приглашения нужно придумать, id мероприятия лежит в поле data";
         String title = "Gazgolder ждет тебя";
         try {
