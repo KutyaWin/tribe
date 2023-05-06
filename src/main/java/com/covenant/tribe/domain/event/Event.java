@@ -63,6 +63,7 @@ public class Event {
     LocalDateTime endTime;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ToString.Exclude
     Set<EventAvatar> eventAvatars = new HashSet<>();
 
     @Column(name = "show_event_in_search", nullable = false)
@@ -146,9 +147,12 @@ public class Event {
     public void addTag(Tag tag) {
         if (this.tagSet == null) this.tagSet = new ArrayList<>();
 
-        if (!this.tagSet.contains(tag)) {
+        if (this.tagSet.stream()
+                .noneMatch(t -> t.getTagName().equals(tag.getTagName()))) {
+
             this.tagSet.add(tag);
             tag.getEventListWithTag().add(this);
+
         } else {
             log.error(
                     String.format("There's already a passed tag in the event tagSet." +
@@ -163,7 +167,9 @@ public class Event {
     }
 
     public void addTagList(List<Tag> passedTags) {
+
         if (this.tagSet == null) this.tagSet = new ArrayList<>();
+
         passedTags.forEach(this::addTag);
     }
 
