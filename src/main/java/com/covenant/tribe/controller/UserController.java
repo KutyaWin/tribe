@@ -63,9 +63,12 @@ public class UserController {
                 .build();
     }
 
-    @DeleteMapping("/favorite")
-    public ResponseEntity<?> deleteEventFromFavorites(@RequestBody UserFavoriteEventDTO userFavoriteEventDTO) {
-        userService.removeEventFromFavorite(userFavoriteEventDTO.getUserId(), userFavoriteEventDTO.getEventId());
+    @DeleteMapping("/favorite/{user_id}/{event_id}")
+    public ResponseEntity<?> deleteEventFromFavorites(
+            @PathVariable(value = "user_id") Long userId,
+            @PathVariable(value = "event_id") Long eventId
+    ) {
+        userService.removeEventFromFavorite(userId, eventId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
