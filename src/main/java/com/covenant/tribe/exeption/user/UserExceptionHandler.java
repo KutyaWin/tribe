@@ -28,20 +28,6 @@ public class UserExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseErrorDTO handleMethodArgNotValidException(MethodArgumentNotValidException ex) {
-        List<String> errorList = ex.getBindingResult().getFieldErrors().stream()
-                .map(fE -> fE.getDefaultMessage()).toList();
-
-        log.error("[EXCEPTION] message: " + errorList);
-
-        return ResponseErrorDTO.builder()
-                .status(HttpStatus.BAD_REQUEST)
-                .errorMessage(errorList)
-                .build();
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseErrorDTO handleUserExistException(UserAlreadyExistException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());

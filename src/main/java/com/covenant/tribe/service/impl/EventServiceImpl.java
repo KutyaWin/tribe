@@ -7,6 +7,7 @@ import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
+import com.covenant.tribe.exeption.event.EventAlreadyExistException;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.event.MessageDidntSendException;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
@@ -48,7 +49,7 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public DetailedEventInSearchDTO handleNewEvent(RequestTemplateForCreatingEventDTO eventDto) throws FileNotFoundException {
+    public DetailedEventInSearchDTO handleNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = eventMapper.mapToEvent(eventDto);
@@ -70,32 +71,40 @@ public class EventServiceImpl implements EventService {
                     .toList();
             sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getEighteenYearLimit());
         }
+
         if (!eventDto.getNewEventTagNames().isEmpty()) {
+
             Set<Tag> newTags = eventDto.getNewEventTagNames().stream()
                     .map(String::toLowerCase)
                     .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
                     .map(tagName -> Tag.builder().tagName(tagName).build())
                     .collect(Collectors.toSet());
             tagRepository.saveAll(newTags);
-            eventType.getTagList().addAll(newTags);
+            eventType.addTags(newTags);
             eventTypeRepository.save(eventType);
-            event.getTagSet().addAll(newTags);
+            event.addTagList(newTags.stream().toList());
         }
 
-        try {
-            fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
-            event = saveEvent(event);
-            fileStorageRepository.deleteUnnecessaryAvatars(eventDto.getAvatarsForDeleting());
-
-        } catch (NoSuchFileException e) {
-            String message = String.format("File with path %s not found", e.getMessage());
-            log.error(message);
-            throw new FileNotFoundException(message);
-        } catch (IOException e) {
-            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
-            log.error(message, e);
-            throw new FilesNotHandleException(message);
+        if (!eventDto.getAvatarsForAdding().isEmpty()) {
+            try {
+                fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
+            } catch (IOException e) {
+                String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+                log.error(message, e);
+                throw new FilesNotHandleException(message);
+            }
         }
+        if (!eventDto.getAvatarsForDeleting().isEmpty()) {
+            try {
+                fileStorageRepository.deleteUnnecessaryAvatars(eventDto.getAvatarsForDeleting());
+            } catch (IOException e) {
+                String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+                log.error(message, e);
+                throw new FilesNotHandleException(message);
+            }
+        }
+
+        event = saveEvent(event, event.getOrganizer().getId());
 
         sendInvitationsToUsers(
                 event.getId(),
@@ -164,8 +173,17 @@ public class EventServiceImpl implements EventService {
         return detailedEventInSearchDTO;
     }
 
-    public Event saveEvent(Event event) {
-        return eventRepository.save(event);
+    public Event saveEvent(Event event, Long organizerId) {
+        if (eventRepository.findByEventNameAndStartTimeAndOrganizerId(
+                event.getEventName(), event.getStartTime(), organizerId).isEmpty()) {
+
+            return eventRepository.save(event);
+        } else {
+            String message = String.format(
+                    "[EXCEPTION] Event with name %s and start time %s already exist",
+                    event.getEventName(), event.getStartTime());
+            throw new EventAlreadyExistException(message);
+        }
     }
 
     @Override

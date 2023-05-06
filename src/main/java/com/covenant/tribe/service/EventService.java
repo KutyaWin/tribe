@@ -13,7 +13,7 @@ import java.util.Set;
 @Service
 public interface EventService {
 
-    Event saveEvent(Event event);
+    Event saveEvent(Event event, Long organizerId);
 
     DetailedEventInSearchDTO handleNewEvent(RequestTemplateForCreatingEventDTO eventDto) throws FileNotFoundException;
 
