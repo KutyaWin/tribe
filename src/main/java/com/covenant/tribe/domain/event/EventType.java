@@ -57,6 +57,7 @@ public class EventType {
             inverseJoinColumns = {@JoinColumn(name = "tag_id", nullable = false)}
     )
     @ToString.Exclude
+    @Setter(AccessLevel.PRIVATE)
     Set<Tag> tagList = new HashSet<>();
 
     @ManyToMany(mappedBy = "interestingEventType", fetch = FetchType.LAZY)
@@ -67,9 +68,12 @@ public class EventType {
     public void addTag(Tag tag) {
         if (this.tagList == null) this.tagList = new HashSet<>();
 
-        if (!this.tagList.contains(tag)) {
+        if (this.tagList.stream()
+                .noneMatch(t -> t.getTagName().equals(tag.getTagName()))) {
+
             this.tagList.add(tag);
             tag.getEventTypesToWhichTagBelong().add(this);
+
         } else {
             String message = String.format("Tag with id: %s is already exist in taglist: %s",
                     tag.getId(),
@@ -82,6 +86,12 @@ public class EventType {
             throw new AlreadyExistArgumentForAddToEntityException(message);
         }
     }
+    public void addTags(Set<Tag> tags) {
+        if (this.tagList == null) this.tagList = new HashSet<>();
+
+        tags.forEach(this::addTag);
+    }
+
     public void addEvent(Event passedEvent) {
         if (this.eventListWithType == null) this.eventListWithType = new ArrayList<>();
 

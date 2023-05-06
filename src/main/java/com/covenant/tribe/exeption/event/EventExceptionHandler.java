@@ -34,4 +34,14 @@ public class EventExceptionHandler {
                 .errorMessage(List.of(messageDidntSendException.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(EventAlreadyExistException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleEventAlreadyExistException(EventAlreadyExistException eventAlreadyExistException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(eventAlreadyExistException.getMessage()))
+                .build();
+    }
 }

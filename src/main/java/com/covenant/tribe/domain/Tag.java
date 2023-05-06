@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,11 +33,13 @@ public class Tag {
 
     @ManyToMany(mappedBy = "tagSet", fetch = FetchType.LAZY)
     @ToString.Exclude
-    List<Event> eventListWithTag;
+    @Builder.Default
+    List<Event> eventListWithTag = new ArrayList<>();
 
     @ManyToMany(mappedBy = "tagList", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     Set<EventType> eventTypesToWhichTagBelong = new HashSet<>();
 
     @Override
