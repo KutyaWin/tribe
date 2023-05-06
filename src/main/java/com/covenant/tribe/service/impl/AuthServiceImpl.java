@@ -270,6 +270,20 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
     }
 
+    @Override
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+        User user = userRepository
+                .findById(changePasswordDTO.getUserId())
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User with id: %s, does not exist", changePasswordDTO.getUserId())
+                ));
+        if (!encoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Credentials is wrong");
+        }
+        user.setPassword(encoder.encode(changePasswordDTO.getNewPassword()));
+        userRepository.save(user);
+    }
+
     private int generateNewPassword() {
         return new Random()
                 .nextInt(MAX_VALUE_FOR_PASSWORD - MIN_VALUE_FOR_PASSWORD) + MIN_VALUE_FOR_PASSWORD;
