@@ -17,6 +17,7 @@ import com.covenant.tribe.service.EventService;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,8 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
-import java.time.Instant;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
@@ -127,18 +127,20 @@ public class EventServiceImpl implements EventService {
     private List<String> getFirebaseIds(List<Long> userIds, boolean ageRestriction) {
         List<String> firebaseIds = null;
         if (ageRestriction) {
-            Instant nowMinusEighteenYears = Instant.now().minus(18, ChronoUnit.YEARS);
+            ZonedDateTime nowMinusEighteenYears = Instant.now().atZone(ZoneId.systemDefault()).minusYears(18);
+
             firebaseIds = userRepository
                     .findAllById(userIds)
                     .stream()
-                    .filter(user -> (user
-                                    .getBirthday()
+                    .filter(user -> {
+                        if (user.getBirthday() != null) {
+                            return user.getBirthday()
                                     .atStartOfDay(ZoneId.systemDefault())
-                                    .toInstant()
-                                    .isBefore(nowMinusEighteenYears)
-                            )
-                                    || user.getBirthday() == null
-                    )
+                                    .isBefore(nowMinusEighteenYears);
+                        } else {
+                            return true;
+                        }
+                    })
                     .map(User::getFirebaseId)
                     .toList();
         } else {
