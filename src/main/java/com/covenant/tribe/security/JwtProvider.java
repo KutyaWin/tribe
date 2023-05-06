@@ -63,6 +63,7 @@ public class JwtProvider {
                 .signWith(privateKey, algorithm)
                 .compact();
     }
+
     public String generateRefreshToken(@NonNull Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         SignatureAlgorithm algorithm = SignatureAlgorithm.RS256;
         PrivateKey privateKey = keysReader.getPrivateKey(refreshPrivateKeyPath);
@@ -77,6 +78,7 @@ public class JwtProvider {
                 .signWith(privateKey, algorithm)
                 .compact();
     }
+
     public Claims getAccessTokenClaims(@NonNull String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         RSAPublicKey publicKey = keysReader.getPublicKey(accessPublicKeyPath);
         String tokenWithoutBearerStr = token.substring(7);

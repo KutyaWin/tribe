@@ -13,7 +13,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserForSignInUpDTO implements Serializable {
+public class  UserForSignInUpDTO implements Serializable {
 
     @JsonProperty("user_id")
     String userId;
@@ -27,6 +27,8 @@ public class UserForSignInUpDTO implements Serializable {
     @NotBlank(message = "firebase_id should not be null or empty")
     @Size(max = 100, message = "firebase_id must not consist of more than 100 characters")
     String firebaseId;
+
+    //todo username
 
     @Size(max = 50, message = "Email must not consist of more than 50 characters")
     String email;
