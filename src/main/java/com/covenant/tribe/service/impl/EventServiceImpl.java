@@ -95,8 +95,6 @@ public class EventServiceImpl implements EventService {
             throw new FilesNotHandleException(message);
         }
 
-        event = saveEvent(event, event.getOrganizer().getId());
-
         sendInvitationsToUsers(
                 event.getId(),
                 eventDto.getInvitedUserIds().stream().toList(),
