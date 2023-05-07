@@ -7,7 +7,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import jakarta.persistence.*;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)

@@ -2,7 +2,6 @@ package com.covenant.tribe.domain;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
-import com.covenant.tribe.domain.user.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

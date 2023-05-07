@@ -85,26 +85,15 @@ public class EventServiceImpl implements EventService {
             event.addTagList(newTags.stream().toList());
         }
 
-        if (!eventDto.getAvatarsForAdding().isEmpty()) {
-            try {
-                fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
-            } catch (IOException e) {
-                String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
-                log.error(message, e);
-                throw new FilesNotHandleException(message);
-            }
+        try {
+            fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
+            event = saveEvent(event, event.getOrganizer().getId());
+            fileStorageRepository.deleteUnnecessaryAvatars(eventDto.getAvatarsForDeleting());
+        } catch (IOException e) {
+            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+            log.error(message, e);
+            throw new FilesNotHandleException(message);
         }
-        if (!eventDto.getAvatarsForDeleting().isEmpty()) {
-            try {
-                fileStorageRepository.deleteUnnecessaryAvatars(eventDto.getAvatarsForDeleting());
-            } catch (IOException e) {
-                String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
-                log.error(message, e);
-                throw new FilesNotHandleException(message);
-            }
-        }
-
-        event = saveEvent(event, event.getOrganizer().getId());
 
         sendInvitationsToUsers(
                 event.getId(),
