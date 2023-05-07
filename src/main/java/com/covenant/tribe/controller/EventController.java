@@ -129,7 +129,7 @@ public class EventController {
 
     @Operation(
             tags = "Event",
-            description = "CardBig screen. Get a event by event_id and user_id.",
+            description = "CardBig screen. Get an event by event_id and user_id.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -161,13 +161,23 @@ public class EventController {
                 .build();
     }
 
+    @Operation(
+            tags = "Event",
+            description = "Screen: Наполнение события. Add event avatar to tmp folder.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            content = @Content(
+                                    schema = @Schema(implementation = TempFileDTO.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
     @PostMapping("/avatars")
     public ResponseEntity<?> addEventAvatarToTempDirectory(
             @RequestBody ImageDTO imageDTO
     ) {
         String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
         return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
+                .status(HttpStatus.CREATED)
                 .body(new TempFileDTO(uniqueTempFileName));
     }
 
