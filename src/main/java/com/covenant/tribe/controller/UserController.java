@@ -6,6 +6,7 @@ import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -37,13 +38,17 @@ public class UserController {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
-                                    schema = @Schema(implementation = UserToSendInvitationDTO.class)))})
-    @GetMapping
-    public ResponseEntity<?> findUserByUsernameForSendInvite(@RequestParam(value = "username") String username) {
-        log.info("[CONTROLLER] start endpoint findUserByUsernameForSendInvite with param: {}", username);
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserToSendInvitationDTO.class))))}
+    )
+    @GetMapping("/username/partial/{username}")
+    public ResponseEntity<?> findUserByUsernameForSendInvite(
+            @PathVariable(value = "username") String partialUsername
+    ) {
+        log.info("[CONTROLLER] start endpoint findUserByUsernameForSendInvite with param: {}", partialUsername);
 
-        UserToSendInvitationDTO responseUser =
-                userService.findUserByUsernameForSendInvite(username);
+        List<UserToSendInvitationDTO> responseUser =
+                userService.findUserByUsernameForSendInvite(partialUsername);
 
         log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite with response: {}", responseUser);
         return ResponseEntity
