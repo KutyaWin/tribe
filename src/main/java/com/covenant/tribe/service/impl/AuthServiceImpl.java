@@ -4,6 +4,7 @@ import com.covenant.tribe.client.dto.VkValidationErrorDTO;
 import com.covenant.tribe.client.dto.VkValidationResponseDTO;
 import com.covenant.tribe.client.vk.VkClient;
 import com.covenant.tribe.client.vk.VkValidationParams;
+import com.covenant.tribe.domain.auth.ResetCodes;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.RegistrantStatus;
@@ -14,10 +15,7 @@ import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.exeption.auth.*;
 import com.covenant.tribe.exeption.user.UserAlreadyExistException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.repository.EventTypeRepository;
-import com.covenant.tribe.repository.RegistrantRepository;
-import com.covenant.tribe.repository.UnknownUserRepository;
-import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.repository.*;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.AuthService;
 import com.covenant.tribe.util.mapper.RegistrantMapper;
@@ -76,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
     UserRepository userRepository;
     UserMapper userMapper;
     UnknownUserRepository unknownUserRepository;
+    ResetCodeRepository resetCodeRepository;
     EventTypeRepository eventTypeRepository;
     RegistrantMapper registrantMapper;
 
@@ -90,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
     String apiVersion;
 
     @Autowired
-    public AuthServiceImpl(RegistrantRepository registrantRepository, PasswordEncoder encoder, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(RegistrantRepository registrantRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
         this.encoder = encoder;
         this.mailSender = mailSender;
@@ -102,6 +101,7 @@ public class AuthServiceImpl implements AuthService {
         this.unknownUserRepository = unknownUserRepository;
         this.eventTypeRepository = eventTypeRepository;
         this.registrantMapper = registrantMapper;
+        this.resetCodeRepository = resetCodeRepository;
     }
 
     private final String GOOGLE_TOKEN_TYPE = "google";
@@ -252,21 +252,28 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void resetPassword(ResetPasswordDTO resetPasswordDTO) {
+    public void sendResetCodeToEmail(ResetPasswordDTO resetPasswordDTO) {
         User user = userRepository
                 .findUserByUserEmail(resetPasswordDTO.getEmail())
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format("User with email: %s, does not exist", resetPasswordDTO.getEmail())
                 ));
-        int newPassword = generateNewPassword();
-        String title = "Новый пароль";
+        int resetConfirmationCode = generateResetCode();
+        String title = "Код для подтверждения сброса пароля";
         String message = String
                 .format(
-                        "Ваш новый пароль: %s, не забудьте изменить его после входа в приложение",
-                        newPassword
+                        "Ваш код для подтверждения сброса пароля: %s",
+                        resetConfirmationCode
                 );
+        ResetCodes resetCodes = ResetCodes.builder()
+                .resetCode(resetConfirmationCode)
+                .email(resetPasswordDTO.getEmail())
+                .requestTime(Instant.now())
+                .isEnable(true)
+                .build();
+        resetCodeRepository.save(resetCodes);
         sendEmail(title, message, resetPasswordDTO.getEmail());
-        user.setPassword(encoder.encode(String.valueOf(newPassword)));
+        user.setPassword(encoder.encode(String.valueOf(resetConfirmationCode)));
         userRepository.save(user);
     }
 
@@ -284,7 +291,47 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
     }
 
-    private int generateNewPassword() {
+    @Override
+    public TokensDTO confirmResetCode(ConfirmCodeDTO confirmResetCodeDTO) {
+        ResetCodes resetCodes = resetCodeRepository
+                .findByEmailAndIsEnable(confirmResetCodeDTO.getEmail(), true);
+        if (resetCodes == null) {
+            log.error("Reset code with email: " + confirmResetCodeDTO.getEmail() + " does not exist");
+            throw new UserNotFoundException(
+                    String.format("Reset code with email: %s, does not exist", confirmResetCodeDTO.getEmail())
+            );
+        }
+        if (resetCodes.getResetCode() != confirmResetCodeDTO.getVerificationCode()) {
+            resetCodes.setEnable(false);
+            String message = String.format("Reset code for email: %s, does not match", confirmResetCodeDTO.getEmail());
+            log.error(message);
+            throw new WrongCodeException(message);
+        }
+        if (resetCodes.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            resetCodes.setEnable(false);
+            String message = String.format("Reset code for email: %s, expired", confirmResetCodeDTO.getEmail());
+            log.error(message);
+            throw new ExpiredCodeException(message);
+        }
+        User user = userRepository
+                .findUserByUserEmail(confirmResetCodeDTO.getEmail())
+                .orElseThrow(() -> {
+                    log.error("User with email: " + confirmResetCodeDTO.getEmail() + " does not exist");
+                    return new UserNotFoundException(
+                            String.format("User with email: %s, does not exist", confirmResetCodeDTO.getEmail())
+                    );
+                });
+        try {
+            TokensDTO tokens = getTokenDTO(user.getId());
+            resetCodes.setEnable(false);
+            resetCodeRepository.save(resetCodes);
+            return tokens;
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new MakeTokenException(e.getMessage());
+        }
+    }
+
+    private int generateResetCode() {
         return new Random()
                 .nextInt(MAX_VALUE_FOR_PASSWORD - MIN_VALUE_FOR_PASSWORD) + MIN_VALUE_FOR_PASSWORD;
     }
