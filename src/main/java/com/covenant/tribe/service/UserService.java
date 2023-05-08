@@ -11,7 +11,9 @@ import java.util.List;
 public interface UserService {
     User findUserByUsername(String username);
 
-    UserToSendInvitationDTO findUserByUsernameForSendInvite(String username);
+    List<User> findUserByPartialUsername(String partialUsername);
+
+    List<UserToSendInvitationDTO> findUserByUsernameForSendInvite(String username);
 
     void saveEventToFavorite(Long userId, Long eventId);
 

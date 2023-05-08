@@ -43,6 +43,11 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
+    @Override
+    public List<User> findUserByPartialUsername(String partialUsername) {
+        return userRepository.findAllByUsernameContains(partialUsername);
+    }
+
     @Transactional
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {
@@ -82,8 +87,12 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserToSendInvitationDTO findUserByUsernameForSendInvite(String username) {
-        return userMapper.mapToUserToSendInvitationDTO(findUserByUsername(username));
+    public List<UserToSendInvitationDTO> findUserByUsernameForSendInvite(String username) {
+        List<User> users = userRepository.findAllByUsernameContains(username);
+        return users.stream()
+                .map(userMapper::mapToUserToSendInvitationDTO)
+                .toList();
+
     }
 
     public boolean isPhoneNumberExist(String phoneNumber) {
