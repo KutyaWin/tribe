@@ -44,24 +44,4 @@ public class SearchEventDTO implements Serializable {
     @JsonProperty(value = "start_time")
     @DateTimeFormat(pattern = "2023-04-19T10:30")
     LocalDateTime startTime;
-
-    @JsonProperty(value = "users_who_participants_of_event")
-    @UniqueElements(message = "All elements in usersWhoParticipantsOfEvent must be unique")
-    List<UsersWhoParticipantsOfEventDTO> usersWhoParticipantsOfEvent = new ArrayList<>();
-
-    @Builder
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class UsersWhoParticipantsOfEventDTO implements Serializable {
-
-        @JsonProperty(value = "participant_id")
-        @NotNull(message = "id should not be null")
-        Long participantId;
-
-        @JsonProperty(value = "participant_avatar_url")
-        String participantAvatarUrl;
-
-    }
 }

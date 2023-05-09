@@ -1,34 +1,37 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.Tag;
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventAlreadyExistException;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.event.MessageDidntSendException;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
+import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
+import com.covenant.tribe.security.JwtProvider;
+import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.util.mapper.EventMapper;
-import com.covenant.tribe.service.EventService;
+import com.covenant.tribe.util.querydsl.EventFilter;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
-import java.time.*;
-import java.time.temporal.ChronoUnit;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,6 +49,13 @@ public class EventServiceImpl implements EventService {
     UserRepository userRepository;
     TagRepository tagRepository;
     EventMapper eventMapper;
+    FilterEventRepository filterEventRepository;
+
+    @Transactional(readOnly = true)
+    public List<Event> getEventsByFilter(EventFilter filter) {
+
+        return filterEventRepository.findAllByFilter(filter);
+    }
 
     @Transactional
     @Override
