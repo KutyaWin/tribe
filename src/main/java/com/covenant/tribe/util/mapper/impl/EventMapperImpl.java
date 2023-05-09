@@ -112,7 +112,7 @@ public class EventMapperImpl implements EventMapper {
 
         List<UserRelationsWithEvent> userRelationsWithEvents = invitedUsers.stream()
                 .map(user -> UserRelationsWithEvent.builder()
-                        .userRelations(organizer)
+                        .userRelations(user)
                         .eventRelations(event)
                         .isInvited(true)
                         .isParticipant(false)
@@ -120,7 +120,18 @@ public class EventMapperImpl implements EventMapper {
                         .isFavorite(false)
                         .isViewed(false)
                         .build()
-                ).toList();
+                ).collect(Collectors.toList());
+        userRelationsWithEvents.add(
+                UserRelationsWithEvent.builder()
+                        .userRelations(organizer)
+                        .eventRelations(event)
+                        .isInvited(false)
+                        .isParticipant(true)
+                        .isWantToGo(false)
+                        .isFavorite(false)
+                        .isViewed(false)
+                        .build()
+        );
         event.setEventAvatars(eventAvatars);
         event.addEventsRelationsWithUsers(userRelationsWithEvents);
         event.getOrganizer().addEventWhereUserAsOrganizer(event);
