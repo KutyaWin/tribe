@@ -18,6 +18,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,8 +84,9 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserToSendInvitationDTO findUserByUsernameForSendInvite(String username) {
-        return userMapper.mapToUserToSendInvitationDTO(findUserByUsername(username));
+    public Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable) {
+        return userRepository.findAllByUsernameContains(partUsername, pageable)
+                .map(userMapper::mapToUserToSendInvitationDTO);
     }
 
     public boolean isPhoneNumberExist(String phoneNumber) {
