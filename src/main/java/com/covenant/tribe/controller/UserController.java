@@ -10,10 +10,13 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,16 +42,21 @@ public class UserController {
                             responseCode = "200",
                             content = @Content(
                                     array = @ArraySchema(
-                                            schema = @Schema(implementation = UserToSendInvitationDTO.class))))}
+                                            schema = @Schema(implementation = UserToSendInvitationDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
     )
     @GetMapping("/username/partial/{username}")
     public ResponseEntity<?> findUserByUsernameForSendInvite(
-            @PathVariable(value = "username") String partialUsername
+            @PathVariable(value = "username") String partialUsername,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size
     ) {
         log.info("[CONTROLLER] start endpoint findUserByUsernameForSendInvite with param: {}", partialUsername);
 
-        List<UserToSendInvitationDTO> responseUser =
-                userService.findUserByUsernameForSendInvite(partialUsername);
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+
+        Page<UserToSendInvitationDTO> responseUser =
+                userService.findUsersByContainsStringInUsernameForSendInvite(partialUsername, pageable);
 
         log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite with response: {}", responseUser);
         return ResponseEntity
