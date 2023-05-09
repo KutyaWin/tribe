@@ -11,10 +11,11 @@ import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
+import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
+import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
-import com.covenant.tribe.repository.UserRelationsWithEventRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventAvatarMapper;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,7 +45,58 @@ public class EventMapperImpl implements EventMapper {
     EventAddressMapper eventAddressMapper;
     EventAvatarMapper eventAvatarMapper;
     TagRepository tagRepository;
-    UserRelationsWithEventRepository userRelationsWithEventRepository;
+
+    @Override
+    public List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, Long currentUserId) {
+        log.info("map List<Event> to List<SearchEventDTO>");
+        log.debug("Passed List<Event>: {}", filteredEvents);
+
+        return filteredEvents.stream()
+                .map(event -> mapToSearchEventDTO(event, currentUserId))
+                .toList();
+    }
+
+    @Override
+    public SearchEventDTO mapToSearchEventDTO(Event event, Long currentUserId) {
+        log.info("map Event to SearchEventDTO");
+        log.debug("Passed Event: {}", event);
+
+        SearchEventDTO searchEventDTO = SearchEventDTO.builder()
+                .eventId(event.getId())
+                .eventPhoto(event.getEventAvatars().stream()
+                        .map(EventAvatar::getAvatarUrl)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElseThrow(() -> {
+                            String message = String.format(
+                                    "Event with id %s doesn't have avatar", event.getId()
+                            );
+                            log.error(message);
+                            return new EventNotFoundException(message);
+                        }))
+                .eventName(event.getEventName())
+                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .startTime(event.getStartTime())
+                .favoriteEvent(false)
+                .build();
+
+        if (currentUserId != null) {
+            List<Event> favoriteEventsCurrentUser = userRepository.findUserById(currentUserId)
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "[EXCEPTION] User with id %s, dont exist", currentUserId
+                        );
+                        log.error(message);
+                        return new UserNotFoundException(message);
+                    }).getUserRelationsWithEvents().stream()
+                    .filter(UserRelationsWithEvent::isFavorite)
+                    .map(UserRelationsWithEvent::getEventRelations)
+                    .toList();
+            searchEventDTO.setFavoriteEvent(favoriteEventsCurrentUser.contains(event));
+        }
+
+        return searchEventDTO;
+    }
 
     @Override
     public EventInFavoriteDTO mapToEventInFavoriteDTO(Event event) {
@@ -171,11 +224,11 @@ public class EventMapperImpl implements EventMapper {
                 .build();
     }
 
-    private Set<SearchEventDTO.UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {
+    private Set<UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {
         log.debug("map Users to UsersWhoParticipantsOfEventDTO. Passed users: {}", users);
 
         return users.stream()
-                .map(user -> SearchEventDTO.UsersWhoParticipantsOfEventDTO.builder()
+                .map(user -> UsersWhoParticipantsOfEventDTO.builder()
                         .participantId(user.getId())
                         .participantAvatarUrl(user.getUserAvatar())
                         .build())

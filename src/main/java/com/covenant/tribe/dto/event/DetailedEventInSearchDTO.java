@@ -1,5 +1,6 @@
 package com.covenant.tribe.dto.event;
 
+import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -68,5 +69,5 @@ public class DetailedEventInSearchDTO {
 
     @JsonProperty(value = "users_who_participants_of_event")
     @UniqueElements(message = "All elements in usersWhoParticipantsOfEvent must be unique")
-    Set<SearchEventDTO.UsersWhoParticipantsOfEventDTO> usersWhoParticipantsOfEvent = new HashSet<>();
+    Set<UsersWhoParticipantsOfEventDTO> usersWhoParticipantsOfEvent = new HashSet<>();
 }
