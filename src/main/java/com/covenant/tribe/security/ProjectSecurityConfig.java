@@ -57,7 +57,7 @@ public class ProjectSecurityConfig {
         http.authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
                 .requestMatchers("api/v1/auth/login/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "api/v1/auth/email/password/reset").permitAll()
+                .requestMatchers("api/v1/auth/email/password/reset/**").permitAll()
                 .requestMatchers("api/v1/auth/registration/email/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/event/type/circle").permitAll()
