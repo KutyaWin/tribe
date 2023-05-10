@@ -69,19 +69,6 @@ public class EventServiceImpl implements EventService {
             sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getEighteenYearLimit());
         }
 
-        if (!eventDto.getNewEventTagNames().isEmpty()) {
-
-            Set<Tag> newTags = eventDto.getNewEventTagNames().stream()
-                    .map(String::toLowerCase)
-                    .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
-                    .map(tagName -> Tag.builder().tagName(tagName).build())
-                    .collect(Collectors.toSet());
-            tagRepository.saveAll(newTags);
-            eventType.addTags(newTags);
-            eventTypeRepository.save(eventType);
-            event.addTagList(newTags.stream().toList());
-        }
-
         try {
             fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
             event = saveEvent(event, event.getOrganizer().getId());

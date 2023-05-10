@@ -123,6 +123,7 @@ public class EventMapperImpl implements EventMapper {
         List<Tag> eventTags = tagRepository.findAllById(dto.getEventTagIds());
 
 
+
         Event event = Event.builder()
                 .organizer(organizer)
                 .eventAddress(eventAddress)
@@ -137,6 +138,19 @@ public class EventMapperImpl implements EventMapper {
                 .eventType(eventType)
                 .build();
         event.addTagList(eventTags);
+
+        if (!dto.getNewEventTagNames().isEmpty()) {
+
+            Set<Tag> newTags = dto.getNewEventTagNames().stream()
+                    .map(String::toLowerCase)
+                    .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
+                    .map(tagName -> Tag.builder().tagName(tagName).build())
+                    .collect(Collectors.toSet());
+            tagRepository.saveAll(newTags);
+            eventType.addTags(newTags);
+            eventTypeRepository.save(eventType);
+            event.addTagList(newTags.stream().toList());
+        }
 
         Set<EventAvatar> eventAvatars = dto.getAvatarsForAdding().stream()
                 .map(avatar -> eventAvatarMapper.mapToEventAvatar(avatar, event))
