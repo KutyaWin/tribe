@@ -14,7 +14,9 @@ public interface AuthService {
 
     TokensDTO loginUserWithEmail(EmailLoginDTO emailLoginDTO);
 
-    void resetPassword(ResetPasswordDTO resetPasswordDTO);
+    void sendResetCodeToEmail(ResetPasswordDTO resetPasswordDTO);
 
     void changePassword(ChangePasswordDTO changePasswordDTO);
+
+    TokensDTO confirmResetCode(ConfirmCodeDTO confirmResetCodeDTO);
 }

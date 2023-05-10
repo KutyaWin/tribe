@@ -14,7 +14,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -92,17 +91,41 @@ public class AuthController {
                     )
             }
     )
-    @PutMapping("/email/password/reset")
-    public ResponseEntity<?> resetPassword(
+    @PutMapping("/email/password/reset/code")
+    public ResponseEntity<?> sendResetCodeToEmail(
         @RequestBody @Valid ResetPasswordDTO resetPasswordDTO
     ) {
         log.info("[CONTROLLER] start endpoint resetPassword with resetPasswordDTO: {}", resetPasswordDTO);
-        authService.resetPassword(resetPasswordDTO);
+        authService.sendResetCodeToEmail(resetPasswordDTO);
         log.info("[CONTROLLER] end endpoint resetPassword");
         return new ResponseEntity<>(HttpStatus.RESET_CONTENT);
-
     }
 
+    @Operation(
+            tags = "Auth",
+            description = "Screen: Сброс, смена пароля. Confirm reset code",
+            responses = {
+                    @ApiResponse(
+                        responseCode = "200",
+                        content = @Content(
+                                schema = @Schema(implementation = TokensDTO.class)
+                        )
+                    )
+            }
+    )
+    @PostMapping("/email/password/reset/code/confirm")
+    public ResponseEntity<?> confirmResetCode(
+            @RequestBody @Valid ConfirmCodeDTO confirmResetCodeDTO
+    ) {
+        log.info("[CONTROLLER] start endpoint confirmResetCode with confirmResetCodeDTO: {}", confirmResetCodeDTO);
+
+        TokensDTO tokensDTO = authService.confirmResetCode(confirmResetCodeDTO);
+
+        log.info("[CONTROLLER] end endpoint confirmResetCode");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(tokensDTO);}
     @Operation(
             tags = "Auth",
             description = "Screen when user changed password. Change password",
@@ -110,7 +133,8 @@ public class AuthController {
                     @ApiResponse(
                             responseCode = "201"
                     )
-            }
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#changePasswordDTO.userId.toString().equals(authentication.getName())")
     @PutMapping("/email/password/change")
