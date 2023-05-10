@@ -42,7 +42,7 @@ public class SearchEventDTO implements Serializable {
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
-    @DateTimeFormat(pattern = "2023-04-19T10:30")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startTime;
 
     @JsonProperty(value = "users_who_participants_of_event")

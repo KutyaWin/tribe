@@ -10,6 +10,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,8 +44,8 @@ public class Event {
     User organizer;
 
     @Builder.Default
-    @Column(name = "created_at")
-    LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime createdAt = OffsetDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "event_address_id")
@@ -56,11 +58,11 @@ public class Event {
     @Column(name = "event_description")
     String eventDescription;
 
-    @Column(name = "start_time", nullable = false)
-    LocalDateTime startTime;
+    @Column(name = "start_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime startTime;
 
-    @Column(name = "end_time", nullable = false)
-    LocalDateTime endTime;
+    @Column(name = "end_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime endTime;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @ToString.Exclude

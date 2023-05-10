@@ -10,5 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    Optional<Event> findByEventNameAndStartTimeAndOrganizerId(String eventName, LocalDateTime startTime, Long organizerId);
+    Optional<Event> findByEventNameAndStartTimeAndOrganizerId(String eventName, OffsetDateTime startTime, Long organizerId);
 }
