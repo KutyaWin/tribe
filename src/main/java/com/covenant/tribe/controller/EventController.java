@@ -3,11 +3,13 @@ package com.covenant.tribe.controller;
 import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 @Slf4j
 @AllArgsConstructor
@@ -148,6 +151,28 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responseEvent);
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: Профиль ADMIN. Get events which user is the organizer",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @GetMapping("/organizer/{organizer_id}")
+    public ResponseEntity<?> findEventsByOrganizerId(@PathVariable(value = "organizer_id") String organizerId, Authentication authentication) {
+        log.info("[CONTROLLER] start endpoint findEventsByOrganizerId with param: {}", organizerId);
+        List<EventInUserProfileDTO> organizersEvents = eventService.findEventsByOrganizerId(organizerId);
+
+        log.info("[CONTROLLER] end endpoint findEventsByOrganizerId with response: {}", organizersEvents);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(organizersEvents);
     }
 
     @PostMapping("/{event_id}/{user_id}")

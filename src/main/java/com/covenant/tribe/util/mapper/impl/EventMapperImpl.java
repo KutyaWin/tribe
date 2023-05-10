@@ -7,10 +7,7 @@ import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.domain.event.EventAvatar;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInFavoriteDTO;
-import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
-import com.covenant.tribe.dto.event.SearchEventDTO;
+import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
@@ -27,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +56,44 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
-                .isFinished(event.getEndTime().isBefore(LocalDateTime.now()))
+                .isFinished(event.getEndTime().isBefore(OffsetDateTime.now()))
+                .build();
+    }
+
+    private List<String> getEventAvatars(Set<EventAvatar> eventAvatars) {
+        return eventAvatars.stream()
+                .map(EventAvatar::getAvatarUrl)
+                .toList();
+    }
+
+    private boolean isEventViewed(Event event, Long userId) {
+        UserRelationsWithEvent currentUserRelations = event.getEventRelationsWithUser().stream()
+                .filter(userRelationsWithEvent ->
+                        userRelationsWithEvent
+                                .getUserRelations()
+                                .getId()
+                                .equals(userId)
+                )
+                .findFirst()
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "There isn't User with id %s in this event", userId
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
+        return currentUserRelations.isViewed();
+    }
+
+    @Override
+    public EventInUserProfileDTO mapToEventInUserProfileDTO(Event event) {
+        return EventInUserProfileDTO.builder()
+                .id(event.getId())
+                .eventPhotoUrl(getEventAvatars(event.getEventAvatars()))
+                .eventName(event.getEventName())
+                .city(event.getEventAddress().getCity())
+                .startTime(event.getStartTime())
+                .isViewed(isEventViewed(event, event.getOrganizer().getId()))
                 .build();
     }
 
@@ -88,6 +123,7 @@ public class EventMapperImpl implements EventMapper {
         List<Tag> eventTags = tagRepository.findAllById(dto.getEventTagIds());
 
 
+
         Event event = Event.builder()
                 .organizer(organizer)
                 .eventAddress(eventAddress)
@@ -103,6 +139,19 @@ public class EventMapperImpl implements EventMapper {
                 .build();
         event.addTagList(eventTags);
 
+        if (!dto.getNewEventTagNames().isEmpty()) {
+
+            Set<Tag> newTags = dto.getNewEventTagNames().stream()
+                    .map(String::toLowerCase)
+                    .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
+                    .map(tagName -> Tag.builder().tagName(tagName).build())
+                    .collect(Collectors.toSet());
+            tagRepository.saveAll(newTags);
+            eventType.addTags(newTags);
+            eventTypeRepository.save(eventType);
+            event.addTagList(newTags.stream().toList());
+        }
+
         Set<EventAvatar> eventAvatars = dto.getAvatarsForAdding().stream()
                 .map(avatar -> eventAvatarMapper.mapToEventAvatar(avatar, event))
                 .collect(Collectors.toSet());
@@ -112,7 +161,7 @@ public class EventMapperImpl implements EventMapper {
 
         List<UserRelationsWithEvent> userRelationsWithEvents = invitedUsers.stream()
                 .map(user -> UserRelationsWithEvent.builder()
-                        .userRelations(organizer)
+                        .userRelations(user)
                         .eventRelations(event)
                         .isInvited(true)
                         .isParticipant(false)
@@ -120,7 +169,18 @@ public class EventMapperImpl implements EventMapper {
                         .isFavorite(false)
                         .isViewed(false)
                         .build()
-                ).toList();
+                ).collect(Collectors.toList());
+        userRelationsWithEvents.add(
+                UserRelationsWithEvent.builder()
+                        .userRelations(organizer)
+                        .eventRelations(event)
+                        .isInvited(false)
+                        .isParticipant(true)
+                        .isWantToGo(false)
+                        .isFavorite(false)
+                        .isViewed(false)
+                        .build()
+        );
         event.setEventAvatars(eventAvatars);
         event.addEventsRelationsWithUsers(userRelationsWithEvents);
         event.getOrganizer().addEventWhereUserAsOrganizer(event);

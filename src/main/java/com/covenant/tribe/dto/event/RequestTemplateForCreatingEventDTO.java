@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,15 +36,13 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    @Schema(pattern = "2023-04-19T10:30")
-    LocalDateTime startTime;
+    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    OffsetDateTime startTime;
 
     @JsonProperty(value = "end_time")
     @Future(message = "end_time must be future")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    @Schema(pattern = "2023-04-19T20:30")
-    LocalDateTime endTime;
+    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    OffsetDateTime endTime;
 
     @JsonProperty(value = "new_event_tags_names")
     @UniqueElements(message = "All elements in event_tags_names must be unique")
