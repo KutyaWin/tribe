@@ -5,6 +5,7 @@ import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventAlreadyExistException;
@@ -156,6 +157,14 @@ public class EventServiceImpl implements EventService {
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
+        return eventRepository.findAllByOrganizerId(Long.parseLong(organizerId))
+                .stream()
+                .map(eventMapper::mapToEventInUserProfileDTO)
+                .toList();
     }
 
     public Event saveEvent(Event event, Long organizerId) {

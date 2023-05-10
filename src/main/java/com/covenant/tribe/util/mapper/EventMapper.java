@@ -16,4 +16,6 @@ public interface EventMapper {
     DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, Long userId);
 
     EventInFavoriteDTO mapToEventInFavoriteDTO(Event event);
+
+    EventInUserProfileDTO mapToEventInUserProfileDTO(Event event);
 }
