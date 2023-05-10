@@ -5,6 +5,7 @@ import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventAlreadyExistException;
@@ -66,19 +67,6 @@ public class EventServiceImpl implements EventService {
                     .map(User::getId)
                     .toList();
             sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getEighteenYearLimit());
-        }
-
-        if (!eventDto.getNewEventTagNames().isEmpty()) {
-
-            Set<Tag> newTags = eventDto.getNewEventTagNames().stream()
-                    .map(String::toLowerCase)
-                    .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
-                    .map(tagName -> Tag.builder().tagName(tagName).build())
-                    .collect(Collectors.toSet());
-            tagRepository.saveAll(newTags);
-            eventType.addTags(newTags);
-            eventTypeRepository.save(eventType);
-            event.addTagList(newTags.stream().toList());
         }
 
         try {
@@ -156,6 +144,14 @@ public class EventServiceImpl implements EventService {
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
+        return eventRepository.findAllByOrganizerId(Long.parseLong(organizerId))
+                .stream()
+                .map(eventMapper::mapToEventInUserProfileDTO)
+                .toList();
     }
 
     public Event saveEvent(Event event, Long organizerId) {
