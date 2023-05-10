@@ -234,6 +234,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Transactional
     @Override
     public TokensDTO loginUserWithEmail(@Valid EmailLoginDTO emailLoginDTO) {
         User user = userRepository
