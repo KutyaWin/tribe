@@ -58,7 +58,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
-                .isFinished(event.getEndTime().isBefore(LocalDateTime.now()))
+                .isFinished(event.getEndTime().isBefore(OffsetDateTime.now()))
                 .build();
     }
 
