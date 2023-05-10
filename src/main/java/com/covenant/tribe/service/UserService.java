@@ -3,6 +3,8 @@ package com.covenant.tribe.service;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.List;
 public interface UserService {
     User findUserByUsername(String username);
 
-    UserToSendInvitationDTO findUserByUsernameForSendInvite(String username);
+    Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable);
 
     void saveEventToFavorite(Long userId, Long eventId);
 
