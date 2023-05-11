@@ -186,7 +186,7 @@ public class EventController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PatchMapping("/verification/{event_id}")
+    @PatchMapping("/verification/confirm/{event_id}")
     public ResponseEntity<?> updateEventStatusToPublished(
         @PathVariable(value = "event_id") Long eventId
     ) {
@@ -195,6 +195,30 @@ public class EventController {
         eventService.updateEventStatusToPublished(eventId);
 
         log.info("[CONTROLLER] end endpoint updateEventStatusToPublished");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Update event status to SEND_TO_REWORK",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/verification/rework/{event_id}")
+    public ResponseEntity<?> updateEventStatusToSendToRework(
+            @PathVariable(value = "event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint updateEventStatusToSendToRework with param: {}", eventId);
+
+        eventService.updateEventStatusToSendToRework(eventId);
+
+        log.info("[CONTROLLER] end endpoint updateEventStatusToSendToRework");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();

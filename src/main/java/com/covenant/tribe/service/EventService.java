@@ -34,4 +34,6 @@ public interface EventService {
     List<EventVerificationDTO> getEventWithVerificationPendingStatus();
 
     void updateEventStatusToPublished(Long eventId);
+
+    void updateEventStatusToSendToRework(Long eventId);
 }
