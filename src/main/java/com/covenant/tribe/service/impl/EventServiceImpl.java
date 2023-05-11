@@ -1,6 +1,5 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.domain.event.EventType;
@@ -140,7 +139,7 @@ public class EventServiceImpl implements EventService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = getEventById(eventId);
-        checkEventForDeletingOrVerifying(event);
+        checkEventStatus(event);
         DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper.mapToDetailedEventInSearchDTO(event, userId);
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
@@ -157,7 +156,7 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
-    private void checkEventForDeletingOrVerifying(Event event) {
+    private void checkEventStatus(Event event) {
         if (event.getEventStatus() == EventStatus.VERIFICATION_PENDING) {
             String message = String.format("Event with id %s is not verified yet", event.getId());
             log.error(message);
@@ -167,6 +166,11 @@ public class EventServiceImpl implements EventService {
             String message = String.format("Event with id %s is deleted", event.getId());
             log.error(message);
             throw new EventNotFoundException(message);
+        }
+        if (event.getEventStatus() == EventStatus.SEND_TO_REWORK) {
+            String message = String.format("Event with id %s is send to rework", event.getId());
+            log.error(message);
+            throw new EventNotVerifiedException(message);
         }
     }
 
@@ -218,6 +222,18 @@ public class EventServiceImpl implements EventService {
             throw new EventAlreadyVerifiedException(message);
         }
         event.setEventStatus(EventStatus.PUBLISHED);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public void updateEventStatusToSendToRework(Long eventId) {
+        Event event = getEventById(eventId);
+        if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("[EXCEPTION] Event with id %s is already verified or send to rework", eventId);
+            log.error(message);
+            throw new EventAlreadyVerifiedException(message);
+        }
+        event.setEventStatus(EventStatus.SEND_TO_REWORK);
         eventRepository.save(event);
     }
 
