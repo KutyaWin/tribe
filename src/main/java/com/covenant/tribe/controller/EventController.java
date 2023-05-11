@@ -176,6 +176,29 @@ public class EventController {
                 .body(events);
     }
 
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Update event status to PUBLISHED",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/verification/{event_id}")
+    public ResponseEntity<?> updateEventStatusToPublished(
+        @PathVariable(value = "event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
+
+        eventService.updateEventStatusToPublished(eventId);
+
+        log.info("[CONTROLLER] end endpoint updateEventStatusToPublished");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
 
 
     @Operation(

@@ -32,4 +32,6 @@ public interface EventService {
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);
 
     List<EventVerificationDTO> getEventWithVerificationPendingStatus();
+
+    void updateEventStatusToPublished(Long eventId);
 }
