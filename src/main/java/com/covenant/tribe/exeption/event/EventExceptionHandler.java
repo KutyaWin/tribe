@@ -44,4 +44,14 @@ public class EventExceptionHandler {
                 .errorMessage(List.of(eventAlreadyExistException.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(EventAlreadyVerifiedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleEventAlreadyExistException(EventAlreadyVerifiedException eventAlreadyVerifiedException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(eventAlreadyVerifiedException.getMessage()))
+                .build();
+    }
 }

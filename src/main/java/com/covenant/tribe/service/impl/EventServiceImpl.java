@@ -11,6 +11,7 @@ import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventAlreadyExistException;
+import com.covenant.tribe.exeption.event.EventAlreadyVerifiedException;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.event.MessageDidntSendException;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
@@ -193,6 +194,18 @@ public class EventServiceImpl implements EventService {
                 .findAllByEventStatus(EventStatus.VERIFICATION_PENDING)
                 .stream().map(eventMapper::mapToEventVerificationDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateEventStatusToPublished(Long eventId) {
+        Event event = getEventById(eventId);
+        if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("[EXCEPTION] Event with id %s is already verified", eventId);
+            log.error(message);
+            throw new EventAlreadyVerifiedException(message);
+        }
+        event.setEventStatus(EventStatus.PUBLISHED);
+        eventRepository.save(event);
     }
 
     @Transactional
