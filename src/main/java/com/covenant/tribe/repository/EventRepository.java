@@ -1,6 +1,7 @@
 package com.covenant.tribe.repository;
 
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,5 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findByEventNameAndStartTimeAndOrganizerId(String eventName, OffsetDateTime startTime, Long organizerId);
     List<Event> findAllByOrganizerId(Long organizerId);
+    List<Event> findAllByEventStatus(EventStatus eventStatus);
 }

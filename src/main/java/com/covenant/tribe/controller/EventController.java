@@ -4,6 +4,7 @@ import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.service.EventService;
@@ -152,6 +153,30 @@ public class EventController {
                 .status(HttpStatus.OK)
                 .body(responseEvent);
     }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Get events which has status VERIFICATION_PENDING",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventVerificationDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/verification")
+    public ResponseEntity<?> getEventWithVerificationPendingStatus() {
+        log.info("[CONTROLLER] start endpoint getEventWithVerificationPendingStatus");
+
+        List<EventVerificationDTO> events = eventService.getEventWithVerificationPendingStatus();
+
+        log.info("[CONTROLLER] end endpoint getEventWithVerificationPendingStatus");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(events);
+    }
+
+
 
     @Operation(
             tags = "Event",
