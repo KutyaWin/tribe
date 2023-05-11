@@ -54,4 +54,14 @@ public class EventExceptionHandler {
                 .errorMessage(List.of(eventAlreadyVerifiedException.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(EventNotVerifiedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleEventAlreadyExistException(EventNotVerifiedException eventNotVerifiedException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(eventNotVerifiedException.getMessage()))
+                .build();
+    }
 }

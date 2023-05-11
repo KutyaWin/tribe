@@ -10,10 +10,7 @@ import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
-import com.covenant.tribe.exeption.event.EventAlreadyExistException;
-import com.covenant.tribe.exeption.event.EventAlreadyVerifiedException;
-import com.covenant.tribe.exeption.event.EventNotFoundException;
-import com.covenant.tribe.exeption.event.MessageDidntSendException;
+import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.FirebaseService;
@@ -143,6 +140,7 @@ public class EventServiceImpl implements EventService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = getEventById(eventId);
+        checkEventForDeletingOrVerifying(event);
         DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper.mapToDetailedEventInSearchDTO(event, userId);
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
@@ -157,6 +155,19 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .map(eventMapper::mapToEventInUserProfileDTO)
                 .toList();
+    }
+
+    private void checkEventForDeletingOrVerifying(Event event) {
+        if (event.getEventStatus() == EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("Event with id %s is not verified yet", event.getId());
+            log.error(message);
+            throw new EventNotVerifiedException(message);
+        }
+        if (event.getEventStatus() == EventStatus.DELETED) {
+            String message = String.format("Event with id %s is deleted", event.getId());
+            log.error(message);
+            throw new EventNotFoundException(message);
+        }
     }
 
     public Event saveEvent(Event event, Long organizerId) {
