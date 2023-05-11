@@ -151,7 +151,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
-        return eventRepository.findAllByOrganizerId(Long.parseLong(organizerId))
+        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
+                        Long.parseLong(organizerId), EventStatus.DELETED
+                )
                 .stream()
                 .map(eventMapper::mapToEventInUserProfileDTO)
                 .toList();
