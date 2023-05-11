@@ -9,9 +9,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -85,6 +83,10 @@ public class Event {
     @ToString.Exclude
     EventType eventType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_status", nullable = false)
+    EventStatus eventStatus = EventStatus.VERIFICATION_PENDING;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "events_tags",
             joinColumns = @JoinColumn(name = "event_id", nullable = false),
@@ -92,7 +94,7 @@ public class Event {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
-    List<Tag> tagSet = new ArrayList<>();
+    List<Tag> tagList = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "eventRelations",
@@ -147,30 +149,30 @@ public class Event {
     }
 
     public void addTag(Tag tag) {
-        if (this.tagSet == null) this.tagSet = new ArrayList<>();
+        if (this.tagList == null) this.tagList = new ArrayList<>();
 
-        if (this.tagSet.stream()
+        if (this.tagList.stream()
                 .noneMatch(t -> t.getTagName().equals(tag.getTagName()))) {
 
-            this.tagSet.add(tag);
+            this.tagList.add(tag);
             tag.getEventListWithTag().add(this);
 
         } else {
             log.error(
                     String.format("There's already a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed tag: %s",
-                            this.tagSet.stream().map(Tag::getId).toList(), tag.getId()));
+                            this.tagList.stream().map(Tag::getId).toList(), tag.getId()));
             throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed tag: %s",
-                            this.tagSet.stream().map(Tag::getId).toList(), tag.getId())
+                            this.tagList.stream().map(Tag::getId).toList(), tag.getId())
             );
         }
     }
 
     public void addTagList(List<Tag> passedTags) {
 
-        if (this.tagSet == null) this.tagSet = new ArrayList<>();
+        if (this.tagList == null) this.tagList = new ArrayList<>();
 
         passedTags.forEach(this::addTag);
     }

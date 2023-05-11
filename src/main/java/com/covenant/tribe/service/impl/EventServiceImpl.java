@@ -2,10 +2,12 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.EventAlreadyExistException;
@@ -183,6 +185,14 @@ public class EventServiceImpl implements EventService {
 
         //todo: refactor method
         return null;
+    }
+
+    @Override
+    public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
+        return eventRepository
+                .findAllByEventStatus(EventStatus.VERIFICATION_PENDING)
+                .stream().map(eventMapper::mapToEventVerificationDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional

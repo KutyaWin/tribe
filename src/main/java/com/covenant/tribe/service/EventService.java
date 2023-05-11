@@ -4,6 +4,7 @@ import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import org.springframework.stereotype.Service;
@@ -29,4 +30,6 @@ public interface EventService {
 
     Set<User> inviteUsersAsParticipantsToEvent(
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);
+
+    List<EventVerificationDTO> getEventWithVerificationPendingStatus();
 }

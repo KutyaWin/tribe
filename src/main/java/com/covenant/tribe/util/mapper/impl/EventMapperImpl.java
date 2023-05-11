@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -97,6 +96,29 @@ public class EventMapperImpl implements EventMapper {
                 .build();
     }
 
+    @Override
+    public EventVerificationDTO mapToEventVerificationDTO(Event event) {
+        return EventVerificationDTO.builder()
+                .eventId(event.getId())
+                .organizerId(event.getOrganizer().getId())
+                .createdAt(event.getCreatedAt())
+                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventName(event.getEventName())
+                .eventDescription(event.getEventDescription())
+                .startTime(event.getStartTime())
+                .endTime(event.getEndTime())
+                .eighteenYearLimit(event.isEighteenYearLimit())
+                .eventType(event.getEventType().getTypeName())
+                .eventTags(getEventTagNames(event.getTagList()))
+                .build();
+    }
+
+    private List<String> getEventTagNames(List<Tag> eventTags) {
+        return eventTags.stream()
+                .map(Tag::getTagName)
+                .collect(Collectors.toList());
+    }
+
     public Event mapToEvent(
             RequestTemplateForCreatingEventDTO dto) {
         log.debug("map RequestTemplateForCreatingEventDTO to Event. Passed dto: {}", dto);
@@ -121,7 +143,6 @@ public class EventMapperImpl implements EventMapper {
                     return new UserNotFoundException(message);
                 });
         List<Tag> eventTags = tagRepository.findAllById(dto.getEventTagIds());
-
 
 
         Event event = Event.builder()
