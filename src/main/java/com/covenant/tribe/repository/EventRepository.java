@@ -1,6 +1,8 @@
 package com.covenant.tribe.repository;
 
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
