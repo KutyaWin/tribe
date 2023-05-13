@@ -83,6 +83,7 @@ public class Event {
     @ToString.Exclude
     EventType eventType;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false)
     EventStatus eventStatus = EventStatus.VERIFICATION_PENDING;
