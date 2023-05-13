@@ -236,8 +236,8 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#organizerId.equals(authentication.getName())")
-    @GetMapping("/organizer/{organizer_id}")
-    public ResponseEntity<?> findEventsByOrganizerId(@PathVariable(value = "organizer_id") String organizerId, Authentication authentication) {
+    @GetMapping("/organisation/{organizer_id}")
+    public ResponseEntity<?> findEventsByOrganizerId(@PathVariable(value = "organizer_id") String organizerId) {
         log.info("[CONTROLLER] start endpoint findEventsByOrganizerId with param: {}", organizerId);
         List<EventInUserProfileDTO> organizersEvents = eventService.findEventsByOrganizerId(organizerId);
 
@@ -245,6 +245,28 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(organizersEvents);
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: Профиль ADMIN, профиль USER. Get events which user is invited",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/invitation/{user_id}")
+    public ResponseEntity<?> findEventsByUserIdWhichUserIsInvited(@PathVariable(value = "user_id") String userId) {
+        log.info("[CONTROLLER] start endpoint findEventsByUserIdWhichUserIsInvited with param: {}", userId);
+        List<EventInUserProfileDTO> invitedEvents = eventService.findEventsByUserIdWhichUserIsInvited(userId);
+
+        log.info("[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsInvited with response: {}", invitedEvents);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(invitedEvents);
     }
 
     @PostMapping("/{event_id}/{user_id}")
