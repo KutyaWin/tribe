@@ -44,4 +44,24 @@ public class EventExceptionHandler {
                 .errorMessage(List.of(eventAlreadyExistException.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(EventAlreadyVerifiedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleEventAlreadyExistException(EventAlreadyVerifiedException eventAlreadyVerifiedException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(eventAlreadyVerifiedException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(EventNotVerifiedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleEventAlreadyExistException(EventNotVerifiedException eventNotVerifiedException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(eventNotVerifiedException.getMessage()))
+                .build();
+    }
 }
