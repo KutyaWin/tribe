@@ -4,6 +4,7 @@ import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.service.EventService;
@@ -152,6 +153,77 @@ public class EventController {
                 .status(HttpStatus.OK)
                 .body(responseEvent);
     }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Get events which has status VERIFICATION_PENDING",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventVerificationDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/verification")
+    public ResponseEntity<?> getEventWithVerificationPendingStatus() {
+        log.info("[CONTROLLER] start endpoint getEventWithVerificationPendingStatus");
+
+        List<EventVerificationDTO> events = eventService.getEventWithVerificationPendingStatus();
+
+        log.info("[CONTROLLER] end endpoint getEventWithVerificationPendingStatus");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(events);
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Update event status to PUBLISHED",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/verification/confirm/{event_id}")
+    public ResponseEntity<?> updateEventStatusToPublished(
+        @PathVariable(value = "event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
+
+        eventService.updateEventStatusToPublished(eventId);
+
+        log.info("[CONTROLLER] end endpoint updateEventStatusToPublished");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Update event status to SEND_TO_REWORK",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/verification/rework/{event_id}")
+    public ResponseEntity<?> updateEventStatusToSendToRework(
+            @PathVariable(value = "event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint updateEventStatusToSendToRework with param: {}", eventId);
+
+        eventService.updateEventStatusToSendToRework(eventId);
+
+        log.info("[CONTROLLER] end endpoint updateEventStatusToSendToRework");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
 
     @Operation(
             tags = "Event",

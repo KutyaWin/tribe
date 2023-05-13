@@ -1,17 +1,16 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
-import com.covenant.tribe.exeption.event.EventAlreadyExistException;
-import com.covenant.tribe.exeption.event.EventNotFoundException;
-import com.covenant.tribe.exeption.event.MessageDidntSendException;
+import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
@@ -144,6 +143,7 @@ public class EventServiceImpl implements EventService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = getEventById(eventId);
+        checkEventStatus(event);
         DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper.mapToDetailedEventInSearchDTO(event, userId);
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
@@ -152,10 +152,30 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
-        return eventRepository.findAllByOrganizerId(Long.parseLong(organizerId))
+        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
+                        Long.parseLong(organizerId), EventStatus.DELETED
+                )
                 .stream()
                 .map(eventMapper::mapToEventInUserProfileDTO)
                 .toList();
+    }
+
+    private void checkEventStatus(Event event) {
+        if (event.getEventStatus() == EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("Event with id %s is not verified yet", event.getId());
+            log.error(message);
+            throw new EventNotVerifiedException(message);
+        }
+        if (event.getEventStatus() == EventStatus.DELETED) {
+            String message = String.format("Event with id %s is deleted", event.getId());
+            log.error(message);
+            throw new EventNotFoundException(message);
+        }
+        if (event.getEventStatus() == EventStatus.SEND_TO_REWORK) {
+            String message = String.format("Event with id %s is send to rework", event.getId());
+            log.error(message);
+            throw new EventNotVerifiedException(message);
+        }
     }
 
     public Event saveEvent(Event event, Long organizerId) {
@@ -187,6 +207,38 @@ public class EventServiceImpl implements EventService {
 
         //todo: refactor method
         return null;
+    }
+
+    @Override
+    public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
+        return eventRepository
+                .findAllByEventStatus(EventStatus.VERIFICATION_PENDING)
+                .stream().map(eventMapper::mapToEventVerificationDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateEventStatusToPublished(Long eventId) {
+        Event event = getEventById(eventId);
+        if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("[EXCEPTION] Event with id %s is already verified", eventId);
+            log.error(message);
+            throw new EventAlreadyVerifiedException(message);
+        }
+        event.setEventStatus(EventStatus.PUBLISHED);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public void updateEventStatusToSendToRework(Long eventId) {
+        Event event = getEventById(eventId);
+        if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("[EXCEPTION] Event with id %s is already verified or send to rework", eventId);
+            log.error(message);
+            throw new EventAlreadyVerifiedException(message);
+        }
+        event.setEventStatus(EventStatus.SEND_TO_REWORK);
+        eventRepository.save(event);
     }
 
     @Override
