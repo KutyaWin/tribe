@@ -29,4 +29,6 @@ public interface EventService {
 
     Set<User> inviteUsersAsParticipantsToEvent(
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);
+
+    List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId);
 }
