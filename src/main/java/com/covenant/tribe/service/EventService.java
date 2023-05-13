@@ -38,4 +38,6 @@ public interface EventService {
     void updateEventStatusToSendToRework(Long eventId);
 
     List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId);
+
+    List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId);
 }

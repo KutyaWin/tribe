@@ -243,6 +243,46 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId) {
+        User user = getUser(userId);
+        List<UserRelationsWithEvent> userRelationsWithEvents = getUserRelationsWithEvents(user);
+
+        return userRelationsWithEvents.stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED
+                            && userRelationsWithEvent.isInvited();
+                })
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations())
+                )
+                .toList();
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId) {
+        User user = getUser(userId);
+        List<UserRelationsWithEvent> userRelationsWithEvents = getUserRelationsWithEvents(user);
+
+        return userRelationsWithEvents.stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED
+                            && userRelationsWithEvent.isParticipant();
+                })
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations())
+                )
+                .toList();
+    }
+
+    private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
+        List<UserRelationsWithEvent> userRelationsWithEvents =
+                userRelationsWithEventRepository.findAllByUserRelations(user);
+        if (userRelationsWithEvents.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return userRelationsWithEvents;
+    }
+
+    private User getUser(String userId) {
         User user = userRepository
                 .findById(Long.parseLong(userId))
                 .orElseThrow(() -> {
@@ -252,17 +292,7 @@ public class EventServiceImpl implements EventService {
                     log.error(message);
                     return new UserNotFoundException(message);
                 });
-        List<UserRelationsWithEvent> userRelationsWithEvents =
-                userRelationsWithEventRepository.findAllByUserRelations(user);
-        if (userRelationsWithEvents.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return userRelationsWithEvents.stream()
-                .filter(UserRelationsWithEvent::isInvited)
-                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
-                        userRelationsWithEvent.getEventRelations())
-                )
-                .toList();
+        return user;
     }
 
     @Transactional

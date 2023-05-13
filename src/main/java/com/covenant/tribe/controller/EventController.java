@@ -269,6 +269,33 @@ public class EventController {
                 .body(invitedEvents);
     }
 
+    @Operation(
+            tags = "Event",
+            description = "Screen: Профиль USER. Get events which user is participant",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/participant/{user_id}")
+    public ResponseEntity<?> findEventsByUserIdWhichUserIsParticipant(@PathVariable(value = "user_id") String userId) {
+        log.info("[CONTROLLER] start endpoint findEventsByUserIdWhichUserIsParticipant with param: {}", userId);
+
+        List<EventInUserProfileDTO> participantsEvents = eventService.findEventsByUserIdWhichUserIsParticipant(userId);
+
+        log.info(
+                "[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsParticipant with response: {}",
+                participantsEvents
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(participantsEvents);
+    }
+
+
     @PostMapping("/{event_id}/{user_id}")
     public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
