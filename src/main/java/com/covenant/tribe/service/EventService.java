@@ -36,4 +36,6 @@ public interface EventService {
     void updateEventStatusToPublished(Long eventId);
 
     void updateEventStatusToSendToRework(Long eventId);
+
+    List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId);
 }

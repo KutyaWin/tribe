@@ -1,5 +1,6 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.domain.event.EventType;
@@ -11,6 +12,7 @@ import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
+import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.util.mapper.EventMapper;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,6 +43,7 @@ public class EventServiceImpl implements EventService {
     FirebaseService firebaseService;
     FileStorageRepository fileStorageRepository;
     UserRepository userRepository;
+    UserRelationsWithEventRepository userRelationsWithEventRepository;
     TagRepository tagRepository;
     EventMapper eventMapper;
 
@@ -235,6 +239,30 @@ public class EventServiceImpl implements EventService {
         }
         event.setEventStatus(EventStatus.SEND_TO_REWORK);
         eventRepository.save(event);
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId) {
+        User user = userRepository
+                .findById(Long.parseLong(userId))
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s, does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
+        List<UserRelationsWithEvent> userRelationsWithEvents =
+                userRelationsWithEventRepository.findAllByUserRelations(user);
+        if (userRelationsWithEvents.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return userRelationsWithEvents.stream()
+                .filter(UserRelationsWithEvent::isInvited)
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations())
+                )
+                .toList();
     }
 
     @Transactional
