@@ -187,14 +187,14 @@ public class AuthController {
     ) {
         log.info("[CONTROLLER] start endpoint add registrant with registrantDTO {} ", registrantRequestDTO);
 
-        Long registrantId = authService.addRegistrantWithEmail(registrantRequestDTO);
-        RegistrantResponseDTO registrantResponseDTO = new RegistrantResponseDTO(registrantId);
+        RegistrantResponseDTO registrantResponseDto = authService.addRegistrantWithEmail(registrantRequestDTO);
+        //RegistrantResponseDTO registrantResponseDTO = new RegistrantResponseDTO(registrantId);
 
-        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody: {}", registrantResponseDTO);
+        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody: {}", registrantResponseDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(registrantResponseDTO);
+                .body(registrantResponseDto);
     }
 
     @Operation(

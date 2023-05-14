@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public interface AuthService {
     TokensDTO getTokensToUserFromSocialNetworks(String token, String tokenType, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException;
     TokensDTO refreshTokens(String token);
-    Long addRegistrantWithEmail(RegistrantRequestDTO registrantRequestDTO);
+    RegistrantResponseDTO addRegistrantWithEmail(RegistrantRequestDTO registrantRequestDTO);
     TokensDTO confirmEmailRegistration(ConfirmRegistrationDTO confirmRegistrationDTO);
 
     TokensDTO loginUserWithEmail(EmailLoginDTO emailLoginDTO);

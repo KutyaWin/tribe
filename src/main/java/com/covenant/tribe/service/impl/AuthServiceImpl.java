@@ -147,7 +147,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Transactional
     @Override
-    public Long addRegistrantWithEmail(RegistrantRequestDTO registrantRequestDTO) {
+    public RegistrantResponseDTO addRegistrantWithEmail(RegistrantRequestDTO registrantRequestDTO) {
 
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
@@ -158,7 +158,7 @@ public class AuthServiceImpl implements AuthService {
             registrant = registrantMapper.mapToRegistrant(registrantRequestDTO, verificationCode);
             Registrant newRegistrant = registrantRepository.save(registrant);
             sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
-            return newRegistrant.getId();
+            return new RegistrantResponseDTO(newRegistrant.getId(), verificationCode);
         } else {
             if (registrant.getStatus() == RegistrantStatus.CONFIRMED ||
                     userRepository.findUserByUserEmail(registrantRequestDTO.getEmail()).isPresent()
@@ -176,7 +176,7 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
 
-            return registrant.getId();
+            return new RegistrantResponseDTO(registrant.getId(), verificationCode);
         }
     }
 
