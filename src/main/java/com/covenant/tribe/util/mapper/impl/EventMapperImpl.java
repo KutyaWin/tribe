@@ -63,17 +63,8 @@ public class EventMapperImpl implements EventMapper {
 
         SearchEventDTO searchEventDTO = SearchEventDTO.builder()
                 .eventId(event.getId())
-                .eventPhoto(event.getEventAvatars().stream()
-                        .map(EventAvatar::getAvatarUrl)
-                        .filter(Objects::nonNull)
-                        .findFirst()
-                        .orElseThrow(() -> {
-                            String message = String.format(
-                                    "Event with id %s doesn't have avatar", event.getId()
-                            );
-                            log.error(message);
-                            return new EventNotFoundException(message);
-                        }))
+                .avatarUrl(event.getEventAvatars().stream()
+                        .map(EventAvatar::getAvatarUrl).toList())
                 .eventName(event.getEventName())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
@@ -150,7 +141,7 @@ public class EventMapperImpl implements EventMapper {
                 .endTime(dto.getEndTime())
                 .showEventInSearch(dto.getShowEventInSearch())
                 .sendToAllUsersByInterests(dto.getSendToAllUsersByInterests())
-                .eighteenYearLimit(dto.getEighteenYearLimit())
+                .isEighteenYearLimit(dto.getEighteenYearLimit())
                 .isPrivate(dto.getIsPrivate())
                 .eventType(eventType)
                 .build();

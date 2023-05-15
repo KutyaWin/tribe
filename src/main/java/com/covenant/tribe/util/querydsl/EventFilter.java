@@ -1,49 +1,45 @@
 package com.covenant.tribe.util.querydsl;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
-@Builder
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventFilter {
+public class EventFilter implements Serializable {
 
-    @JsonProperty("event_type_id")
-    List<Long> eventTypeIdList;
+    List<Long> eventTypeId;
 
-    @JsonProperty("distance_in_meters")
-    double distanceInMeters;
+    Double distanceInMeters;
 
-    @JsonProperty("start_date")
+    Double longitude;
+
+    Double latitude;
+
     LocalDate startDate;
 
-    @JsonProperty("end_date")
     LocalDate endDate;
 
-    @JsonProperty("number_of_participants_min")
-    Long numberOfParticipantsMin;
+    Integer numberOfParticipantsMin;
 
-    @JsonProperty("number_of_participants_max")
-    Long numberOfParticipantsMax;
+    Integer numberOfParticipantsMax;
 
-    @JsonProperty("parts_of_day")
-    @Schema(example = "EVENING")
     String partsOfDay;
 
-    @JsonProperty("is_presence_of_alcohol")
-    boolean isPresenceOfAlcohol;
+    Integer durationEventInHoursMin;
 
-    @JsonProperty("is_free")
-    boolean isFree;
+    Integer durationEventInHoursMax;
 
-    @JsonProperty("is_eighteen_year_limit")
-    boolean isEighteenYearLimit;
+    Boolean isPresenceOfAlcohol;
+
+    Boolean isFree;
+
+    Boolean isEighteenYearLimit;
 }

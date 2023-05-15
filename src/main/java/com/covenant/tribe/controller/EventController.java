@@ -1,22 +1,18 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.PageResponse;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
-import com.covenant.tribe.repository.FilterEventRepository;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,22 +20,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.Optional;
 
 @Tag(name = "Event")
 @Slf4j
@@ -211,23 +204,28 @@ public class EventController {
     @GetMapping("/search")
     @SecurityRequirement(name = "BearerJWT")
     public ResponseEntity<?> getAllEventByFilter(
-            HttpServletRequest token, EventFilter eventFilter
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            EventFilter eventFilter,
+            HttpServletRequest token
     ) {
-        log.info("[CONTROLLER] start endpoint getAllEventByFilter with param: {}", eventFilter);
+        log.info("[CONTROLLER] start endpoint getAllEventByFilter");
+        log.debug("With data: {}", eventFilter);
 
-        List<Event> filteredEvent = eventService.getEventsByFilter(eventFilter);
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
 
-        Long currentUserId = Optional.ofNullable(token.getHeader(HttpHeaders.AUTHORIZATION))
-                .map(jwtProvider::getUserIdFromToken)
-                .orElse(null);
+        Long currentUserId = null;
         if (token.getHeader(HttpHeaders.AUTHORIZATION) != null) {
             currentUserId = jwtProvider.getUserIdFromToken(token.getHeader(HttpHeaders.AUTHORIZATION));
         }
-        List<SearchEventDTO> filteredEventDto = eventMapper.mapToSearchEventDTOList(filteredEvent, currentUserId);
 
-        log.info("[CONTROLLER] end endpoint getAllEventByFilter with response: {}", filteredEventDto);
+        PageResponse<SearchEventDTO> response = PageResponse.of(
+                eventService.getEventsByFilter(eventFilter, currentUserId, pageable));
+
+        log.info("[CONTROLLER] end endpoint getAllEventByFilter");
+        log.debug("With response: {}", response);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(filteredEventDto);
+                .body(response);
     }
 }

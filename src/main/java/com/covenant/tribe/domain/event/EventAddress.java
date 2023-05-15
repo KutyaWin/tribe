@@ -33,7 +33,7 @@ public class EventAddress {
     @Column(name = "event_longitude", nullable = false)
     Double eventLongitude;
 
-    @Column(name = "event_position", columnDefinition = "geometry(Point,4326)", nullable = true)
+    @Column(name = "event_position", columnDefinition = "geography(Point, 4326)")
     Point eventPosition;
 
     @Column(length = 100, nullable = false)

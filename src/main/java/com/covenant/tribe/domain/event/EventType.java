@@ -48,6 +48,7 @@ public class EventType {
     @OneToMany(mappedBy = "eventType", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     List<Event> eventListWithType = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,11 +59,13 @@ public class EventType {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     Set<Tag> tagList = new HashSet<>();
 
     @ManyToMany(mappedBy = "interestingEventType", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     Set<User> usersWhoInterestedInEventType = new HashSet<>();
 
     public void addTag(Tag tag) {
