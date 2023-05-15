@@ -51,8 +51,6 @@ public class EventController {
 
     JwtProvider jwtProvider;
 
-    EventMapper eventMapper;
-
     @Operation(
             description = "CreateEvent screen. Create a new event by body. Response eventId.",
             responses = {
