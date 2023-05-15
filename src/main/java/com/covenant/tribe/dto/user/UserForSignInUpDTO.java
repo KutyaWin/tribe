@@ -28,13 +28,15 @@ public class  UserForSignInUpDTO implements Serializable {
     @Size(max = 100, message = "firebase_id must not consist of more than 100 characters")
     String firebaseId;
 
-    //todo username
-
     @Size(max = 50, message = "Email must not consist of more than 50 characters")
     String email;
 
     @Size(max = 500, message = "Password must not consist of more than 500 characters")
     String password;
+
+    @NotBlank(message = "username should not be null or empty")
+    @Size(max = 50, message = "username must not consist of more than 50 characters")
+    String username;
 
     @JsonProperty("phone_number")
     @Schema(example = "+380937419055")

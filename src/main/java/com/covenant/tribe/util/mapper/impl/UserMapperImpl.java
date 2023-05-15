@@ -32,7 +32,7 @@ public class UserMapperImpl implements UserMapper {
                 .socialId(socialUserId)
                 .firebaseId(userDto.getFirebaseId())
                 .bluetoothId(userDto.getBluetoothId())
-                .username(makeFakeDataIfNeededIsEmpty("", socialUserId))
+                .username(userDto.getUsername())
                 .userEmail(makeFakeDataIfNeededIsEmpty(userDto.getEmail(), socialUserId))
                 .password(makeFakeDataIfNeededIsEmpty(userDto.getPassword(), socialUserId))
                 .phoneNumber(makeFakeDataIfNeededIsEmpty(userDto.getPhoneNumber(), socialUserId))

@@ -416,6 +416,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
+        if (userRepository.existsUserByUsername(userForSignInUpDTO.getUsername())) {
+            String message = String.format("Username: %s, already exists", userForSignInUpDTO.getUsername());
+            log.error(message);
+            throw new UserAlreadyExistException(message);
+        }
 
         User userToSave = userMapper.mapToUserFromUserForSignInUpDTO(userForSignInUpDTO, socialId);
         UnknownUser unknownUserWithUserToSaveBluetoothId = unknownUserRepository
