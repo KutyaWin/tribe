@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.UniqueElements;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,9 +55,9 @@ public class DetailedEventInSearchDTO {
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    @Schema(pattern = "2023-04-19T20:30")
-    LocalDateTime startTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    OffsetDateTime startTime;
 
     @JsonProperty(value = "event_duration")
     @NotBlank(message = "event_duration should not be null or empty")

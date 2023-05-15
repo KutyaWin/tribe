@@ -4,44 +4,56 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.UniqueElements;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventInFavoriteDTO {
+public class EventVerificationDTO {
 
     @JsonProperty(value = "event_id")
-    @NotNull(message = "event_id should not be null")
     Long eventId;
 
-    @JsonProperty(value = "event_photo")
-    @Size(max = 200, message = "event_photo must not consist of more than 200 characters")
-    List<String> eventPhoto;
+    @JsonProperty(value = "organizer_id")
+    Long organizerId;
 
-    @JsonProperty(value = "event_name")
-    @NotBlank(message = "event_name should not be null or empty")
-    @Size(max = 100)
-    String eventName;
+    @JsonProperty(value = "created_at")
+    OffsetDateTime createdAt;
 
     @JsonProperty(value = "event_address")
     EventAddressDTO eventAddress;
 
+    @JsonProperty(value = "event_name")
+    String eventName;
+
+    @JsonProperty(value = "event_description")
+    String eventDescription;
+
     @JsonProperty(value = "start_time")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
     OffsetDateTime startTime;
 
-    @JsonProperty(value = "is_finished")
-    @NotNull(message = "is_finished should not be null")
-    Boolean isFinished;
+    @JsonProperty(value = "end_time")
+    OffsetDateTime endTime;
+
+    @JsonProperty(value = "eighteen_year_limit")
+    boolean eighteenYearLimit;
+
+    @JsonProperty(value = "event_type")
+    String eventType;
+
+    @JsonProperty(value = "event_tags")
+    List<String> eventTags;
+
 }

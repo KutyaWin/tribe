@@ -2,18 +2,21 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.Tag;
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.event.QEvent;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
-import com.covenant.tribe.exeption.event.EventAlreadyExistException;
-import com.covenant.tribe.exeption.event.EventNotFoundException;
-import com.covenant.tribe.exeption.event.MessageDidntSendException;
+import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
+import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
@@ -37,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,6 +56,7 @@ public class EventServiceImpl implements EventService {
     FirebaseService firebaseService;
     FileStorageRepository fileStorageRepository;
     UserRepository userRepository;
+    UserRelationsWithEventRepository userRelationsWithEventRepository;
     TagRepository tagRepository;
     EventMapper eventMapper;
 
@@ -162,19 +167,6 @@ public class EventServiceImpl implements EventService {
             sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getEighteenYearLimit());
         }
 
-        if (!eventDto.getNewEventTagNames().isEmpty()) {
-
-            Set<Tag> newTags = eventDto.getNewEventTagNames().stream()
-                    .map(String::toLowerCase)
-                    .filter(tagName -> tagRepository.findTagByTagName(tagName).isEmpty())
-                    .map(tagName -> Tag.builder().tagName(tagName).build())
-                    .collect(Collectors.toSet());
-            tagRepository.saveAll(newTags);
-            eventType.addTags(newTags);
-            eventTypeRepository.save(eventType);
-            event.addTagList(newTags.stream().toList());
-        }
-
         try {
             fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
             event = saveEvent(event, event.getOrganizer().getId());
@@ -246,10 +238,39 @@ public class EventServiceImpl implements EventService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = getEventById(eventId);
+        checkEventStatus(event);
         DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper.mapToDetailedEventInSearchDTO(event, userId);
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
+        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
+                        Long.parseLong(organizerId), EventStatus.DELETED
+                )
+                .stream()
+                .map(eventMapper::mapToEventInUserProfileDTO)
+                .toList();
+    }
+
+    private void checkEventStatus(Event event) {
+        if (event.getEventStatus() == EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("Event with id %s is not verified yet", event.getId());
+            log.error(message);
+            throw new EventNotVerifiedException(message);
+        }
+        if (event.getEventStatus() == EventStatus.DELETED) {
+            String message = String.format("Event with id %s is deleted", event.getId());
+            log.error(message);
+            throw new EventNotFoundException(message);
+        }
+        if (event.getEventStatus() == EventStatus.SEND_TO_REWORK) {
+            String message = String.format("Event with id %s is send to rework", event.getId());
+            log.error(message);
+            throw new EventNotVerifiedException(message);
+        }
     }
 
     public Event saveEvent(Event event, Long organizerId) {
@@ -283,23 +304,94 @@ public class EventServiceImpl implements EventService {
         return null;
     }
 
+    @Override
+    public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
+        return eventRepository
+                .findAllByEventStatus(EventStatus.VERIFICATION_PENDING)
+                .stream().map(eventMapper::mapToEventVerificationDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateEventStatusToPublished(Long eventId) {
+        Event event = getEventById(eventId);
+        if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("[EXCEPTION] Event with id %s is already verified", eventId);
+            log.error(message);
+            throw new EventAlreadyVerifiedException(message);
+        }
+        event.setEventStatus(EventStatus.PUBLISHED);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public void updateEventStatusToSendToRework(Long eventId) {
+        Event event = getEventById(eventId);
+        if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
+            String message = String.format("[EXCEPTION] Event with id %s is already verified or send to rework", eventId);
+            log.error(message);
+            throw new EventAlreadyVerifiedException(message);
+        }
+        event.setEventStatus(EventStatus.SEND_TO_REWORK);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId) {
+        User user = getUser(userId);
+        List<UserRelationsWithEvent> userRelationsWithEvents = getUserRelationsWithEvents(user);
+
+        return userRelationsWithEvents.stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED
+                            && userRelationsWithEvent.isInvited();
+                })
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations())
+                )
+                .toList();
+    }
+
+    @Override
+    public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId) {
+        User user = getUser(userId);
+        List<UserRelationsWithEvent> userRelationsWithEvents = getUserRelationsWithEvents(user);
+
+        return userRelationsWithEvents.stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED
+                            && userRelationsWithEvent.isParticipant();
+                })
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations())
+                )
+                .toList();
+    }
+
+    private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
+        List<UserRelationsWithEvent> userRelationsWithEvents =
+                userRelationsWithEventRepository.findAllByUserRelations(user);
+        if (userRelationsWithEvents.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return userRelationsWithEvents;
+    }
+
+    private User getUser(String userId) {
+        User user = userRepository
+                .findById(Long.parseLong(userId))
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s, does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
+        return user;
+    }
+
     @Transactional
     @Override
     public void addUserToEventAsParticipant(Long eventId, Long userId) {
-        /*Event event = eventRepository
-                .findById(eventId)
-                .orElseThrow(() -> new EventNotFoundException(
-                        String.format(
-                                "Event with id %s  does not exist",
-                                eventId)
-                ));
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        String.format(
-                                "User with id %s  does not exist",
-                                eventId)
-                ));
-        event.addUserAsAsParticipantsEvent(user);*/
     }
 }

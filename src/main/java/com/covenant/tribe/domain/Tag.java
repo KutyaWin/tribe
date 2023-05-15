@@ -30,7 +30,7 @@ public class Tag {
     @Column(name = "tag_name", nullable = false, unique = true, length = 50)
     String tagName;
 
-    @ManyToMany(mappedBy = "tagSet", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "tagList", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Builder.Default
     List<Event> eventListWithTag = new ArrayList<>();

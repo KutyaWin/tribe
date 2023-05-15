@@ -4,6 +4,8 @@ import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.PageResponse;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
@@ -13,6 +15,7 @@ import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,6 +36,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 @Tag(name = "Event")
 @Slf4j
@@ -139,7 +143,7 @@ public class EventController {
     }
 
     @Operation(
-            description = "CardBig screen. Get a event by event_id and user_id.",
+            description = "CardBig screen. Get an event by event_id and user_id.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -160,6 +164,148 @@ public class EventController {
                 .body(responseEvent);
     }
 
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Get events which has status VERIFICATION_PENDING",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventVerificationDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/verification")
+    public ResponseEntity<?> getEventWithVerificationPendingStatus() {
+        log.info("[CONTROLLER] start endpoint getEventWithVerificationPendingStatus");
+
+        List<EventVerificationDTO> events = eventService.getEventWithVerificationPendingStatus();
+
+        log.info("[CONTROLLER] end endpoint getEventWithVerificationPendingStatus");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(events);
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Update event status to PUBLISHED",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/verification/confirm/{event_id}")
+    public ResponseEntity<?> updateEventStatusToPublished(
+        @PathVariable(value = "event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
+
+        eventService.updateEventStatusToPublished(eventId);
+
+        log.info("[CONTROLLER] end endpoint updateEventStatusToPublished");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: none. Update event status to SEND_TO_REWORK",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/verification/rework/{event_id}")
+    public ResponseEntity<?> updateEventStatusToSendToRework(
+            @PathVariable(value = "event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint updateEventStatusToSendToRework with param: {}", eventId);
+
+        eventService.updateEventStatusToSendToRework(eventId);
+
+        log.info("[CONTROLLER] end endpoint updateEventStatusToSendToRework");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: Профиль ADMIN. Get events which user is the organizer",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @GetMapping("/organisation/{organizer_id}")
+    public ResponseEntity<?> findEventsByOrganizerId(@PathVariable(value = "organizer_id") String organizerId) {
+        log.info("[CONTROLLER] start endpoint findEventsByOrganizerId with param: {}", organizerId);
+        List<EventInUserProfileDTO> organizersEvents = eventService.findEventsByOrganizerId(organizerId);
+
+        log.info("[CONTROLLER] end endpoint findEventsByOrganizerId with response: {}", organizersEvents);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(organizersEvents);
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: Профиль ADMIN, профиль USER. Get events which user is invited",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/invitation/{user_id}")
+    public ResponseEntity<?> findEventsByUserIdWhichUserIsInvited(@PathVariable(value = "user_id") String userId) {
+        log.info("[CONTROLLER] start endpoint findEventsByUserIdWhichUserIsInvited with param: {}", userId);
+        List<EventInUserProfileDTO> invitedEvents = eventService.findEventsByUserIdWhichUserIsInvited(userId);
+
+        log.info("[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsInvited with response: {}", invitedEvents);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(invitedEvents);
+    }
+
+    @Operation(
+            tags = "Event",
+            description = "Screen: Профиль USER. Get events which user is participant",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/participant/{user_id}")
+    public ResponseEntity<?> findEventsByUserIdWhichUserIsParticipant(@PathVariable(value = "user_id") String userId) {
+        log.info("[CONTROLLER] start endpoint findEventsByUserIdWhichUserIsParticipant with param: {}", userId);
+
+        List<EventInUserProfileDTO> participantsEvents = eventService.findEventsByUserIdWhichUserIsParticipant(userId);
+
+        log.info(
+                "[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsParticipant with response: {}",
+                participantsEvents
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(participantsEvents);
+    }
+
+
     @PostMapping("/{event_id}/{user_id}")
     public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
@@ -171,13 +317,23 @@ public class EventController {
                 .build();
     }
 
+    @Operation(
+            tags = "Event",
+            description = "Screen: Наполнение события. Add event avatar to tmp folder.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            content = @Content(
+                                    schema = @Schema(implementation = TempFileDTO.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
     @PostMapping("/avatars")
     public ResponseEntity<?> addEventAvatarToTempDirectory(
             @RequestBody ImageDTO imageDTO
     ) {
         String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
         return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
+                .status(HttpStatus.CREATED)
                 .body(new TempFileDTO(uniqueTempFileName));
     }
 
