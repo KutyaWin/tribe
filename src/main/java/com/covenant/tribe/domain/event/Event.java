@@ -92,7 +92,6 @@ public class Event {
     @ToString.Exclude
     EventType eventType;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false)

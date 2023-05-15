@@ -1,13 +1,12 @@
 package com.covenant.tribe.util.querydsl;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -31,6 +30,7 @@ public class EventFilter implements Serializable {
 
     Integer numberOfParticipantsMax;
 
+    @Schema(example = "MORNING")
     String partsOfDay;
 
     Integer durationEventInHoursMin;

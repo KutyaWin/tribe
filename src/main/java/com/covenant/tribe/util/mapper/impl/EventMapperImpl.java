@@ -48,46 +48,50 @@ public class EventMapperImpl implements EventMapper {
     TagRepository tagRepository;
 
     @Override
-    public List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, Long currentUserId) {
+    public List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, List<UserRelationsWithEvent> relationsWithEventCurrentUserId) {
         log.info("map List<Event> to List<SearchEventDTO>");
         log.debug("Passed List<Event>: {}", filteredEvents);
 
         return filteredEvents.stream()
-                .map(event -> mapToSearchEventDTO(event, currentUserId))
+                .map(event -> mapToSearchEventDTO(event, relationsWithEventCurrentUserId))
                 .toList();
     }
 
     @Override
-    public SearchEventDTO mapToSearchEventDTO(Event event, Long currentUserId) {
+    public SearchEventDTO mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId) {
         log.info("map Event to SearchEventDTO");
         log.debug("Passed Event: {}", event);
 
-        SearchEventDTO searchEventDTO = SearchEventDTO.builder()
+        return SearchEventDTO.builder()
                 .eventId(event.getId())
                 .avatarUrl(event.getEventAvatars().stream()
                         .map(EventAvatar::getAvatarUrl).toList())
                 .eventName(event.getEventName())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
-                .startTime(event.getStartTime())
-                .favoriteEvent(false)
+                .startTime(event.getStartTime().toLocalDateTime())
+                .eventType(event.getEventType().getTypeName())
+                .favoriteEvent(relationsWithEventCurrentUserId.stream()
+                        .filter(UserRelationsWithEvent::isFavorite)
+                        .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                .viewEvent(relationsWithEventCurrentUserId.stream()
+                        .filter(UserRelationsWithEvent::isViewed)
+                        .anyMatch(relations -> relations.getEventRelations().equals(event)))
                 .build();
+    }
 
-        if (currentUserId != null) {
-            List<Event> favoriteEventsCurrentUser = userRepository.findUserById(currentUserId)
-                    .orElseThrow(() -> {
-                        String message = String.format(
-                                "[EXCEPTION] User with id %s, dont exist", currentUserId
-                        );
-                        log.error(message);
-                        return new UserNotFoundException(message);
-                    }).getUserRelationsWithEvents().stream()
-                    .filter(UserRelationsWithEvent::isFavorite)
-                    .map(UserRelationsWithEvent::getEventRelations)
-                    .toList();
-            searchEventDTO.setFavoriteEvent(favoriteEventsCurrentUser.contains(event));
-        }
+    public SearchEventDTO mapToSearchEventDTO(Event event) {
+        log.info("map Event to SearchEventDTO");
+        log.debug("Passed Event: {}", event);
 
-        return searchEventDTO;
+        return SearchEventDTO.builder()
+                .eventId(event.getId())
+                .avatarUrl(event.getEventAvatars().stream()
+                        .map(EventAvatar::getAvatarUrl).toList())
+                .eventName(event.getEventName())
+                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .startTime(event.getStartTime().toLocalDateTime())
+                .eventType(event.getEventType().getTypeName())
+                .build();
     }
 
     @Override

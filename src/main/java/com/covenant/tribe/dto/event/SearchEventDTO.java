@@ -27,7 +27,11 @@ public class SearchEventDTO implements Serializable {
 
     Boolean favoriteEvent;
 
+    Boolean viewEvent;
+
     String eventName;
+
+    String eventType;
 
     EventAddressDTO eventAddress;
 
