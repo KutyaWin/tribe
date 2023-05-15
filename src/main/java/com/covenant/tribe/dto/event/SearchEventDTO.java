@@ -21,27 +21,15 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchEventDTO implements Serializable {
 
-    @JsonProperty(value = "event_id")
-    @NotNull(message = "event_id should not be null")
     Long eventId;
 
-    @JsonProperty(value = "event_photo")
-    @Size(max = 200, message = "event_photo must not consist of more than 200 characters")
-    String eventPhoto;
+    List<String> avatarUrl;
 
-    @JsonProperty(value = "favorite_event")
-    @NotNull(message = "favorite_event should not be null.")
     Boolean favoriteEvent;
 
-    @JsonProperty(value = "event_name")
-    @NotBlank(message = "event_name should not be null or empty")
-    @Size(max = 100)
     String eventName;
 
-    @JsonProperty(value = "event_address")
     EventAddressDTO eventAddress;
 
-    @JsonProperty(value = "start_time")
-    @DateTimeFormat(pattern = "2023-04-19T10:30")
     LocalDateTime startTime;
 }

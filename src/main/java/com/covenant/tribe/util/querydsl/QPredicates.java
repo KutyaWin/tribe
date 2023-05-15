@@ -1,12 +1,17 @@
 package com.covenant.tribe.util.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -25,11 +30,19 @@ public class QPredicates {
         return this;
     }
 
+    public <T> void add(T object, Predicate predicate) {
+        if (object != null) {
+            predicates.add(predicate);
+        }
+    }
+
     public Predicate build() {
-        return ExpressionUtils.allOf(predicates);
+        return Optional.ofNullable(ExpressionUtils.allOf(predicates))
+                .orElseGet(() -> Expressions.asBoolean(true).isTrue());
     }
 
     public Predicate buildOr() {
-        return ExpressionUtils.anyOf(predicates);
+        return Optional.ofNullable(ExpressionUtils.anyOf(predicates))
+                .orElseGet(() -> Expressions.asBoolean(true).isTrue());
     }
 }

@@ -23,7 +23,7 @@ public class FilterEventRepositoryImpl implements FilterEventRepository {
 
     public List<Event> findAllByFilter(EventFilter filter) {
         Predicate predicate = QPredicates.builder()
-                .add(filter.getEventTypeIdList(), QEvent.event.eventType.id::in)
+                .add(filter.getEventTypeId(), QEvent.event.eventType.id::in)
                 .build();
 
         return new JPAQuery<Event>(entityManager)
