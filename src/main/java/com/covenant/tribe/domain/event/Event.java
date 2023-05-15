@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,8 +44,8 @@ public class Event {
     User organizer;
 
     @Builder.Default
-    @Column(name = "created_at")
-    LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime createdAt = OffsetDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "event_address_id")
@@ -58,11 +58,11 @@ public class Event {
     @Column(name = "event_description")
     String eventDescription;
 
-    @Column(name = "start_time", nullable = false)
-    LocalDateTime startTime;
+    @Column(name = "start_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime startTime;
 
-    @Column(name = "end_time", nullable = false)
-    LocalDateTime endTime;
+    @Column(name = "end_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime endTime;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @ToString.Exclude
@@ -93,6 +93,12 @@ public class Event {
     EventType eventType;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_status", nullable = false)
+    EventStatus eventStatus = EventStatus.VERIFICATION_PENDING;
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "events_tags",
             joinColumns = @JoinColumn(name = "event_id", nullable = false,
                     foreignKey = @ForeignKey(name = "fk_events_tags_event_id",
@@ -102,7 +108,7 @@ public class Event {
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
-    List<Tag> tagSet = new ArrayList<>();
+    List<Tag> tagList = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "eventRelations",
@@ -158,30 +164,30 @@ public class Event {
     }
 
     public void addTag(Tag tag) {
-        if (this.tagSet == null) this.tagSet = new ArrayList<>();
+        if (this.tagList == null) this.tagList = new ArrayList<>();
 
-        if (this.tagSet.stream()
+        if (this.tagList.stream()
                 .noneMatch(t -> t.getTagName().equals(tag.getTagName()))) {
 
-            this.tagSet.add(tag);
+            this.tagList.add(tag);
             tag.getEventListWithTag().add(this);
 
         } else {
             log.error(
                     String.format("There's already a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed tag: %s",
-                            this.tagSet.stream().map(Tag::getId).toList(), tag.getId()));
+                            this.tagList.stream().map(Tag::getId).toList(), tag.getId()));
             throw new AlreadyExistArgumentForAddToEntityException(
                     String.format("There's already a passed tag in the event tagSet." +
                                     "Event tagSet: %s. Passed tag: %s",
-                            this.tagSet.stream().map(Tag::getId).toList(), tag.getId())
+                            this.tagList.stream().map(Tag::getId).toList(), tag.getId())
             );
         }
     }
 
     public void addTagList(List<Tag> passedTags) {
 
-        if (this.tagSet == null) this.tagSet = new ArrayList<>();
+        if (this.tagList == null) this.tagList = new ArrayList<>();
 
         passedTags.forEach(this::addTag);
     }

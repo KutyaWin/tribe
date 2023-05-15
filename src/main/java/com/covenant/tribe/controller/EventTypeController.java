@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,7 +33,8 @@ public class EventTypeController {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
-                                    schema = @Schema(implementation = EventTypeDTO.class)))}
+                                    schema = @Schema(implementation = EventTypeDTO.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
     )
     @GetMapping("/event/type/rectangle")
     public ResponseEntity<?> getRectangleEventTypes(

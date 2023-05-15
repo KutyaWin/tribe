@@ -17,6 +17,10 @@ public interface EventMapper {
 
     EventInFavoriteDTO mapToEventInFavoriteDTO(Event event);
 
+    EventInUserProfileDTO mapToEventInUserProfileDTO(Event event);
+
+    EventVerificationDTO mapToEventVerificationDTO(Event event);
+
     List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, Long currentUserId);
 
     SearchEventDTO mapToSearchEventDTO(Event event, Long currentUserId);
