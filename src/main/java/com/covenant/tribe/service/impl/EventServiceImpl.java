@@ -1,27 +1,35 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.event.QEvent;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInUserProfileDTO;
-import com.covenant.tribe.dto.event.EventVerificationDTO;
-import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
+import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.util.mapper.EventMapper;
-import com.covenant.tribe.service.EventService;
+import com.covenant.tribe.util.querydsl.EventFilter;
+import com.covenant.tribe.util.querydsl.PartsOfDay;
+import com.covenant.tribe.util.querydsl.QPredicates;
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,8 +52,93 @@ public class EventServiceImpl implements EventService {
     FileStorageRepository fileStorageRepository;
     UserRepository userRepository;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
-    TagRepository tagRepository;
     EventMapper eventMapper;
+
+    @Transactional(readOnly = true)
+    public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable) {
+        QPredicates qPredicates = QPredicates.builder();
+
+        qPredicates.add(EventStatus.PUBLISHED, QEvent.event.eventStatus.eq(EventStatus.PUBLISHED));
+        if (filter.getDistanceInMeters() != null && filter.getLongitude() != null &&
+                filter.getLatitude() != null) {
+
+            NumberExpression<Double> distance = Expressions.numberTemplate(
+                    Double.class,
+                    "ST_Distance(" + QEvent.event.eventAddress.eventPosition +
+                            ", ST_MakePoint(" + filter.getLongitude()+ ", " + filter.getLatitude() + "))");
+
+            qPredicates.add(filter.getDistanceInMeters(), distance::lt);
+        }
+        if (filter.getEventTypeId() != null) {
+            qPredicates.add(filter.getEventTypeId(), QEvent.event.eventType.id::in);
+        }
+        if (filter.getStartDate() != null && filter.getEndDate() != null) {
+            OffsetDateTime startDateTime = filter.getStartDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
+            OffsetDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+
+            qPredicates.add(startDateTime, QEvent.event.startTime::after);
+            qPredicates.add(endDateTime, QEvent.event.endTime::before);
+        }
+        if (filter.getNumberOfParticipantsMin() != null && filter.getNumberOfParticipantsMax() != null) {
+            QUserRelationsWithEvent qUserRelationsWithEvent = QUserRelationsWithEvent.userRelationsWithEvent;
+
+            qPredicates.add(filter.getNumberOfParticipantsMin(), QEvent.event.eventRelationsWithUser.size().goe(
+                    JPAExpressions.select(qUserRelationsWithEvent.count())
+                            .from(qUserRelationsWithEvent)
+                            .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id))
+                            .where(qUserRelationsWithEvent.isParticipant.isTrue())
+            ));
+            qPredicates.add(filter.getNumberOfParticipantsMax(), QEvent.event.eventRelationsWithUser.size().loe(
+                    JPAExpressions.select(qUserRelationsWithEvent.count())
+                            .from(qUserRelationsWithEvent)
+                            .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id))
+                            .where(qUserRelationsWithEvent.isParticipant.isTrue())
+            ));
+        }
+        if (filter.getPartsOfDay() != null) {
+            PartsOfDay partsOfDayFromClient = PartsOfDay.valueOf(filter.getPartsOfDay());
+
+            qPredicates.add(
+                    filter.getPartsOfDay(),
+                    QEvent.event.startTime.hour().goe(Integer.valueOf(partsOfDayFromClient.getHour()))
+                            .and(QEvent.event.endTime.hour().loe(Integer.valueOf(PartsOfDay.getNextEnumValue(partsOfDayFromClient).getHour()))));
+        }
+        if (filter.getDurationEventInHoursMin() != null && filter.getDurationEventInHoursMax() != null) {
+            Predicate eventDurationInHours =
+                    QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).goe(filter.getDurationEventInHoursMin())
+                    .and(
+                            QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).loe(filter.getDurationEventInHoursMax())
+                    );
+
+            qPredicates.add(filter.getDurationEventInHoursMin(), eventDurationInHours);
+        }
+        if (filter.getIsPresenceOfAlcohol() != null) {
+            qPredicates.add(filter.getIsPresenceOfAlcohol(), QEvent.event.isPresenceOfAlcohol::eq);
+        }
+        if (filter.getIsFree() != null) {
+            qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
+        }
+        if (filter.getIsEighteenYearLimit() != null) {
+            qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
+        }
+        Predicate predicate = qPredicates.build();
+
+        Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
+
+        if (currentUserId != null) {
+            List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserById(currentUserId)
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "[EXCEPTION] User with id %s, dont exist", currentUserId
+                        );
+                        log.error(message);
+                        return new UserNotFoundException(message);
+                    }).getUserRelationsWithEvents();
+
+            return filteredEvents.map(event -> eventMapper.mapToSearchEventDTO(event, eventsCurrentUser));
+        }
+        return filteredEvents.map(eventMapper::mapToSearchEventDTO);
+    }
 
     @Transactional
     @Override
@@ -298,20 +391,5 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public void addUserToEventAsParticipant(Long eventId, Long userId) {
-        /*Event event = eventRepository
-                .findById(eventId)
-                .orElseThrow(() -> new EventNotFoundException(
-                        String.format(
-                                "Event with id %s  does not exist",
-                                eventId)
-                ));
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        String.format(
-                                "User with id %s  does not exist",
-                                eventId)
-                ));
-        event.addUserAsAsParticipantsEvent(user);*/
     }
 }

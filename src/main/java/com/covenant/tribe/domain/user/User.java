@@ -80,6 +80,7 @@ public class User {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     List<Event> eventsWhereUserAsOrganizer = new ArrayList<>();
 
     @OneToMany(
@@ -88,6 +89,7 @@ public class User {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     Set<Friendship> following = new HashSet<>();
 
     @OneToMany(
@@ -96,6 +98,7 @@ public class User {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     Set<Friendship> followers = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -104,6 +107,7 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "event_type_id", nullable = false))
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     Set<EventType> interestingEventType = new HashSet<>();
 
     @OneToMany(
@@ -113,6 +117,7 @@ public class User {
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
 
     public void addUserRelationsWithEvent(UserRelationsWithEvent userRelationsWithEvent) {

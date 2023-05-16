@@ -14,11 +14,11 @@ import java.io.Serializable;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventAddressDTO implements Serializable {
 
-    @JsonProperty("event_latitude")
-    Double eventLatitude;
-
     @JsonProperty("event_longitude")
     Double eventLongitude;
+
+    @JsonProperty("event_latitude")
+    Double eventLatitude;
 
     @Size(max = 100, message = "city must not consist of more than 100 characters")
     String city;

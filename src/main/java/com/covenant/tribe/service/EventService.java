@@ -6,7 +6,11 @@ import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
+import com.covenant.tribe.util.querydsl.EventFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -15,6 +19,8 @@ import java.util.Set;
 
 @Service
 public interface EventService {
+
+    Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable);
 
     Event saveEvent(Event event, Long organizerId);
 

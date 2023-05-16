@@ -1,14 +1,19 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.PageResponse;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.EventVerificationDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.storage.TempFileDTO;
+import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
+import com.covenant.tribe.util.mapper.EventMapper;
+import com.covenant.tribe.util.querydsl.EventFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,21 +21,24 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.util.List;
 
+@Tag(name = "Event")
 @Slf4j
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -41,8 +49,9 @@ public class EventController {
     EventService eventService;
     PhotoStorageService storageService;
 
+    JwtProvider jwtProvider;
+
     @Operation(
-            tags = "Event",
             description = "CreateEvent screen. Create a new event by body. Response eventId.",
             responses = {
                     @ApiResponse(
@@ -132,7 +141,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "CardBig screen. Get an event by event_id and user_id.",
             responses = {
                     @ApiResponse(
@@ -339,5 +347,39 @@ public class EventController {
                 .body(imageDTO.getImage());
     }
 
+    @Operation(
+            description = "EventSearch screen. Get event by filter.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = SearchEventDTO.class)))}
+    )
+    @GetMapping("/search")
+    @SecurityRequirement(name = "BearerJWT")
+    public ResponseEntity<?> getAllEventByFilter(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            EventFilter eventFilter,
+            HttpServletRequest token
+    ) {
+        log.info("[CONTROLLER] start endpoint getAllEventByFilter");
+        log.debug("With data: {}", eventFilter);
 
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+
+        Long currentUserId = null;
+        if (token.getHeader(HttpHeaders.AUTHORIZATION) != null) {
+            currentUserId = jwtProvider.getUserIdFromToken(token.getHeader(HttpHeaders.AUTHORIZATION));
+        }
+
+        PageResponse<SearchEventDTO> response = PageResponse.of(
+                eventService.getEventsByFilter(eventFilter, currentUserId, pageable));
+
+        log.info("[CONTROLLER] end endpoint getAllEventByFilter");
+        log.debug("With response: {}", response);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
 }
