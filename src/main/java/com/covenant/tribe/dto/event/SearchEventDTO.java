@@ -21,47 +21,19 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchEventDTO implements Serializable {
 
-    @JsonProperty(value = "event_id")
-    @NotNull(message = "event_id should not be null")
     Long eventId;
 
-    @JsonProperty(value = "event_photo")
-    @Size(max = 200, message = "event_photo must not consist of more than 200 characters")
-    String eventPhoto;
+    List<String> avatarUrl;
 
-    @JsonProperty(value = "favorite_event")
-    @NotNull(message = "favorite_event should not be null.")
     Boolean favoriteEvent;
 
-    @JsonProperty(value = "event_name")
-    @NotBlank(message = "event_name should not be null or empty")
-    @Size(max = 100)
+    Boolean viewEvent;
+
     String eventName;
 
-    @JsonProperty(value = "event_address")
+    String eventType;
+
     EventAddressDTO eventAddress;
 
-    @JsonProperty(value = "start_time")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startTime;
-
-    @JsonProperty(value = "users_who_participants_of_event")
-    @UniqueElements(message = "All elements in usersWhoParticipantsOfEvent must be unique")
-    List<UsersWhoParticipantsOfEventDTO> usersWhoParticipantsOfEvent = new ArrayList<>();
-
-    @Builder
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class UsersWhoParticipantsOfEventDTO implements Serializable {
-
-        @JsonProperty(value = "participant_id")
-        @NotNull(message = "id should not be null")
-        Long participantId;
-
-        @JsonProperty(value = "participant_avatar_url")
-        String participantAvatarUrl;
-
-    }
 }

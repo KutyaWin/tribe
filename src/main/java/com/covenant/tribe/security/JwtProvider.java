@@ -1,5 +1,6 @@
 package com.covenant.tribe.security;
 
+import com.covenant.tribe.domain.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -9,6 +10,11 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -20,12 +26,15 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Map;
 
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
 @Component
 public class JwtProvider {
+
+    private AuthenticationManager authenticationManager;
 
     private KeysReader keysReader;
 
@@ -98,4 +107,16 @@ public class JwtProvider {
                 .parseClaimsJws(tokenWithoutBearerStr)
                 .getBody();
     }
+
+    public Long getUserIdFromToken(@NonNull String token) {
+        Claims claims = null;
+        try {
+            claims = getAccessTokenClaims(token);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+
+        return Long.parseLong(claims.getSubject());
+    }
+
 }

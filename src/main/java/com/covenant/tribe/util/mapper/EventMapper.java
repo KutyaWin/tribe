@@ -1,5 +1,6 @@
 package com.covenant.tribe.util.mapper;
 
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.domain.event.EventType;
@@ -20,4 +21,10 @@ public interface EventMapper {
     EventInUserProfileDTO mapToEventInUserProfileDTO(Event event);
 
     EventVerificationDTO mapToEventVerificationDTO(Event event);
+
+    List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, List<UserRelationsWithEvent> relationsWithEventCurrentUserId);
+
+    SearchEventDTO  mapToSearchEventDTO(Event event);
+
+    SearchEventDTO  mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId);
 }

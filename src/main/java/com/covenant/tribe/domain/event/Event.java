@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -62,8 +64,9 @@ public class Event {
     @Column(name = "end_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     OffsetDateTime endTime;
 
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @ToString.Exclude
+    @Builder.Default
     Set<EventAvatar> eventAvatars = new HashSet<>();
 
     @Column(name = "show_event_in_search", nullable = false)
@@ -72,11 +75,17 @@ public class Event {
     @Column(name = "send_to_all_users_by_interests", nullable = false)
     boolean sendToAllUsersByInterests;
 
-    @Column(name = "eighteen_year_limit", nullable = false)
-    boolean eighteenYearLimit;
+    @Column(name = "is_eighteen_year_limit", nullable = false, columnDefinition = "boolean default false")
+    boolean isEighteenYearLimit;
 
     @Column(name = "is_private", nullable = false)
     boolean isPrivate;
+
+    @Column(name = "is_presence_of_alcohol", nullable = false, columnDefinition = "boolean default false")
+    boolean isPresenceOfAlcohol;
+
+    @Column(name = "is_free", nullable = false, columnDefinition = "boolean default false")
+    boolean isFree;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type")
@@ -90,20 +99,24 @@ public class Event {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "events_tags",
-            joinColumns = @JoinColumn(name = "event_id", nullable = false),
+            joinColumns = @JoinColumn(name = "event_id", nullable = false,
+                    foreignKey = @ForeignKey(name = "fk_events_tags_event_id",
+                            foreignKeyDefinition = "FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE")),
             inverseJoinColumns = @JoinColumn(name = "tag_id", nullable = false)
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     List<Tag> tagList = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "eventRelations",
             fetch = FetchType.LAZY,
-            cascade = CascadeType.PERSIST
+            cascade = CascadeType.ALL
     )
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
+    @Builder.Default
     List<UserRelationsWithEvent> eventRelationsWithUser = new ArrayList<>();
 
     public void addEventAvatar(EventAvatar eventAvatar) {
