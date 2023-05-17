@@ -206,7 +206,7 @@ public class EventMapperImpl implements EventMapper {
                 .endTime(dto.getEndTime())
                 .showEventInSearch(dto.getShowEventInSearch())
                 .sendToAllUsersByInterests(dto.getSendToAllUsersByInterests())
-                .isEighteenYearLimit(dto.getEighteenYearLimit())
+                .isEighteenYearLimit(dto.getIsEighteenYearLimit())
                 .isPrivate(dto.getIsPrivate())
                 .eventType(eventType)
                 .build();
