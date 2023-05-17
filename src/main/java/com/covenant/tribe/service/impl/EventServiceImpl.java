@@ -162,7 +162,7 @@ public class EventServiceImpl implements EventService {
                     .stream()
                     .map(User::getId)
                     .toList();
-            sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getEighteenYearLimit());
+            sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getIsEighteenYearLimit());
         }
 
         try {
@@ -178,7 +178,7 @@ public class EventServiceImpl implements EventService {
         sendInvitationsToUsers(
                 event.getId(),
                 eventDto.getInvitedUserIds().stream().toList(),
-                eventDto.getEighteenYearLimit()
+                eventDto.getIsEighteenYearLimit()
         );
 
         DetailedEventInSearchDTO detailedEventInSearchDTO =

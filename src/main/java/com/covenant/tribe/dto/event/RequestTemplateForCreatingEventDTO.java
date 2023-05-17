@@ -77,9 +77,9 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @NotNull(message = "send_to_all_users_by_interests should not be null.")
     Boolean sendToAllUsersByInterests;
 
-    @JsonProperty(value = "eighteen_year_limit")
-    @NotNull(message = "eighteen_year_limit should not be null.")
-    Boolean eighteenYearLimit;
+    @JsonProperty(value = "is_eighteen_year_limit")
+    @NotNull(message = "is_eighteen_year_limit should not be null.")
+    Boolean isEighteenYearLimit;
 
     @JsonProperty(value = "organizer_id")
     @Min(value = 1, message = "organizer_id should be greater than 0")
