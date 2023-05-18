@@ -1,12 +1,12 @@
 package com.covenant.tribe.domain.user;
 
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import jakarta.persistence.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -29,8 +29,8 @@ public class Friendship {
     RelationshipStatus relationshipStatus;
 
     @Builder.Default
-    @Column(name = "created_at", nullable = false)
-    Instant createdAt = Instant.now();
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
+    OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Column(name = "added_to_friends_at")
     LocalDateTime addedToFriends_At;

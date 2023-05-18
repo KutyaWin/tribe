@@ -4,13 +4,13 @@ import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import jakarta.persistence.*;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,8 +41,8 @@ public class User {
     String firebaseId;
 
     @Builder.Default
-    @Column(name = "created_at")
-    Instant createdAt = Instant.now();
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
+    OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Column(name = "user_email", length = 50, nullable = false, unique = true)
     String userEmail;

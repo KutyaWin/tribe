@@ -1,9 +1,7 @@
 package com.covenant.tribe.dto.user;
 
-import com.covenant.tribe.dto.event.EventAddressDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -13,10 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Builder
@@ -53,6 +48,7 @@ public class UserProfileDTO implements Serializable {
 
     @JsonProperty("interesting_event_type")
     @UniqueElements(message = "All elements in favorite_events_id must be unique")
+    @Builder.Default
     Set<String> interestingEventType = new HashSet<>();
 
     @JsonProperty(value = "number_of_following")
