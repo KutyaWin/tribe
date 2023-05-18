@@ -12,5 +12,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             User userWhoGetFollower, User userWhoMadeFollowing, RelationshipStatus relationshipStatus
     );
 
-    Optional<Friendship> findByUserWhoMadeFollowingAndUserWhoGetFollower(User follower, User following);
+    Optional<Friendship> findByUserWhoMadeFollowingAndUserWhoGetFollowerAndUnsubscribeAtIsNull(
+            User follower, User following
+    );
 }

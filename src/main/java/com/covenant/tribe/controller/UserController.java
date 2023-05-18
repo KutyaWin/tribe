@@ -70,7 +70,7 @@ public class UserController {
 
     @Operation(
             tags = "User",
-            description = "Screen подписчики. Get all user's subscribers.",
+            description = "Screen подписчики. Get all user's subscribers by partial username.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -93,6 +93,36 @@ public class UserController {
         Page<UserSubscriberDto> responseUser = userService.findAllSubscribersByUsername(subscriberUsername, Long.parseLong(userId), pageable);
 
         log.info("[CONTROLLER] end endpoint findAllSubscribersByUsername with response: {}", responseUser);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseUser);
+    }
+
+    @Operation(
+            tags = "User",
+            description = "Screen подписчики. Get all user's subscribers.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserSubscriberDto.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/subscriber/{user_id}")
+    public ResponseEntity<?> findAllSubscribersByUsername(
+            @PathVariable(value = "user_id") String userId,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "100") Integer size
+    ) {
+        log.info("[CONTROLLER] start endpoint findAllSubscribers with response: {}", userId);
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserSubscriberDto> responseUser = userService.findAllSubscribers(Long.parseLong(userId), pageable);
+
+        log.info("[CONTROLLER] end endpoint findAllSubscribers with response: {}", responseUser);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

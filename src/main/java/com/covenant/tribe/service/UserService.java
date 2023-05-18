@@ -33,4 +33,6 @@ public interface UserService {
     void subscribeToUser(SubscriptionDto subscriptionDto);
 
     void unsubscribeFromUser(SubscriptionDto subscriptionDto);
+
+    Page<UserSubscriberDto> findAllSubscribers(long l, Pageable pageable);
 }
