@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SubscribeToUserDto {
+public class SubscriptionDto {
 
     @JsonProperty("follower_user_id")
     @NotNull(message = "follower_user_id must not be null")

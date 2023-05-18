@@ -5,11 +5,12 @@ import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.Friendship;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.user.SubscribeToUserDto;
+import com.covenant.tribe.dto.user.SubscriptionDto;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
+import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.UserRelationsWithEventService;
@@ -117,9 +118,9 @@ public class UserServiceImpl implements UserService {
     ;
 
     @Override
-    public void subscribeToUser(SubscribeToUserDto subscribeToUserDto) {
-        User follower = findUserById(subscribeToUserDto.getFollowerUserId());
-        User following = findUserById(subscribeToUserDto.getFollowingUserId());
+    public void subscribeToUser(SubscriptionDto subscriptionDto) {
+        User follower = findUserById(subscriptionDto.getFollowerUserId());
+        User following = findUserById(subscriptionDto.getFollowingUserId());
         boolean isFriendshipExist = friendshipRepository
                 .existsByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
                 following, follower, RelationshipStatus.SUBSCRIBE
@@ -136,6 +137,23 @@ public class UserServiceImpl implements UserService {
                 .userWhoGetFollower(following)
                 .userWhoMadeFollowing(follower)
                 .build();
+        friendshipRepository.save(friendship);
+    }
+
+    @Override
+    public void unsubscribeFromUser(SubscriptionDto subscriptionDto) {
+        User follower = findUserById(subscriptionDto.getFollowerUserId());
+        User following = findUserById(subscriptionDto.getFollowingUserId());
+        Friendship friendship = friendshipRepository
+                .findByUserWhoMadeFollowingAndUserWhoGetFollower(follower, following)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "User %s don't subscribe to user %s", following.getUsername(), follower.getUsername()
+                    );
+                    log.error(message);
+                    return new SubscribeNotFoundException(message);
+                });
+        friendship.unsubscribeUser();
         friendshipRepository.save(friendship);
     }
 
