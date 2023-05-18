@@ -2,7 +2,7 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.user.SubscribeToUserDto;
+import com.covenant.tribe.dto.user.SubscriptionDto;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import org.springframework.data.domain.Page;
@@ -30,5 +30,7 @@ public interface UserService {
     boolean isUsernameExist(String username);
 
     Page<UserSubscriberDto> findAllSubscribersByUsername(String partialUsername, Long userId, Pageable pageable);
-    void subscribeToUser(SubscribeToUserDto subscribeToUserDto);
+    void subscribeToUser(SubscriptionDto subscriptionDto);
+
+    void unsubscribeFromUser(SubscriptionDto subscriptionDto);
 }

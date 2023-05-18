@@ -46,6 +46,11 @@ public class Friendship {
     @ToString.Exclude
     User userWhoGetFollower;
 
+    public void unsubscribeUser() {
+        unsubscribeAt = OffsetDateTime.now();
+        relationshipStatus = RelationshipStatus.UNSUBSCRIBE;
+    }
+
     @Override
     public boolean equals(Object o){
         if (this == o) return true;

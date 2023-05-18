@@ -1,6 +1,6 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.dto.user.SubscribeToUserDto;
+import com.covenant.tribe.dto.user.SubscriptionDto;
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
@@ -108,16 +108,41 @@ public class UserController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PreAuthorize("#subscribeToUserDto.followerUserId.toString().equals(authentication.getName())")
+    @PreAuthorize("#subscriptionDto.followerUserId.toString().equals(authentication.getName())")
     @PostMapping("/subscribe")
     public ResponseEntity<?> subscribeToUser(
-        @RequestBody SubscribeToUserDto subscribeToUserDto
+        @RequestBody SubscriptionDto subscriptionDto
     ) {
-        log.info("[CONTROLLER] start endpoint subscribeToUser with param: {}", subscribeToUserDto);
+        log.info("[CONTROLLER] start endpoint subscribeToUser with param: {}", subscriptionDto);
 
-        userService.subscribeToUser(subscribeToUserDto);
+        userService.subscribeToUser(subscriptionDto);
 
         log.info("[CONTROLLER] end endpoint subscribeToUser");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Подписки. Unsubscribe from user.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#subscriptionDto.followerUserId.toString().equals(authentication.getName())")
+    @PutMapping("/unsubscribe")
+    public ResponseEntity<?> unsubscribeFromUser(
+        @RequestBody SubscriptionDto subscriptionDto
+    ) {
+        log.info("[CONTROLLER] start endpoint unsubscribeFromUser with param: {}", subscriptionDto);
+
+        userService.unsubscribeFromUser(subscriptionDto);
+
+        log.info("[CONTROLLER] end endpoint unsubscribeFromUser");
 
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
