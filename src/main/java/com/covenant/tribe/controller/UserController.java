@@ -1,5 +1,6 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.user.SubscribeToUserDto;
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Slf4j
+@Tag(name = "User")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
@@ -37,7 +40,6 @@ public class UserController {
     EventMapper eventMapper;
 
     @Operation(
-            tags = "User",
             description = "Android Small 39 screen. Get a User by username.",
             responses = {
                     @ApiResponse(
@@ -97,6 +99,32 @@ public class UserController {
                 .body(responseUser);
     }
 
+    @Operation(
+            description = "Screen: Подписчики. Subscribe to user.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#subscribeToUserDto.followerUserId.toString().equals(authentication.getName())")
+    @PostMapping("/subscribe")
+    public ResponseEntity<?> subscribeToUser(
+        @RequestBody SubscribeToUserDto subscribeToUserDto
+    ) {
+        log.info("[CONTROLLER] start endpoint subscribeToUser with param: {}", subscribeToUserDto);
+
+        userService.subscribeToUser(subscribeToUserDto);
+
+        log.info("[CONTROLLER] end endpoint subscribeToUser");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+
     @PostMapping("/favorite")
     public ResponseEntity<?> saveEventToFavorites(@RequestBody UserFavoriteEventDTO userFavoriteEventDTO) {
         log.info("[CONTROLLER] start endpoint saveEventToFavorites with param: {}", userFavoriteEventDTO);
@@ -121,7 +149,6 @@ public class UserController {
     }
 
     @Operation(
-            tags = "User",
             description = "Favorite screen. Get all favorite events by user_id.",
             responses = {
                     @ApiResponse(

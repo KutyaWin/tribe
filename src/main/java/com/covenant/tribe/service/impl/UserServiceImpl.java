@@ -2,9 +2,13 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.user.Friendship;
+import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.user.SubscribeToUserDto;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
@@ -29,6 +33,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
 
+    FriendshipRepository friendshipRepository;
     UserRepository userRepository;
     EventRepository eventRepository;
     UserMapper userMapper;
@@ -106,6 +111,32 @@ public class UserServiceImpl implements UserService {
         Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
 
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
+
+    }
+
+    ;
+
+    @Override
+    public void subscribeToUser(SubscribeToUserDto subscribeToUserDto) {
+        User follower = findUserById(subscribeToUserDto.getFollowerUserId());
+        User following = findUserById(subscribeToUserDto.getFollowingUserId());
+        boolean isFriendshipExist = friendshipRepository
+                .existsByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
+                following, follower, RelationshipStatus.SUBSCRIBE
+        );
+        if (isFriendshipExist) {
+            String message = String.format(
+                    "User %s and %s are already friends", following.getUsername(), follower.getUsername()
+            );
+            log.error(message);
+            throw new AlreadyExistArgumentForAddToEntityException(message);
+        }
+        Friendship friendship = Friendship.builder()
+                .relationshipStatus(RelationshipStatus.SUBSCRIBE)
+                .userWhoGetFollower(following)
+                .userWhoMadeFollowing(follower)
+                .build();
+        friendshipRepository.save(friendship);
     }
 
     @Override
