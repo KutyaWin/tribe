@@ -1,6 +1,7 @@
 package com.covenant.tribe.repository;
 
 import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
@@ -24,8 +25,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "FROM User u " +
             "JOIN u.followers f " +
             "WHERE f.userWhoGetFollower.id = :userId " +
-            "AND f.userWhoMadeFollowing.username LIKE %:username%")
-    Page<User> findAllSubscribers(@Param("userId") Long userId, @Param("username") String username, Pageable pageable);
+            "AND f.userWhoMadeFollowing.username LIKE %:username% " +
+            "AND f.relationshipStatus = :relationshipStatus")
+    Page<User> findAllSubscribersByPartialUsername
+            (@Param("userId") Long userId,
+             @Param("username") String username,
+             @Param("relationshipStatus") RelationshipStatus relationshipStatus,
+             Pageable pageable);
+
+    @Query("SELECT f.userWhoMadeFollowing " +
+            "FROM User u " +
+            "JOIN u.followers f " +
+            "WHERE f.userWhoGetFollower.id = :userId AND f.relationshipStatus = :relationshipStatus")
+    Page<User> findAllSubscribers(
+            @Param("userId") Long userId,
+            @Param("relationshipStatus") RelationshipStatus relationshipStatus,
+            Pageable pageable);
 
     @Query("SELECT u.id " +
             "FROM User u " +

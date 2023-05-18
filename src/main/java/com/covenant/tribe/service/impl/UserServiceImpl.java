@@ -107,15 +107,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserSubscriberDto> findAllSubscribersByUsername(String partialUsername, Long userId, Pageable pageable) {
-        Page<User> subscribers = userRepository.findAllSubscribers(userId, partialUsername, pageable);
+        Page<User> subscribers = userRepository.findAllSubscribersByPartialUsername(
+                userId, partialUsername, RelationshipStatus.SUBSCRIBE, pageable
+        );
         List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
         Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
 
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
+    };
 
+    @Override
+    public Page<UserSubscriberDto> findAllSubscribers(long userId, Pageable pageable) {
+        Page<User> subscribers = userRepository.findAllSubscribers(userId, RelationshipStatus.SUBSCRIBE, pageable);
+        List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
+        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
+        return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
     }
-
-    ;
 
     @Override
     public void subscribeToUser(SubscriptionDto subscriptionDto) {
@@ -145,7 +152,7 @@ public class UserServiceImpl implements UserService {
         User follower = findUserById(subscriptionDto.getFollowerUserId());
         User following = findUserById(subscriptionDto.getFollowingUserId());
         Friendship friendship = friendshipRepository
-                .findByUserWhoMadeFollowingAndUserWhoGetFollower(follower, following)
+                .findByUserWhoMadeFollowingAndUserWhoGetFollowerAndUnsubscribeAtIsNull(follower, following)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "User %s don't subscribe to user %s", following.getUsername(), follower.getUsername()
