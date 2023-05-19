@@ -106,6 +106,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsUserByUsername(username);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<UserSubscriberDto> findAllSubscribersByUsername(String partialUsername, Long userId, Pageable pageable) {
         Page<User> subscribers = userRepository.findAllSubscribersByPartialUsername(
@@ -119,6 +120,7 @@ public class UserServiceImpl implements UserService {
 
     ;
 
+    @Transactional(readOnly = true)
     @Override
     public Page<UserSubscriberDto> findAllSubscribers(long userId, Pageable pageable) {
         Page<User> subscribers = userRepository.findAllSubscribers(userId, RelationshipStatus.SUBSCRIBE, pageable);
@@ -127,12 +129,14 @@ public class UserServiceImpl implements UserService {
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<UserUnSubscriberDto> findAllUnSubscribers(long userId, Pageable pageable) {
         Page<User> unsubscribers = userRepository.findAllNotFollowingUser(userId, RelationshipStatus.SUBSCRIBE, pageable);
         return unsubscribers.map(user -> userMapper.mapToUserUnSubscriberDto(user));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<UserUnSubscriberDto> findAllUnSubscribersByUsername(
             String unsubscriberUsername, long userId, Pageable pageable
@@ -143,6 +147,7 @@ public class UserServiceImpl implements UserService {
         return unsubscribers.map(user -> userMapper.mapToUserUnSubscriberDto(user));
     }
 
+    @Transactional()
     @Override
     public void subscribeToUser(SubscriptionDto subscriptionDto) {
         User follower = findUserById(subscriptionDto.getFollowerUserId());
@@ -166,6 +171,7 @@ public class UserServiceImpl implements UserService {
         friendshipRepository.save(friendship);
     }
 
+    @Transactional
     @Override
     public void unsubscribeFromUser(SubscriptionDto subscriptionDto) {
         User follower = findUserById(subscriptionDto.getFollowerUserId());
