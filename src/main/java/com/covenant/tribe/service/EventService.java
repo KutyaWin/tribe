@@ -48,4 +48,6 @@ public interface EventService {
     List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId);
 
     void confirmInvitationToEvent(Long eventId, String userId);
+
+    void declineInvitationToEvent(Long eventId, String userId);
 }

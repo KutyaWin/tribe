@@ -298,6 +298,32 @@ public class EventController {
     }
 
     @Operation(
+            description = "Screen: Карточка приглашения. Decline the invitation to event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/invitation/decline/{event_id}/{user_id}")
+    public ResponseEntity<?> declineInvitationToEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint declineInvitationToEvent with event_id: {} and user_id {}", eventId, userId);
+
+        eventService.declineInvitationToEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint declineInvitationToEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
             description = "Screen: Профиль USER. Get events which user is participant",
             responses = {
                     @ApiResponse(
