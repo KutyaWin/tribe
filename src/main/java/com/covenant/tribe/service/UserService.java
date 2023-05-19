@@ -5,6 +5,7 @@ import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.user.SubscriptionDto;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.dto.user.UserUnSubscriberDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,4 +36,6 @@ public interface UserService {
     void unsubscribeFromUser(SubscriptionDto subscriptionDto);
 
     Page<UserSubscriberDto> findAllSubscribers(long l, Pageable pageable);
+
+    Page<UserUnSubscriberDto> findAllUnSubscribers(long userId, Pageable pageable);
 }

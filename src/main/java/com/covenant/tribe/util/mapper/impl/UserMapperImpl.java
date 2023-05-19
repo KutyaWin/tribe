@@ -7,6 +7,7 @@ import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.dto.user.UserUnSubscriberDto;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +71,17 @@ public class UserMapperImpl implements UserMapper {
                 .firstName(subscriber.getFirstName())
                 .build();
 
+    }
+
+    @Override
+    public UserUnSubscriberDto mapToUserUnSubscriberDto(User user) {
+        return UserUnSubscriberDto.builder()
+                .userAvatar(user.getUserAvatar())
+                .userId(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build();
     }
 
     private String makeFakeDataIfNeededIsEmpty(String data, String socialId) {

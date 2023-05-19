@@ -1,10 +1,7 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.dto.user.SubscriptionDto;
+import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.dto.event.EventInFavoriteDTO;
-import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
-import com.covenant.tribe.dto.user.UserSubscriberDto;
-import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,7 +66,6 @@ public class UserController {
     }
 
     @Operation(
-            tags = "User",
             description = "Screen подписчики. Get all user's subscribers by partial username.",
             responses = {
                     @ApiResponse(
@@ -100,7 +96,35 @@ public class UserController {
     }
 
     @Operation(
-            tags = "User",
+            description = "Screen:  Подписаться. Get all users that the user is not subscribed to",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserUnSubscriberDto.class))))},
+            security = @SecurityRequirement(name = "BearerJWT"))
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/unsubscriber/{user_id}")
+    public ResponseEntity<?> findAllUnSubscribers(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "100") Integer size,
+            @PathVariable(name = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint findAllUnSubscribers with param: {}", userId);
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserUnSubscriberDto> unsubscribers = userService.findAllUnSubscribers(Long.parseLong(userId), pageable);
+
+        log.info("[CONTROLLER] end endpoint findAllUnSubscribers with response: {}", unsubscribers);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(unsubscribers);
+    }
+
+
+
+    @Operation(
             description = "Screen подписчики. Get all user's subscribers.",
             responses = {
                     @ApiResponse(
