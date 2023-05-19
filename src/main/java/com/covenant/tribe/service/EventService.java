@@ -46,4 +46,6 @@ public interface EventService {
     List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId);
 
     List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId);
+
+    void confirmInvitationToEvent(Long eventId, String userId);
 }

@@ -12,6 +12,7 @@ import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
+import com.covenant.tribe.exeption.event.UserRelationsWithEventNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
@@ -364,6 +365,21 @@ public class EventServiceImpl implements EventService {
                         userRelationsWithEvent.getEventRelations())
                 )
                 .toList();
+    }
+
+    @Override
+    public void confirmInvitationToEvent(Long eventId, String userId) {
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(eventId, Long.parseLong(userId))
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        userRelationsWithEvent.setParticipant(true);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
