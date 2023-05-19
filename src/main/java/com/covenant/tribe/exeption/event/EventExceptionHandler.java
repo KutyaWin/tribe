@@ -55,6 +55,18 @@ public class EventExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(UserRelationsWithEventNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseErrorDTO handleUserRelationsWithEventNotFoundException(
+            UserRelationsWithEventNotFoundException eventNotVerifiedException
+    ) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .errorMessage(List.of(eventNotVerifiedException.getMessage()))
+                .build();
+    }
+
     @ExceptionHandler(EventNotVerifiedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleEventAlreadyExistException(EventNotVerifiedException eventNotVerifiedException) {
