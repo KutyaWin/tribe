@@ -382,6 +382,21 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
+    @Override
+    public void declineInvitationToEvent(Long eventId, String userId) {
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(eventId, Long.parseLong(userId))
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        userRelationsWithEvent.setInvited(false);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
         List<UserRelationsWithEvent> userRelationsWithEvents =
                 userRelationsWithEventRepository.findAllByUserRelations(user);
