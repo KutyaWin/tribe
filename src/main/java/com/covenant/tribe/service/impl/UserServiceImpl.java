@@ -8,6 +8,7 @@ import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.user.SubscriptionDto;
 import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.dto.user.UserUnSubscriberDto;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
@@ -122,6 +123,12 @@ public class UserServiceImpl implements UserService {
         List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
         Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
+    }
+
+    @Override
+    public Page<UserUnSubscriberDto> findAllUnSubscribers(long userId, Pageable pageable) {
+        Page<User> unsubscribers = userRepository.findAllNotFollowingUser(userId, RelationshipStatus.SUBSCRIBE, pageable);
+        return unsubscribers.map(user -> userMapper.mapToUserUnSubscriberDto(user));
     }
 
     @Override
