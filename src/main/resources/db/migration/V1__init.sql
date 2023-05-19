@@ -76,7 +76,8 @@ CREATE TABLE IF NOT EXISTS event_types
     dark_rectangle_animation  TEXT,
     light_circle_animation    TEXT,
     light_rectangle_animation TEXT,
-    type_name                 varchar(50) UNIQUE NOT NULL
+    type_name                 varchar(50) UNIQUE NOT NULL,
+    type_name_en              varchar(50) UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS unknown_user_interests
@@ -121,7 +122,8 @@ CREATE TABLE IF NOT EXISTS event_avatars
 CREATE TABLE IF NOT EXISTS tags
 (
     id       BIGSERIAL PRIMARY KEY,
-    tag_name varchar(50) UNIQUE NOT NULL
+    tag_name varchar(50) UNIQUE NOT NULL,
+    tag_name_en varchar(50) UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS events_tags

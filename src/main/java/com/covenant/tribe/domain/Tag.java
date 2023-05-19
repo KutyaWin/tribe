@@ -30,6 +30,9 @@ public class Tag {
     @Column(name = "tag_name", nullable = false, unique = true, length = 50)
     String tagName;
 
+    @Column(name = "tag_name_en", unique = true, length = 50)
+    String tagNameEn;
+
     @ManyToMany(mappedBy = "tagList", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Builder.Default
