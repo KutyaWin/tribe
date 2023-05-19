@@ -38,4 +38,8 @@ public interface UserService {
     Page<UserSubscriberDto> findAllSubscribers(long l, Pageable pageable);
 
     Page<UserUnSubscriberDto> findAllUnSubscribers(long userId, Pageable pageable);
+
+    Page<UserUnSubscriberDto> findAllUnSubscribersByUsername(
+            String unsubscriberUsername, long userId, Pageable pageable
+    );
 }

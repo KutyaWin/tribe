@@ -48,6 +48,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("relationshipStatus") RelationshipStatus relationshipStatus,
             Pageable pageable);
 
+    @Query("SELECT u " +
+            "FROM User u " +
+            "WHERE u " +
+            "NOT IN (" +
+            "SELECT f.userWhoMadeFollowing " +
+            "FROM User u " +
+            "JOIN u.followers f " +
+            "WHERE f.userWhoGetFollower.id = :userId " +
+            "AND f.relationshipStatus = :relationshipStatus) " +
+            "AND u.id <> :userId " +
+            "AND u.username LIKE :unsubscriberUsername%")
+    Page<User> findAllNotFollowingUserByPartialUsername(
+            String unsubscriberUsername, long userId, RelationshipStatus relationshipStatus, Pageable pageable
+    );
+
+
     @Query("SELECT f.userWhoMadeFollowing " +
             "FROM User u " +
             "JOIN u.followers f " +

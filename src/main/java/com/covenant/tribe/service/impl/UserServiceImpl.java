@@ -115,7 +115,9 @@ public class UserServiceImpl implements UserService {
         Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
 
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
-    };
+    }
+
+    ;
 
     @Override
     public Page<UserSubscriberDto> findAllSubscribers(long userId, Pageable pageable) {
@@ -132,13 +134,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Page<UserUnSubscriberDto> findAllUnSubscribersByUsername(
+            String unsubscriberUsername, long userId, Pageable pageable
+    ) {
+        Page<User> unsubscribers = userRepository.findAllNotFollowingUserByPartialUsername(
+                unsubscriberUsername, userId, RelationshipStatus.SUBSCRIBE, pageable
+        );
+        return unsubscribers.map(user -> userMapper.mapToUserUnSubscriberDto(user));
+    }
+
+    @Override
     public void subscribeToUser(SubscriptionDto subscriptionDto) {
         User follower = findUserById(subscriptionDto.getFollowerUserId());
         User following = findUserById(subscriptionDto.getFollowingUserId());
         boolean isFriendshipExist = friendshipRepository
                 .existsByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
-                following, follower, RelationshipStatus.SUBSCRIBE
-        );
+                        following, follower, RelationshipStatus.SUBSCRIBE
+                );
         if (isFriendshipExist) {
             String message = String.format(
                     "User %s and %s are already friends", following.getUsername(), follower.getUsername()

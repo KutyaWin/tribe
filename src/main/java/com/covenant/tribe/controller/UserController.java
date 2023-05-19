@@ -122,6 +122,37 @@ public class UserController {
                 .body(unsubscribers);
     }
 
+    @Operation(
+            description = "Screen:  Подписаться. Get all users that the user is not subscribed to by partial username",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserUnSubscriberDto.class))))},
+            security = @SecurityRequirement(name = "BearerJWT"))
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/unsubscriber/partial/{unsubscriber_username}/{user_id}")
+    public ResponseEntity<?> findAllUnSubscribersByUsername(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "100") Integer size,
+            @PathVariable(name = "unsubscriber_username") String unsubscriberUsername,
+            @PathVariable(name = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint findAllUnSubscribersByUsername with param: {}", unsubscriberUsername);
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserUnSubscriberDto> unsubscribers = userService.findAllUnSubscribersByUsername(
+                unsubscriberUsername, Long.parseLong(userId), pageable
+        );
+
+        log.info("[CONTROLLER] end endpoint findAllUnSubscribersByUsername with response: {}", unsubscribers);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(unsubscribers);
+
+    }
 
 
     @Operation(
@@ -165,7 +196,7 @@ public class UserController {
     @PreAuthorize("#subscriptionDto.followerUserId.toString().equals(authentication.getName())")
     @PostMapping("/subscribe")
     public ResponseEntity<?> subscribeToUser(
-        @RequestBody SubscriptionDto subscriptionDto
+            @RequestBody SubscriptionDto subscriptionDto
     ) {
         log.info("[CONTROLLER] start endpoint subscribeToUser with param: {}", subscriptionDto);
 
@@ -190,7 +221,7 @@ public class UserController {
     @PreAuthorize("#subscriptionDto.followerUserId.toString().equals(authentication.getName())")
     @PutMapping("/unsubscribe")
     public ResponseEntity<?> unsubscribeFromUser(
-        @RequestBody SubscriptionDto subscriptionDto
+            @RequestBody SubscriptionDto subscriptionDto
     ) {
         log.info("[CONTROLLER] start endpoint unsubscribeFromUser with param: {}", subscriptionDto);
 
