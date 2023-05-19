@@ -163,7 +163,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: none. Get events which has status VERIFICATION_PENDING",
             responses = {
                     @ApiResponse(
@@ -185,7 +184,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: none. Update event status to PUBLISHED",
             responses = {
                     @ApiResponse(
@@ -209,7 +207,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: none. Update event status to SEND_TO_REWORK",
             responses = {
                     @ApiResponse(
@@ -234,7 +231,6 @@ public class EventController {
 
 
     @Operation(
-            tags = "Event",
             description = "Screen: Профиль ADMIN. Get events which user is the organizer",
             responses = {
                     @ApiResponse(
@@ -256,7 +252,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: Профиль ADMIN, профиль USER. Get events which user is invited",
             responses = {
                     @ApiResponse(
@@ -278,7 +273,10 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
+
+    )
+
+    @Operation(
             description = "Screen: Профиль USER. Get events which user is participant",
             responses = {
                     @ApiResponse(
@@ -316,7 +314,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: Наполнение события. Add event avatar to tmp folder.",
             responses = {
                     @ApiResponse(
