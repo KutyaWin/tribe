@@ -11,7 +11,9 @@ import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
+import com.covenant.tribe.exeption.event.UserAlreadyInvitedException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
+import com.covenant.tribe.exeption.event.UserRelationsWithEventNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
@@ -65,7 +67,7 @@ public class EventServiceImpl implements EventService {
             NumberExpression<Double> distance = Expressions.numberTemplate(
                     Double.class,
                     "ST_Distance(" + QEvent.event.eventAddress.eventPosition +
-                            ", ST_MakePoint(" + filter.getLongitude()+ ", " + filter.getLatitude() + "))");
+                            ", ST_MakePoint(" + filter.getLongitude() + ", " + filter.getLatitude() + "))");
 
             qPredicates.add(filter.getDistanceInMeters(), distance::lt);
         }
@@ -106,9 +108,9 @@ public class EventServiceImpl implements EventService {
         if (filter.getDurationEventInHoursMin() != null && filter.getDurationEventInHoursMax() != null) {
             Predicate eventDurationInHours =
                     QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).goe(filter.getDurationEventInHoursMin())
-                    .and(
-                            QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).loe(filter.getDurationEventInHoursMax())
-                    );
+                            .and(
+                                    QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).loe(filter.getDurationEventInHoursMax())
+                            );
 
             qPredicates.add(filter.getDurationEventInHoursMin(), eventDurationInHours);
         }
@@ -243,6 +245,7 @@ public class EventServiceImpl implements EventService {
         return detailedEventInSearchDTO;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
         return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
@@ -302,6 +305,7 @@ public class EventServiceImpl implements EventService {
         return null;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
         return eventRepository
@@ -310,6 +314,7 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public void updateEventStatusToPublished(Long eventId) {
         Event event = getEventById(eventId);
@@ -322,6 +327,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
+    @Transactional
     @Override
     public void updateEventStatusToSendToRework(Long eventId) {
         Event event = getEventById(eventId);
@@ -334,6 +340,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId) {
         User user = getUser(userId);
@@ -350,6 +357,7 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId) {
         User user = getUser(userId);
@@ -365,6 +373,148 @@ public class EventServiceImpl implements EventService {
                 )
                 .toList();
     }
+
+    @Transactional
+    @Override
+    public void confirmInvitationToEvent(Long eventId, String userId) {
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        userRelationsWithEvent.setParticipant(true);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
+    @Transactional
+    @Override
+    public void declineInvitationToEvent(Long eventId, String userId) {
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        userRelationsWithEvent.setInvited(false);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
+    @Transactional
+    @Override
+    public void declineToParticipantInEvent(Long eventId, String userId) {
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        userRelationsWithEvent.setParticipant(false);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
+    @Transactional
+    @Override
+    public void deleteEvent(Long organizerId, Long eventId) {
+        Event event = eventRepository
+                .findByOrganizerIdAndId(organizerId, eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] Event with id %s and organizer with id %s, does not exist",
+                            eventId, organizerId);
+                    log.error(message);
+                    return new EventNotFoundException(message);
+                });
+        event.setEventStatus(EventStatus.DELETED);
+        eventRepository.save(event);
+    }
+
+    @Override
+    public void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId) {
+        boolean isUserAlreadyInvited = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .isPresent();
+        if (isUserAlreadyInvited) {
+            String message = String.format("[EXCEPTION] User with id %s is already invited to this event", userId);
+            log.error(message);
+            throw new UserAlreadyInvitedException(message);
+        }
+        boolean isUserAlreadyParticipant = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .isPresent();
+        if (isUserAlreadyParticipant) {
+            String message = String.format("[EXCEPTION] User with id %s is already participant in this event", userId);
+            log.error(message);
+            throw new UserAlreadyParticipantException(message);
+        }
+        boolean isUserAlreadySendRequest = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsWantToGoTrue(Long.parseLong(userId), eventId)
+                .isPresent();
+        if (isUserAlreadySendRequest) {
+            String message = String.format("[EXCEPTION] User with id %s is already send request to this event", userId);
+            log.error(message);
+            throw new UserAlreadySendRequestException(message);
+        }
+        UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
+                .isInvited(false)
+                .isParticipant(false)
+                .isWantToGo(true)
+                .isFavorite(false)
+                .isViewed(false)
+                .build();
+        User user = getUser(userId);
+        Event event = getEventById(eventId);
+        if (!event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not closed", eventId);
+            log.error(message);
+            throw new NotPrivateEventException(message);
+        }
+        userRelationsWithEvent.setEventRelations(event);
+        userRelationsWithEvent.setUserRelations(user);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
+    @Override
+    public void sendRequestToParticipationInPublicEvent(Long eventId, String userId) {
+        Event event = getEventById(eventId);
+        if (event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not public", eventId);
+            log.error(message);
+            throw new NotPublicEventException(message);
+        }
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId)
+                .orElseGet(() -> {
+                    return null;
+                });
+        if (userRelationsWithEvent == null) {
+            userRelationsWithEvent = UserRelationsWithEvent.builder()
+                    .isInvited(false)
+                    .isParticipant(true)
+                    .isWantToGo(false)
+                    .isFavorite(false)
+                    .isViewed(false)
+                    .build();
+            User user = getUser(userId);
+            userRelationsWithEvent.setEventRelations(event);
+            userRelationsWithEvent.setUserRelations(user);
+        } else {
+            userRelationsWithEvent.setInvited(false);
+            userRelationsWithEvent.setWantToGo(false);
+            userRelationsWithEvent.setParticipant(true);
+        }
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
 
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
         List<UserRelationsWithEvent> userRelationsWithEvents =
@@ -390,6 +540,45 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public void addUserToEventAsParticipant(Long eventId, Long userId) {
+    public void addUsersToPrivateEventAsParticipants(Long eventId, Long userId) {
+        Event event = getEventById(eventId);
+        if (!event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not private", eventId);
+            log.error(message);
+            throw new NotPrivateEventException(message);
+        }
+        List<UserRelationsWithEvent> userRelationsWithEvents = userRelationsWithEventRepository
+                .findByEventRelationsIdAndIsWantToGo(eventId, true);
+        userRelationsWithEvents.forEach(relation -> {
+            relation.setParticipant(true);
+            relation.setWantToGo(false);
+        });
+        userRelationsWithEventRepository.saveAll(userRelationsWithEvents);
+    }
+
+    @Transactional
+    @Override
+    public void addUserToPrivateEventAsParticipant(Long eventId, Long organizerId, Long userId) {
+        Event event = getEventById(eventId);
+        if (!event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not private", eventId);
+            log.error(message);
+            throw new NotPrivateEventException(message);
+        }
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(userId, eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s and event relations with id %s does not exist",
+                            userId, eventId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        if (userRelationsWithEvent.isInvited()) {
+            userRelationsWithEvent.setInvited(false);
+        }
+        userRelationsWithEvent.setWantToGo(false);
+        userRelationsWithEvent.setParticipant(true);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 }
