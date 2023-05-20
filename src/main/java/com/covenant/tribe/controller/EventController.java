@@ -395,6 +395,28 @@ public class EventController {
     }
 
     @Operation(
+            description = "Screen: Пока нет. Confirm by organizer request to participation in private event by userId",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @PatchMapping("/organizer/participation/confirm/{event_id}/{organizer_id}/{user_id}")
+    public ResponseEntity<?> addUserToEventAsParticipant(
+            @PathVariable("event_id") Long eventId,
+            @PathVariable("organizer_id") String organizerId,
+            @PathVariable("user_id") Long userId
+    ) {
+        eventService.addUserToPrivateEventAsParticipant(eventId, Long.valueOf(organizerId), userId);
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
             description = "Screen: Подача заявки после отказа, Экран карточки. Send to organizer a request to " +
                     "participation in a private event",
             responses = {

@@ -58,4 +58,6 @@ public interface EventService {
     void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId);
 
     void sendRequestToParticipationInPublicEvent(Long eventId, String userId);
+
+    void addUserToPrivateEventAsParticipant(Long eventId, Long organizerId, Long userId);
 }
