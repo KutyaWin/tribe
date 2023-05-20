@@ -11,8 +11,9 @@ import java.util.Optional;
 @Repository
 public interface UserRelationsWithEventRepository extends JpaRepository<UserRelationsWithEvent, Long> {
 
-    Optional<UserRelationsWithEvent> getByUserRelationsIdAndEventRelationsId(Long userId, Long eventId);
+    Optional<UserRelationsWithEvent> findByUserRelationsIdAndEventRelationsId(Long userId, Long eventId);
     Optional<UserRelationsWithEvent> findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long userId, Long eventId);
     Optional<UserRelationsWithEvent> findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(Long userId, Long eventId);
+    Optional<UserRelationsWithEvent> findByUserRelationsIdAndEventRelationsIdAndIsWantToGoTrue(Long userId, Long eventId);
     List<UserRelationsWithEvent> findAllByUserRelations(User user);
 }

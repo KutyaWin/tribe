@@ -76,4 +76,45 @@ public class EventExceptionHandler {
                 .errorMessage(List.of(eventNotVerifiedException.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(NotClosedEventException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleNotClosedEventException(NotClosedEventException notClosedEventException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(notClosedEventException.getMessage()))
+                .build();
+    }
+    @ExceptionHandler(UserAlreadyParticipantException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleUserAlreadyInvitedException(UserAlreadyParticipantException participantException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(participantException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(UserAlreadyInvitedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleUserAlreadyInvitedException(UserAlreadyInvitedException e) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(UserAlreadySendRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleUserAlreadySendRequestException(
+            UserAlreadySendRequestException userAlreadySendRequestException
+    ) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(userAlreadySendRequestException.getMessage()))
+                .build();
+    }
 }
