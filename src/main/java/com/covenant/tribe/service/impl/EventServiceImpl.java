@@ -244,6 +244,7 @@ public class EventServiceImpl implements EventService {
         return detailedEventInSearchDTO;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
         return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
@@ -303,6 +304,7 @@ public class EventServiceImpl implements EventService {
         return null;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
         return eventRepository
@@ -311,6 +313,7 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public void updateEventStatusToPublished(Long eventId) {
         Event event = getEventById(eventId);
@@ -323,6 +326,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
+    @Transactional
     @Override
     public void updateEventStatusToSendToRework(Long eventId) {
         Event event = getEventById(eventId);
@@ -335,6 +339,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId) {
         User user = getUser(userId);
@@ -350,7 +355,7 @@ public class EventServiceImpl implements EventService {
                 )
                 .toList();
     }
-
+    @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId) {
         User user = getUser(userId);
@@ -367,10 +372,11 @@ public class EventServiceImpl implements EventService {
                 .toList();
     }
 
+    @Transactional
     @Override
     public void confirmInvitationToEvent(Long eventId, String userId) {
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
-                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(eventId, Long.parseLong(userId))
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
@@ -382,10 +388,11 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
+    @Transactional
     @Override
     public void declineInvitationToEvent(Long eventId, String userId) {
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
-                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(eventId, Long.parseLong(userId))
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
@@ -394,6 +401,21 @@ public class EventServiceImpl implements EventService {
                     return new UserRelationsWithEventNotFoundException(message);
                 });
         userRelationsWithEvent.setInvited(false);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+    @Transactional
+    @Override
+    public void declineToParticipantInEvent(Long eventId, String userId) {
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
+        userRelationsWithEvent.setParticipant(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 

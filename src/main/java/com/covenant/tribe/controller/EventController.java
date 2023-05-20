@@ -349,7 +349,7 @@ public class EventController {
     }
 
 
-    @PostMapping("/{event_id}/{user_id}")
+    @PostMapping("/participant/confirm/{event_id}/{user_id}")
     public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
             @PathVariable("user_id") Long userId
@@ -359,6 +359,33 @@ public class EventController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+
+    @Operation(
+            description = "Screen: Пока нет. Decline to participant in the event.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/participant/decline/{event_id}/{user_id}")
+    public ResponseEntity<?> declineToParticipantInEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint declineToParticipantInEvent with event_id: {} and user_id {}", eventId, userId);
+
+        eventService.declineToParticipantInEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint declineToParticipantInEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
 
     @Operation(
             description = "Screen: Наполнение события. Add event avatar to tmp folder.",

@@ -50,4 +50,6 @@ public interface EventService {
     void confirmInvitationToEvent(Long eventId, String userId);
 
     void declineInvitationToEvent(Long eventId, String userId);
+
+    void declineToParticipantInEvent(Long eventId, String userId);
 }
