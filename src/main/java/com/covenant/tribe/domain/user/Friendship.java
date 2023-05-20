@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -29,14 +30,11 @@ public class Friendship {
     RelationshipStatus relationshipStatus;
 
     @Builder.Default
-    @Column(name = "created_at", nullable = false)
-    Instant createdAt = Instant.now();
+    @Column(name = "subscribe_at", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime subscribeAt = OffsetDateTime.now();
 
-    @Column(name = "added_to_friends_at")
-    LocalDateTime addedToFriends_At;
-
-    @Column(name = "added_to_block_at")
-    LocalDateTime addedToBlock_At;
+    @Column(name = "unsubscribe_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    OffsetDateTime unsubscribeAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_who_made_following")
@@ -47,6 +45,11 @@ public class Friendship {
     @JoinColumn(name = "user_who_get_follower")
     @ToString.Exclude
     User userWhoGetFollower;
+
+    public void unsubscribeUser() {
+        unsubscribeAt = OffsetDateTime.now();
+        relationshipStatus = RelationshipStatus.UNSUBSCRIBE;
+    }
 
     @Override
     public boolean equals(Object o){
