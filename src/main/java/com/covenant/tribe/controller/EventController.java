@@ -125,7 +125,7 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PostMapping
-    @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.name)")
+    @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.getName())")
     public ResponseEntity<?> createEvent(
             @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
     ) throws FileNotFoundException {
@@ -148,7 +148,7 @@ public class EventController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PreAuthorize("#organizerId.toString().equals(authentication.name)")
+    @PreAuthorize("#organizerId.toString().equals(authentication.getName())")
     @DeleteMapping("/delete/{organizer_id}/{event_id}")
     public ResponseEntity<?> deleteEvent(
             @PathVariable("organizer_id") Long organizerId,
@@ -373,12 +373,22 @@ public class EventController {
                 .body(participantsEvents);
     }
 
-    @PostMapping("/organizer/participation/confirm/{event_id}/{user_id}")
+    @Operation(
+        description = "Screen: Пока нет. Confirm by organizer all requests to participation",
+        responses = {
+                @ApiResponse(
+                        responseCode = "202"
+                )
+        },
+        security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @PatchMapping("/organizer/participation/confirm/{event_id}/{organizer_id}")
     public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
-            @PathVariable("user_id") Long userId
+            @PathVariable("organizer_id") String organizerId
     ) {
-        eventService.addUserToEventAsParticipant(eventId, userId);
+        eventService.addUsersToPrivateEventAsParticipants(eventId, Long.valueOf(organizerId));
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();

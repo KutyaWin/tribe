@@ -32,7 +32,7 @@ public interface EventService {
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);
 
-    void addUserToEventAsParticipant(Long eventId, Long userId);
+    void addUsersToPrivateEventAsParticipants(Long eventId, Long userId);
 
     Set<User> inviteUsersAsParticipantsToEvent(
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);
