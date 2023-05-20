@@ -537,6 +537,19 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public void addUserToEventAsParticipant(Long eventId, Long userId) {
+    public void addUsersToPrivateEventAsParticipants(Long eventId, Long userId) {
+        Event event = getEventById(eventId);
+        if (!event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not private", eventId);
+            log.error(message);
+            throw new NotPrivateEventException(message);
+        }
+        List<UserRelationsWithEvent> userRelationsWithEvents = userRelationsWithEventRepository
+                .findByEventRelationsIdAndIsWantToGo(eventId, true);
+        userRelationsWithEvents.forEach(relation -> {
+            relation.setParticipant(true);
+            relation.setWantToGo(false);
+        });
+        userRelationsWithEventRepository.saveAll(userRelationsWithEvents);
     }
 }
