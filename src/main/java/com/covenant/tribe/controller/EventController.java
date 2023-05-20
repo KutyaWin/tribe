@@ -141,6 +141,32 @@ public class EventController {
     }
 
     @Operation(
+            description = "Screen: Настройки, Редактировать удалить. Delete event by event_id and organizer_id",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.toString().equals(authentication.name)")
+    @DeleteMapping("/delete/{organizer_id}/{event_id}")
+    public ResponseEntity<?> deleteEvent(
+            @PathVariable("organizer_id") Long organizerId,
+            @PathVariable("event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint deleteEvent with param: {}, {}", organizerId, eventId);
+
+        eventService.deleteEvent(organizerId, eventId);
+
+        log.info("[CONTROLLER] end endpoint deleteEvent with response: {}", eventId);
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
             description = "CardBig screen. Get an event by event_id and user_id.",
             responses = {
                     @ApiResponse(
