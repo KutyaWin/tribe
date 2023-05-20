@@ -419,6 +419,22 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
+    @Transactional
+    @Override
+    public void deleteEvent(Long organizerId, Long eventId) {
+        Event event = eventRepository
+                .findByOrganizerIdAndId(organizerId, eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] Event with id %s and organizer with id %s, does not exist",
+                            eventId, organizerId);
+                    log.error(message);
+                    return new EventNotFoundException(message);
+                });
+        event.setEventStatus(EventStatus.DELETED);
+        eventRepository.save(event);
+    }
+
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
         List<UserRelationsWithEvent> userRelationsWithEvents =
                 userRelationsWithEventRepository.findAllByUserRelations(user);
