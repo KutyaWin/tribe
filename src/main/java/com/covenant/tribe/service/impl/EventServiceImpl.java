@@ -11,6 +11,7 @@ import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
+import com.covenant.tribe.exeption.event.UserAlreadyInvitedException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.exeption.event.UserRelationsWithEventNotFoundException;
 import com.covenant.tribe.repository.*;
@@ -433,6 +434,51 @@ public class EventServiceImpl implements EventService {
                 });
         event.setEventStatus(EventStatus.DELETED);
         eventRepository.save(event);
+    }
+
+    @Override
+    public void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId) {
+        boolean isUserAlreadyInvited = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .isPresent();
+        if (isUserAlreadyInvited) {
+            String message = String.format("[EXCEPTION] User with id %s is already invited to this event", userId);
+            log.error(message);
+            throw new UserAlreadyInvitedException(message);
+        }
+        boolean isUserAlreadyParticipant = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .isPresent();
+        if (isUserAlreadyParticipant) {
+            String message = String.format("[EXCEPTION] User with id %s is already participant in this event", userId);
+            log.error(message);
+            throw new UserAlreadyParticipantException(message);
+        }
+        boolean isUserAlreadySendRequest = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsWantToGoTrue(Long.parseLong(userId), eventId  )
+                .isPresent();
+        if (isUserAlreadySendRequest) {
+            String message = String.format("[EXCEPTION] User with id %s is already send request to this event", userId);
+            log.error(message);
+            throw new UserAlreadySendRequestException(message);
+        }
+        UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
+                .isInvited(false)
+                .isParticipant(false)
+                .isWantToGo(true)
+                .isFavorite(false)
+                .isViewed(false)
+                .build();
+        User user = getUser(userId);
+        Event event = getEventById(eventId);
+        if (!event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not closed", eventId);
+            log.error(message);
+            throw new NotClosedEventException(message);
+        }
+        userRelationsWithEvent.setEventRelations(event);
+        userRelationsWithEvent.setUserRelations(user);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {

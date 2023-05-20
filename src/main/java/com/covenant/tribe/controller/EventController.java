@@ -12,7 +12,6 @@ import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
-import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -374,13 +373,39 @@ public class EventController {
                 .body(participantsEvents);
     }
 
-
-    @PostMapping("/participant/confirm/{event_id}/{user_id}")
+    @PostMapping("/organizer/participation/confirm/{event_id}/{user_id}")
     public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
             @PathVariable("user_id") Long userId
     ) {
         eventService.addUserToEventAsParticipant(eventId, userId);
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Подача заявки после отказа, Экран карточки. Send to organizer a request to " +
+                    "participation in a closed event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PostMapping("/participant/request/private/{event_id}/{user_id}")
+    public ResponseEntity<?> sendToOrganizerARequestToParticipationInPrivateEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint sendToOrganizerARequestToParticipationInPrivateEvent" +
+                " with event_id: {} and user_id {}", eventId, userId);
+        eventService.sendToOrganizerRequestToParticipationInPrivateEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();
