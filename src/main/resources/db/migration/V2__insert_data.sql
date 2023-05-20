@@ -6,7 +6,7 @@ VALUES ('спорт','sport'),
        ('обучения','education'),
        ('музыка','music'),
        ('для детей', 'for children'),
-       ('отдіх за городом','countryside retreat'),
+       ('отдых за городом','countryside retreat'),
        ('религия', 'religion'),
        ('кино', 'cinema'),
        ('фестиваль', 'festivals');
