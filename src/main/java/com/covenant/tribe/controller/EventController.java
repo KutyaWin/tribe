@@ -386,7 +386,7 @@ public class EventController {
 
     @Operation(
             description = "Screen: Подача заявки после отказа, Экран карточки. Send to organizer a request to " +
-                    "participation in a closed event",
+                    "participation in a private event",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -405,6 +405,33 @@ public class EventController {
         eventService.sendToOrganizerRequestToParticipationInPrivateEvent(eventId, userId);
 
         log.info("[CONTROLLER] end endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Подача заявки после отказа, Экран карточки. Send a request to " +
+                    "participation in a public event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PostMapping("/participant/request/public/{event_id}/{user_id}")
+    public ResponseEntity<?> sendRequestToParticipationInPublicEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint sendRequestToParticipationInPublicEvent" +
+                " with event_id: {} and user_id {}", eventId, userId);
+        eventService.sendRequestToParticipationInPublicEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint sendRequestToParticipationInPublicEvent");
 
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)

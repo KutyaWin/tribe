@@ -474,10 +474,42 @@ public class EventServiceImpl implements EventService {
         if (!event.isPrivate()) {
             String message = String.format("[EXCEPTION] Event with id %s is not closed", eventId);
             log.error(message);
-            throw new NotClosedEventException(message);
+            throw new NotPrivateEventException(message);
         }
         userRelationsWithEvent.setEventRelations(event);
         userRelationsWithEvent.setUserRelations(user);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+    }
+
+    @Override
+    public void sendRequestToParticipationInPublicEvent(Long eventId, String userId) {
+        Event event = getEventById(eventId);
+        if (event.isPrivate()) {
+            String message = String.format("[EXCEPTION] Event with id %s is not public", eventId);
+            log.error(message);
+            throw new NotPublicEventException(message);
+        }
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId)
+                .orElseGet(() -> {
+                    return null;
+                });
+        if (userRelationsWithEvent == null) {
+            userRelationsWithEvent = UserRelationsWithEvent.builder()
+                    .isInvited(false)
+                    .isParticipant(true)
+                    .isWantToGo(false)
+                    .isFavorite(false)
+                    .isViewed(false)
+                    .build();
+            User user = getUser(userId);
+            userRelationsWithEvent.setEventRelations(event);
+            userRelationsWithEvent.setUserRelations(user);
+        } else {
+            userRelationsWithEvent.setInvited(false);
+            userRelationsWithEvent.setWantToGo(false);
+            userRelationsWithEvent.setParticipant(true);
+        }
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
