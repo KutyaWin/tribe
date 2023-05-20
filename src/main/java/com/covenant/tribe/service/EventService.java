@@ -56,4 +56,6 @@ public interface EventService {
     void deleteEvent(Long organizerId, Long eventId);
 
     void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId);
+
+    void sendRequestToParticipationInPublicEvent(Long eventId, String userId);
 }
