@@ -233,55 +233,6 @@ public class UserController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
-
-
-    @PostMapping("/favorite")
-    public ResponseEntity<?> saveEventToFavorites(@RequestBody UserFavoriteEventDTO userFavoriteEventDTO) {
-        log.info("[CONTROLLER] start endpoint saveEventToFavorites with param: {}", userFavoriteEventDTO);
-
-        userService.saveEventToFavorite(userFavoriteEventDTO.getUserId(), userFavoriteEventDTO.getEventId());
-
-        log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite");
-        return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
-                .build();
-    }
-
-    @DeleteMapping("/favorite/{user_id}/{event_id}")
-    public ResponseEntity<?> deleteEventFromFavorites(
-            @PathVariable(value = "user_id") Long userId,
-            @PathVariable(value = "event_id") Long eventId
-    ) {
-        userService.removeEventFromFavorite(userId, eventId);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .build();
-    }
-
-    @Operation(
-            description = "Favorite screen. Get all favorite events by user_id.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            content = @Content(
-                                    schema = @Schema(implementation = EventInFavoriteDTO.class)))})
-    @GetMapping("/favorite/{user_id}")
-    @Transactional
-    public ResponseEntity<?> getAllFavoritesByUserId(
-            @PathVariable(value = "user_id") Long userId
-    ) {
-        log.info("[CONTROLLER] start endpoint getAllFavoritesByUserId with param: {}", userId);
-
-        List<EventInFavoriteDTO> userFavorites = userService.getAllFavoritesByUserId(userId).stream()
-                .map(eventMapper::mapToEventInFavoriteDTO)
-                .toList();
-
-        log.info("[CONTROLLER] end endpoint getAllFavoritesByUserId with response: {}", userFavorites);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(userFavorites);
-    }
-
     @GetMapping("/email/check/{email}")
     public ResponseEntity<?> isEmailExistCheck(
             @PathVariable String email
