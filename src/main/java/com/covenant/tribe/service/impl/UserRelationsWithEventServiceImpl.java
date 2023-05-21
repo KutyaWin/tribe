@@ -25,7 +25,7 @@ public class UserRelationsWithEventServiceImpl implements UserRelationsWithEvent
 
     @Override
     public UserRelationsWithEvent findUserRelationsWithEventByUserIdAndEventId(Long userId, Long eventId) {
-        return userRelationsWithEventRepository.getByUserRelationsIdAndEventRelationsId(userId, eventId)
+        return userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "UserRelationsWithEvent with userId: " + userId + " and eventId: " + eventId + " not found")
                 );

@@ -19,6 +19,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     List<Event> findAllByOrganizerIdAndEventStatusIsNot(Long organizerId, EventStatus eventStatus);
 
     List<Event> findAllByEventStatus(EventStatus eventStatus);
+    Optional<Event> findByOrganizerIdAndId(Long organizerId, Long eventId);
 
     Optional<Event> findByEventNameAndStartTimeAndOrganizerId(String eventName, LocalDateTime startTime, Long organizerId);
 }

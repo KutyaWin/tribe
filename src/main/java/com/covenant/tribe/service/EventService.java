@@ -32,7 +32,7 @@ public interface EventService {
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);
 
-    void addUserToEventAsParticipant(Long eventId, Long userId);
+    void addUsersToPrivateEventAsParticipants(Long eventId, Long userId);
 
     Set<User> inviteUsersAsParticipantsToEvent(
             UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId);
@@ -46,4 +46,18 @@ public interface EventService {
     List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsInvited(String userId);
 
     List<EventInUserProfileDTO> findEventsByUserIdWhichUserIsParticipant(String userId);
+
+    void confirmInvitationToEvent(Long eventId, String userId);
+
+    void declineInvitationToEvent(Long eventId, String userId);
+
+    void declineToParticipantInEvent(Long eventId, String userId);
+
+    void deleteEvent(Long organizerId, Long eventId);
+
+    void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId);
+
+    void sendRequestToParticipationInPublicEvent(Long eventId, String userId);
+
+    void addUserToPrivateEventAsParticipant(Long eventId, Long organizerId, Long userId);
 }
