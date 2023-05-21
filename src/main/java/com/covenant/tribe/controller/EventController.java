@@ -51,7 +51,7 @@ public class EventController {
     JwtProvider jwtProvider;
 
     @Operation(
-            description = "CreateEvent screen. Create a new event by body. Response eventId.",
+            description = "Категория: создание Евента. Экран: создание Евента. Кнопка: создать евент.  Действие: Создание нового события.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -140,7 +140,8 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Настройки, Редактировать удалить. Delete event by event_id and organizer_id",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Редактировать удалить. Кнопка: Удалить событие. " +
+                    "Действие: Удаление мероприятия организатором",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -166,7 +167,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "CardBig screen. Get an event by event_id and user_id.",
+            description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Везде, где необходимо получить детальную информацию о мероприятии, напр. CardBig." +
+                    "Действие: Получение детальной информации о событии, например для карточки события",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -188,7 +191,8 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: none. Get events which has status VERIFICATION_PENDING",
+            description = "Категория: нет. Экран: Веб админ панель. Действие: Получение всех мероприятий, " +
+                    "которые необходимо проверить перед публикацией",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -209,7 +213,8 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: none. Update event status to PUBLISHED",
+            description = "Категория: нет Экран: Веб админ панель. Действие: изменение статуса" +
+                    " мероприятия на 'Опубликовано'. ",
             responses = {
                     @ApiResponse(
                             responseCode = "200"
@@ -232,7 +237,8 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: none. Update event status to SEND_TO_REWORK",
+            description = "Категория: нет Экран: Веб админ панель. Действие: изменение статуса" +
+                    " мероприятия на 'Отправлен на доработку'.",
             responses = {
                     @ApiResponse(
                             responseCode = "200"
@@ -256,7 +262,9 @@ public class EventController {
 
 
     @Operation(
-            description = "Screen: Профиль ADMIN. Get events which user is the organizer",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Профиль ADMIN. Кнопка: Мои события. Действие: Получение всех событий, " +
+                    "в которых пользователь выступает в роли организатора",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -277,7 +285,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Профиль ADMIN, профиль USER. Get events which user is invited",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Любой, где есть кнопка Приглашения. Кнопка: Приглашения. Действие: Получение всех событий, " +
+                    "на которые приглашен пользователь",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -298,7 +308,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Карточка приглашения. Confirm invitation to event",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Экран приглашений, Карточка приглашения. Кнопка: Посетить. Действие: Подтверждение участия " +
+                    "в мероприятии, после получения приглашения.",
             responses = {
                     @ApiResponse(
                             responseCode = "200"
@@ -323,7 +335,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Карточка приглашения. Decline the invitation to event",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Карточка приглашения. Кнопка: Не пойду. Действие: Отказ от участия " +
+                    "в мероприятии, после получения приглашения.",
             responses = {
                     @ApiResponse(
                             responseCode = "200"
@@ -349,7 +363,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Профиль USER. Get events which user is participant",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: ПрофильUSER. Кнопка: События. Действие: Получение всех событий, в которых пользователь " +
+                    "принимает участие",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -374,7 +390,8 @@ public class EventController {
     }
 
     @Operation(
-        description = "Screen: Пока нет. Confirm by organizer all requests to participation",
+        description = "Категория: нет. Экран: нет. Действие: Позволяет организатору подтвердить все заявки " +
+                "пользователей на посещение приватного мероприятия.",
         responses = {
                 @ApiResponse(
                         responseCode = "202"
@@ -395,7 +412,8 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Пока нет. Confirm by organizer request to participation in private event by userId",
+            description = "Категория: нет. Экран: нет. Действие: Позволяет организатору подтвердить одну заявку " +
+                    "пользователя на посещение приватного мероприятия.",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -417,8 +435,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Подача заявки после отказа, Экран карточки. Send to organizer a request to " +
-                    "participation in a private event",
+            description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Экран карточки. Кнопка: Хочу пойти. Действие: Отправка запроса организатору для " +
+                    "посещения приватного мероприятия",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -444,8 +463,9 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Подача заявки после отказа, Экран карточки. Send a request to " +
-                    "participation in a public event",
+            description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Экран карточки. Кнопка: Хочу пойти. Действие: Позволяет зарегистрироваться на" +
+                    " публичное мероприятие в качестве посетителя.",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -471,7 +491,7 @@ public class EventController {
     }
 
     @Operation(
-            description = "Screen: Пока нет. Decline to participant in the event.",
+            description = "Категория: нет. Экран: нет. Действие: Позволяет отказаться от посещения мероприятия.",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -498,7 +518,8 @@ public class EventController {
 
 
     @Operation(
-            description = "Screen: Наполнение события. Add event avatar to tmp folder.",
+            description = "Категория: Создание Евента. Экран: Наполнение события. Кнопка: Add photo. Действие: " +
+                    "Позволяет отправить на сервер для сохранения фото/аватар мероприятия",
             responses = {
                     @ApiResponse(
                             responseCode = "201",
@@ -516,6 +537,16 @@ public class EventController {
                 .body(new TempFileDTO(uniqueTempFileName));
     }
 
+    @Operation(
+            description = "Категория: Splash/Фид/Cards, Избранное, Создание Евента, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    ". Экран: Любой, на котором нужно получить фото/аватар мероприятия. Действие: " +
+                    "Позволяет получить фото/аватар мероприятия",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = Byte.class))))}
+    )
     @GetMapping("/avatars/{added_date}/{avatar_file_name}")
     public ResponseEntity<?> getEventAvatar(
             @PathVariable(value = "added_date") String addedDate,
@@ -529,7 +560,8 @@ public class EventController {
     }
 
     @Operation(
-            description = "EventSearch screen. Get event by filter.",
+            description =  "Категория: Splash/Фид/Cards/ Экран: Фильтр, главный экран приложения. Действие: " +
+                    "Позволяет получить мероприятия, отфильтрованные в соответствии с заданными параметрами",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
