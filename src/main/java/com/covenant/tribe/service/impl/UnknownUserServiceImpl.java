@@ -8,11 +8,9 @@ import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.UnknownUserRepository;
 import com.covenant.tribe.service.UnknownUserService;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,11 +24,11 @@ public class UnknownUserServiceImpl implements UnknownUserService {
     public Long saveNewUnknownUserWithInterests(UnknownUserWithInterestsDTO unknownUserWithInterests) {
         List<EventType> eventTypes = getEventTypes(unknownUserWithInterests.getEventTypeIds());
         UnknownUser unknownUser = unknownUserRepository.findUnknownUserByBluetoothId(
-                unknownUserWithInterests.getBluetoothId()
+                unknownUserWithInterests.getFirebaseId()
                 );
         if (unknownUser == null) {
             unknownUser = new UnknownUser();
-            unknownUser.setBluetoothId(unknownUserWithInterests.getBluetoothId());
+            unknownUser.setBluetoothId(unknownUserWithInterests.getFirebaseId());
         }
         unknownUser.setUserInterests(eventTypes);
         unknownUserRepository.save(unknownUser);

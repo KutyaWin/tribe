@@ -1,7 +1,15 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.user.UnknownUserWithInterestsDTO;
+import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.service.UnknownUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,11 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
+@Tag(name = "Unknown user")
 @RequestMapping("api/v1/unknown-user")
 public class UnknownUserController {
 
     UnknownUserService unknownUserService;
 
+    @Operation(
+            description = "Категория: Splash/Фид/Cards. Экран: Like me. Кнопка: Поехали!" +
+                    " Действие: Сохранение интересов неизвестного пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = Long.class)))}
+    )
     @PostMapping("/interests")
     public ResponseEntity<?> saveUnknownUserWithInterests(
             @RequestBody UnknownUserWithInterestsDTO unknownUserWithInterests

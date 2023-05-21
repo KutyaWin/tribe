@@ -38,7 +38,8 @@ public class TagController {
     EventTagMapper eventTagMapper;
     @Operation(
             tags = "Tag",
-            description = "CreateEvent screen. Returns tags by event type id.",
+            description = "Категория: Создание Евента. Экран: Наполнение события. Input для выбора тегов" +
+                    " Действие: Получение всех тегов соответствующих типу выбранного ивента",
             responses = {
                     @ApiResponse(
                             responseCode = "200",

@@ -60,4 +60,12 @@ public interface EventService {
     void sendRequestToParticipationInPublicEvent(Long eventId, String userId);
 
     void addUserToPrivateEventAsParticipant(Long eventId, Long organizerId, Long userId);
+
+    void saveEventToFavorite(Long userId, Long eventId);
+
+    List<Event> getAllFavoritesByUserId(Long userId);
+
+    void removeEventFromFavorite(Long userId, Long eventId);
+
+    boolean isFavoriteEventForUser(Long userId, Long eventId);
 }

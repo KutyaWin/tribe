@@ -69,7 +69,7 @@ public class EventMapperImpl implements EventMapper {
                     .favoriteEvent(relationsWithEventCurrentUserId.stream()
                             .filter(UserRelationsWithEvent::isFavorite)
                             .anyMatch(relations -> relations.getEventRelations().equals(event)))
-                    .isPrivate(event.isPrivate())
+                    .isPrivate(true)
                     .build();
         }
 
@@ -102,7 +102,7 @@ public class EventMapperImpl implements EventMapper {
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
                     .eventType(event.getEventType().getTypeName())
-                    .isPrivate(event.isPrivate())
+                    .isPrivate(true)
                     .build();
         }
         return SearchEventDTO.builder()
