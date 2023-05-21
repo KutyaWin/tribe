@@ -49,7 +49,6 @@ public class EventTypeController {
     }
 
     @Operation(
-            tags = "EventType",
             description = "Категория: Splash/Фид/Cards. Экран: Like me." +
                     " Действие: Получение списка анимаций, которые можно использовать для выбора типов событий, " +
                     "интересных новому пользователю.",
