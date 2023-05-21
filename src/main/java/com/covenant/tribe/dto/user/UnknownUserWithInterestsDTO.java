@@ -18,8 +18,8 @@ import java.util.List;
 public class UnknownUserWithInterestsDTO implements Serializable {
 
     @JsonProperty("bluetooth_id")
-    @Size(max = 100, message = "bluetooth_id must not consist of more than 100 characters")
-    String bluetoothId;
+    @Size(max = 100, message = "firebase_id must not consist of more than 100 characters")
+    String firebaseId;
 
     @JsonProperty(value = "event_type_ids")
     List<Long> eventTypeIds;

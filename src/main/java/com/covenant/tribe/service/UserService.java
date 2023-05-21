@@ -17,15 +17,6 @@ public interface UserService {
     User findUserByUsername(String username);
 
     Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable);
-
-    void saveEventToFavorite(Long userId, Long eventId);
-
-    List<Event> getAllFavoritesByUserId(Long userId);
-
-    void removeEventFromFavorite(Long userId, Long eventId);
-
-    boolean isFavoriteEventForUser(Long userId, Long eventId);
-
     boolean isEmailExist(String email);
 
     boolean isUsernameExist(String username);

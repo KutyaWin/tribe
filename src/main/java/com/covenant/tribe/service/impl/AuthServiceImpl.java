@@ -48,6 +48,7 @@ import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -171,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
             sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             registrant.setVerificationCode(verificationCode);
             registrant.setStatus(RegistrantStatus.AWAITED);
-            registrant.setCreatedAt(Instant.now());
+            registrant.setCreatedAt(OffsetDateTime.now());
             registrantRepository.save(registrant);
 
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
@@ -202,9 +203,8 @@ public class AuthServiceImpl implements AuthService {
                                 )
                         )
                 );
-        Instant codeCreated = registrant.getCreatedAt();
-        Instant now = Instant.now();
-        if (codeCreated.plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(now)) {
+        OffsetDateTime codeCreated = registrant.getCreatedAt();
+        if (codeCreated.plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(OffsetDateTime.now())) {
             registrant.setStatus(RegistrantStatus.EXPIRED);
             throw new ExpiredCodeException(confirmRegistrationDTO.getRegistrantId().toString());
         }
