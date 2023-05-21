@@ -3,15 +3,13 @@ package com.covenant.tribe.controller;
 import com.covenant.tribe.dto.ImageDTO;
 import com.covenant.tribe.dto.PageResponse;
 import com.covenant.tribe.dto.ResponseErrorDTO;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInUserProfileDTO;
-import com.covenant.tribe.dto.event.EventVerificationDTO;
-import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
-import com.covenant.tribe.dto.event.SearchEventDTO;
+import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.storage.TempFileDTO;
+import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
+import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -32,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
@@ -47,6 +46,7 @@ public class EventController {
 
     EventService eventService;
     PhotoStorageService storageService;
+    EventMapper eventMapper;
 
     JwtProvider jwtProvider;
 
@@ -224,7 +224,7 @@ public class EventController {
     )
     @PatchMapping("/verification/confirm/{event_id}")
     public ResponseEntity<?> updateEventStatusToPublished(
-        @PathVariable(value = "event_id") Long eventId
+            @PathVariable(value = "event_id") Long eventId
     ) {
         log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
 
@@ -390,14 +390,14 @@ public class EventController {
     }
 
     @Operation(
-        description = "Категория: нет. Экран: нет. Действие: Позволяет организатору подтвердить все заявки " +
-                "пользователей на посещение приватного мероприятия.",
-        responses = {
-                @ApiResponse(
-                        responseCode = "202"
-                )
-        },
-        security = @SecurityRequirement(name = "BearerJWT")
+            description = "Категория: нет. Экран: нет. Действие: Позволяет организатору подтвердить все заявки " +
+                    "пользователей на посещение приватного мероприятия.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#organizerId.equals(authentication.getName())")
     @PatchMapping("/organizer/participation/confirm/{event_id}/{organizer_id}")
@@ -560,7 +560,7 @@ public class EventController {
     }
 
     @Operation(
-            description =  "Категория: Splash/Фид/Cards/ Экран: Фильтр, главный экран приложения. Действие: " +
+            description = "Категория: Splash/Фид/Cards/ Экран: Фильтр, главный экран приложения. Действие: " +
                     "Позволяет получить мероприятия, отфильтрованные в соответствии с заданными параметрами",
             responses = {
                     @ApiResponse(
@@ -594,5 +594,80 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @Operation(
+            description = "Категория: Splash/Фид/Cards/, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    " Экран: Фильтр, главный экран приложения, Экран карточки. Кнопка: сердце. Действие: " +
+                    "Добавляет выбранное событие в избранное пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userFavoriteEventDTO.getUserId().equals(authentication.getName())")
+    @PostMapping("/favorite")
+    public ResponseEntity<?> saveEventToFavorites(@RequestBody UserFavoriteEventDTO userFavoriteEventDTO) {
+        log.info("[CONTROLLER] start endpoint saveEventToFavorites with param: {}", userFavoriteEventDTO);
+
+        eventService.saveEventToFavorite(
+                Long.parseLong(userFavoriteEventDTO.getUserId()), userFavoriteEventDTO.getEventId()
+        );
+
+        log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite");
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Категория: Splash/Фид/Cards/, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/, Избранное" +
+                    " Экран: Фильтр, главный экран приложения, Экран карточки. Кнопка: сердце. мусорный бачок. Действие: " +
+                    "Удаляет выбранное событие в избранное пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @DeleteMapping("/favorite/{user_id}/{event_id}")
+    public ResponseEntity<?> deleteEventFromFavorites(
+            @PathVariable(value = "user_id") String userId,
+            @PathVariable(value = "event_id") Long eventId
+    ) {
+        eventService.removeEventFromFavorite(Long.parseLong(userId), eventId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            description = "Категория: Избранное. Экран: Избранное. Действие: " +
+                    "Получение всех избранных мероприятий пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(schema = @Schema(implementation = EventInFavoriteDTO.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/favorite/{user_id}")
+    @Transactional
+    public ResponseEntity<?> getAllFavoritesByUserId(
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint getAllFavoritesByUserId with param: {}", userId);
+
+        List<EventInFavoriteDTO> userFavorites = eventService.getAllFavoritesByUserId(Long.parseLong(userId)).stream()
+                .map(eventMapper::mapToEventInFavoriteDTO)
+                .toList();
+
+        log.info("[CONTROLLER] end endpoint getAllFavoritesByUserId with response: {}", userFavorites);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userFavorites);
     }
 }
