@@ -1,15 +1,13 @@
 package com.covenant.tribe.domain.event;
 
 import com.covenant.tribe.domain.Tag;
-import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
+import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -44,7 +42,7 @@ public class Event {
     User organizer;
 
     @Builder.Default
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
     OffsetDateTime createdAt = OffsetDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
