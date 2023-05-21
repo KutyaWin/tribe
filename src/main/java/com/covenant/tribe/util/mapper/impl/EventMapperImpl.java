@@ -7,13 +7,8 @@ import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.domain.event.EventAvatar;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInFavoriteDTO;
-import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
-import com.covenant.tribe.dto.event.SearchEventDTO;
-import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
-import com.covenant.tribe.exeption.event.EventNotFoundException;
 import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
@@ -30,7 +25,6 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,6 +56,23 @@ public class EventMapperImpl implements EventMapper {
         log.info("map Event to SearchEventDTO");
         log.debug("Passed Event: {}", event);
 
+        if (event.isPrivate()) {
+            return SearchEventDTO.builder()
+                    .eventId(event.getId())
+                    .avatarUrl(event.getEventAvatars().stream()
+                            .map(EventAvatar::getAvatarUrl).toList())
+                    .eventName(event.getEventName())
+                    .eventType(event.getEventType().getTypeName())
+                    .viewEvent(relationsWithEventCurrentUserId.stream()
+                            .filter(UserRelationsWithEvent::isViewed)
+                            .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                    .favoriteEvent(relationsWithEventCurrentUserId.stream()
+                            .filter(UserRelationsWithEvent::isFavorite)
+                            .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                    .isPrivate(event.isPrivate())
+                    .build();
+        }
+
         return SearchEventDTO.builder()
                 .eventId(event.getId())
                 .avatarUrl(event.getEventAvatars().stream()
@@ -76,6 +87,7 @@ public class EventMapperImpl implements EventMapper {
                 .viewEvent(relationsWithEventCurrentUserId.stream()
                         .filter(UserRelationsWithEvent::isViewed)
                         .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                .isPrivate(event.isPrivate())
                 .build();
     }
 
@@ -83,6 +95,16 @@ public class EventMapperImpl implements EventMapper {
         log.info("map Event to SearchEventDTO");
         log.debug("Passed Event: {}", event);
 
+        if (event.isPrivate()) {
+            return SearchEventDTO.builder()
+                    .eventId(event.getId())
+                    .avatarUrl(event.getEventAvatars().stream()
+                            .map(EventAvatar::getAvatarUrl).toList())
+                    .eventName(event.getEventName())
+                    .eventType(event.getEventType().getTypeName())
+                    .isPrivate(event.isPrivate())
+                    .build();
+        }
         return SearchEventDTO.builder()
                 .eventId(event.getId())
                 .avatarUrl(event.getEventAvatars().stream()
@@ -91,6 +113,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
+                .isPrivate(event.isPrivate())
                 .build();
     }
 
@@ -265,6 +288,7 @@ public class EventMapperImpl implements EventMapper {
     @Override
     public DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, Long userId) {
         log.debug("map Event to DetailedEventInSearchDTO. Event: {}", event);
+
         List<String> eventAvatars = event.getEventAvatars().stream()
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
@@ -283,6 +307,16 @@ public class EventMapperImpl implements EventMapper {
                 .map(UserRelationsWithEvent::isFavorite)
                 .orElse(false);
 
+        if (event.isPrivate()) {
+            return DetailedEventInSearchDTO.builder()
+                    .eventId(event.getId())
+                    .eventPhoto(eventAvatars)
+                    .favoriteEvent(isFavoriteEvent)
+                    .eventName(event.getEventName())
+                    .description(event.getEventDescription())
+                    .isPrivate(event.isPrivate())
+                    .build();
+        }
         return DetailedEventInSearchDTO.builder()
                 .eventId(event.getId())
                 .eventPhoto(eventAvatars)
@@ -301,6 +335,7 @@ public class EventMapperImpl implements EventMapper {
                                         .filter(UserRelationsWithEvent::isParticipant)
                                         .map(UserRelationsWithEvent::getUserRelations)
                                         .collect(Collectors.toSet())))
+                .isPrivate(event.isPrivate())
                 .build();
     }
 
