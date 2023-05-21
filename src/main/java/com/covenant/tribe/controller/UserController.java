@@ -37,7 +37,9 @@ public class UserController {
     EventMapper eventMapper;
 
     @Operation(
-            description = "Android Small 39 screen. Get a User by username.",
+            description = "Категория: создание Евента. Экран: Приглашение участников. Поле для поиска." +
+                    " Действие: Получение всех пользователей, у которых username совпадает с введенным в поле поиска." +
+                    " (Можно передавать не username целиком, а первые несколько символов.)",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -66,7 +68,9 @@ public class UserController {
     }
 
     @Operation(
-            description = "Screen подписчики. Get all user's subscribers by partial username.",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Поле для поиска." +
+                    " Действие: Получение всех подписчиков пользователя, у которых username совпадает с введенным в поле поиска." +
+                    " (Можно передавать не username целиком, а первые несколько символов.)",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -96,7 +100,8 @@ public class UserController {
     }
 
     @Operation(
-            description = "Screen:  Подписаться. Get all users that the user is not subscribed to",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписаться. Поле для поиска." +
+                    " Действие: Получение всех пользователей, на которых не подписан текущий пользователь",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -123,7 +128,10 @@ public class UserController {
     }
 
     @Operation(
-            description = "Screen:  Подписаться. Get all users that the user is not subscribed to by partial username",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписаться. Поле для поиска." +
+                    " Действие: Получение всех пользователей, на которых не подписан текущий пользователь, " +
+                    "у которых username совпадает с введенным в поле поиска." +
+                    " (Можно передавать не username целиком, а первые несколько символов.)",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -156,7 +164,9 @@ public class UserController {
 
 
     @Operation(
-            description = "Screen подписчики. Get all user's subscribers.",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Поле для поиска." +
+                    " Действие: Получение всех подписчиков, текущего пользователя у которых username совпадает" +
+                    " с введенным в поле поиска. (Можно передавать не username целиком, а первые несколько символов.)",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -185,7 +195,8 @@ public class UserController {
     }
 
     @Operation(
-            description = "Screen: Подписчики. Subscribe to user.",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Кнопка: подписаться." +
+                    " Действие: подписаться на пользователя.",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -210,7 +221,8 @@ public class UserController {
     }
 
     @Operation(
-            description = "Screen: Подписки. Unsubscribe from user.",
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписки. Кнопка: мусорный ящик." +
+                    " Действие: отписаться от пользователя.",
             responses = {
                     @ApiResponse(
                             responseCode = "202"
@@ -233,6 +245,18 @@ public class UserController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+    @Operation(
+            description = "Категория: Вход/Регистрация. Экран: Любой, где необходима проверка." +
+                    " Действие: Проверка существует ли пользователь с заданным email.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = Boolean.class)
+                            )
+                    )
+            }
+    )
     @GetMapping("/email/check/{email}")
     public ResponseEntity<?> isEmailExistCheck(
             @PathVariable String email
@@ -243,6 +267,18 @@ public class UserController {
                 .body(isEmailExist);
     }
 
+    @Operation(
+            description = "Категория: Вход/Регистрация. Экран: Любой, где необходима проверка." +
+                    " Действие: Проверка существует ли пользователь с заданным username.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = Boolean.class)
+                            )
+                    )
+            }
+    )
     @GetMapping("/username/check/{username}")
     public ResponseEntity<?> isUsernameExistCheck(
             @PathVariable String username
@@ -252,5 +288,5 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(isUsernameExist);
     }
-
+    
 }
