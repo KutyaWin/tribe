@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,14 +22,15 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
+@Tag(name = "Event type")
 @RequestMapping("api/v1")
 public class EventTypeController {
 
     EventTypeService eventTypeService;
 
     @Operation(
-            tags = "EventType",
-            description = "Like me screen. Get all dark all light rectangle event types.",
+            description = "Категория: Создание Евента. Экран: Создание события." +
+                    " Действие: Получение всех анимаций, для выбора типа события, при создании мероприятия.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -47,8 +49,9 @@ public class EventTypeController {
     }
 
     @Operation(
-            tags = "EventType",
-            description = "Screen: создание события. Get all dark or light circle event types.",
+            description = "Категория: Splash/Фид/Cards. Экран: Like me." +
+                    " Действие: Получение списка анимаций, которые можно использовать для выбора типов событий, " +
+                    "интересных новому пользователю.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",

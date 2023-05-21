@@ -14,7 +14,7 @@ import java.io.Serializable;
 public class UserFavoriteEventDTO implements Serializable {
 
     @JsonProperty(value = "user_id")
-    Long userId;
+    String userId;
 
     @JsonProperty(value = "event_id")
     Long eventId;
