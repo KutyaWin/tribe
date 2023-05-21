@@ -1,10 +1,10 @@
 package com.covenant.tribe.domain.user;
 
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
@@ -35,8 +35,8 @@ public class Registrant {
     Integer verificationCode;
 
     @Builder.Default
-    @Column(name = "created_at", nullable = false)
-    Instant createdAt = Instant.now();
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
+    OffsetDateTime createdAt = OffsetDateTime.now();
 
     @Column(name = "username", length = 50)
     String username;
