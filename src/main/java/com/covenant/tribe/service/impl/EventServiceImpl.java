@@ -60,6 +60,8 @@ public class EventServiceImpl implements EventService {
     public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable) {
         QPredicates qPredicates = QPredicates.builder();
 
+
+        qPredicates.add(Boolean.TRUE, QEvent.event.showEventInSearch.isTrue());
         qPredicates.add(EventStatus.PUBLISHED, QEvent.event.eventStatus.eq(EventStatus.PUBLISHED));
         if (filter.getDistanceInMeters() != null && filter.getLongitude() != null &&
                 filter.getLatitude() != null) {
