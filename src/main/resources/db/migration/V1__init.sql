@@ -46,8 +46,7 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS friends
 (
     id                      BIGSERIAL PRIMARY KEY,
-    added_to_block_at       TIMESTAMP,
-    added_to_friends_at     TIMESTAMP,
+    unsubscribe_at          TIMESTAMP WITH TIME ZONE,
     created_at              TIMESTAMP WITH TIME ZONE     NOT NULL,
     relationship_status     varchar(255)                 not null,
     user_who_get_follower   BIGINT REFERENCES users (id) NOT NULL,

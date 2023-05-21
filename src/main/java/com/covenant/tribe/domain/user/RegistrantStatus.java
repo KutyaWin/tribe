@@ -4,5 +4,4 @@ public enum RegistrantStatus {
     CONFIRMED,
     AWAITED,
     EXPIRED
-    
 }

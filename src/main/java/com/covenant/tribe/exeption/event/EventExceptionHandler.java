@@ -1,7 +1,6 @@
 package com.covenant.tribe.exeption.event;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
-import com.google.firebase.auth.FirebaseAuthException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -55,6 +54,18 @@ public class EventExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(UserRelationsWithEventNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseErrorDTO handleUserRelationsWithEventNotFoundException(
+            UserRelationsWithEventNotFoundException eventNotVerifiedException
+    ) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .errorMessage(List.of(eventNotVerifiedException.getMessage()))
+                .build();
+    }
+
     @ExceptionHandler(EventNotVerifiedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleEventAlreadyExistException(EventNotVerifiedException eventNotVerifiedException) {
@@ -62,6 +73,57 @@ public class EventExceptionHandler {
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(eventNotVerifiedException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(NotPrivateEventException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleNotClosedEventException(NotPrivateEventException notPrivateEventException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(notPrivateEventException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(NotPublicEventException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleNotPublicEventException(NotPublicEventException notPublicEventException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(notPublicEventException.getMessage()))
+                .build();
+    }
+    @ExceptionHandler(UserAlreadyParticipantException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleUserAlreadyInvitedException(UserAlreadyParticipantException participantException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(participantException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(UserAlreadyInvitedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleUserAlreadyInvitedException(UserAlreadyInvitedException e) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(UserAlreadySendRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleUserAlreadySendRequestException(
+            UserAlreadySendRequestException userAlreadySendRequestException
+    ) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(userAlreadySendRequestException.getMessage()))
                 .build();
     }
 }

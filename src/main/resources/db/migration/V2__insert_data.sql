@@ -1,17 +1,17 @@
-INSERT INTO event_types(type_name_en, type_name)
-VALUES ('спорт','sport'),
-       ('транспорт', 'transportation'),
-       ('выставка', 'exhibition'),
-       ('посиделки', 'party'),
-       ('обучения','education'),
-       ('музыка','music'),
-       ('для детей', 'for children'),
-       ('отдых за городом','countryside retreat'),
-       ('религия', 'religion'),
-       ('кино', 'cinema'),
-       ('фестиваль', 'festivals');
+INSERT INTO event_types(type_name, type_name_en)
+VALUES ('Спорт','Sport'),
+       ('Транспорт', 'Transportation'),
+       ('Выставка', 'Exhibition'),
+       ('Посиделки', 'Party'),
+       ('Обучения','Education'),
+       ('Музыка','Music'),
+       ('Для детей', 'For children'),
+       ('Отдых за городом','Countryside retreat'),
+       ('Религия', 'Religion'),
+       ('Кино', 'Cinema'),
+       ('Фестиваль', 'Festivals');
 
-INSERT INTO tags(tag_name_en, tag_name)
+INSERT INTO tags(tag_name, tag_name_en)
 VALUES ('велоспорт','cycling'),
        ('бег','running'),
        ('гребля','sailing'),

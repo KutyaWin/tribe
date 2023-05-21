@@ -12,7 +12,6 @@ import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
-import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -126,7 +125,7 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PostMapping
-    @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.name)")
+    @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.getName())")
     public ResponseEntity<?> createEvent(
             @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
     ) throws FileNotFoundException {
@@ -138,6 +137,32 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @Operation(
+            description = "Screen: Настройки, Редактировать удалить. Delete event by event_id and organizer_id",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.toString().equals(authentication.getName())")
+    @DeleteMapping("/delete/{organizer_id}/{event_id}")
+    public ResponseEntity<?> deleteEvent(
+            @PathVariable("organizer_id") Long organizerId,
+            @PathVariable("event_id") Long eventId
+    ) {
+        log.info("[CONTROLLER] start endpoint deleteEvent with param: {}, {}", organizerId, eventId);
+
+        eventService.deleteEvent(organizerId, eventId);
+
+        log.info("[CONTROLLER] end endpoint deleteEvent with response: {}", eventId);
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
     }
 
     @Operation(
@@ -163,7 +188,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: none. Get events which has status VERIFICATION_PENDING",
             responses = {
                     @ApiResponse(
@@ -185,7 +209,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: none. Update event status to PUBLISHED",
             responses = {
                     @ApiResponse(
@@ -209,7 +232,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: none. Update event status to SEND_TO_REWORK",
             responses = {
                     @ApiResponse(
@@ -234,7 +256,6 @@ public class EventController {
 
 
     @Operation(
-            tags = "Event",
             description = "Screen: Профиль ADMIN. Get events which user is the organizer",
             responses = {
                     @ApiResponse(
@@ -256,7 +277,6 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
             description = "Screen: Профиль ADMIN, профиль USER. Get events which user is invited",
             responses = {
                     @ApiResponse(
@@ -278,7 +298,57 @@ public class EventController {
     }
 
     @Operation(
-            tags = "Event",
+            description = "Screen: Карточка приглашения. Confirm invitation to event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/invitation/confirm/{event_id}/{user_id}")
+    public ResponseEntity<?> confirmInvitationToEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint confirmInvitationToEvent with event_id: {} and user_id {}", eventId, userId);
+
+        eventService.confirmInvitationToEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint confirmInvitationToEvent");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Карточка приглашения. Decline the invitation to event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/invitation/decline/{event_id}/{user_id}")
+    public ResponseEntity<?> declineInvitationToEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint declineInvitationToEvent with event_id: {} and user_id {}", eventId, userId);
+
+        eventService.declineInvitationToEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint declineInvitationToEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
             description = "Screen: Профиль USER. Get events which user is participant",
             responses = {
                     @ApiResponse(
@@ -303,20 +373,131 @@ public class EventController {
                 .body(participantsEvents);
     }
 
-
-    @PostMapping("/{event_id}/{user_id}")
+    @Operation(
+        description = "Screen: Пока нет. Confirm by organizer all requests to participation",
+        responses = {
+                @ApiResponse(
+                        responseCode = "202"
+                )
+        },
+        security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @PatchMapping("/organizer/participation/confirm/{event_id}/{organizer_id}")
     public ResponseEntity<?> addUserToEventAsParticipant(
             @PathVariable("event_id") Long eventId,
-            @PathVariable("user_id") Long userId
+            @PathVariable("organizer_id") String organizerId
     ) {
-        eventService.addUserToEventAsParticipant(eventId, userId);
+        eventService.addUsersToPrivateEventAsParticipants(eventId, Long.valueOf(organizerId));
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
 
     @Operation(
-            tags = "Event",
+            description = "Screen: Пока нет. Confirm by organizer request to participation in private event by userId",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @PatchMapping("/organizer/participation/confirm/{event_id}/{organizer_id}/{user_id}")
+    public ResponseEntity<?> addUserToEventAsParticipant(
+            @PathVariable("event_id") Long eventId,
+            @PathVariable("organizer_id") String organizerId,
+            @PathVariable("user_id") Long userId
+    ) {
+        eventService.addUserToPrivateEventAsParticipant(eventId, Long.valueOf(organizerId), userId);
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Подача заявки после отказа, Экран карточки. Send to organizer a request to " +
+                    "participation in a private event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PostMapping("/participant/request/private/{event_id}/{user_id}")
+    public ResponseEntity<?> sendToOrganizerARequestToParticipationInPrivateEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint sendToOrganizerARequestToParticipationInPrivateEvent" +
+                " with event_id: {} and user_id {}", eventId, userId);
+        eventService.sendToOrganizerRequestToParticipationInPrivateEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Подача заявки после отказа, Экран карточки. Send a request to " +
+                    "participation in a public event",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PostMapping("/participant/request/public/{event_id}/{user_id}")
+    public ResponseEntity<?> sendRequestToParticipationInPublicEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint sendRequestToParticipationInPublicEvent" +
+                " with event_id: {} and user_id {}", eventId, userId);
+        eventService.sendRequestToParticipationInPublicEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint sendRequestToParticipationInPublicEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Screen: Пока нет. Decline to participant in the event.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/participant/decline/{event_id}/{user_id}")
+    public ResponseEntity<?> declineToParticipantInEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint declineToParticipantInEvent with event_id: {} and user_id {}", eventId, userId);
+
+        eventService.declineToParticipantInEvent(eventId, userId);
+
+        log.info("[CONTROLLER] end endpoint declineToParticipantInEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+
+    @Operation(
             description = "Screen: Наполнение события. Add event avatar to tmp folder.",
             responses = {
                     @ApiResponse(

@@ -5,7 +5,9 @@ import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
+import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.dto.user.UserUnSubscriberDto;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,31 @@ public class UserMapperImpl implements UserMapper {
                 .interestingEventType(userInterests)
                 .build();
     }
+
+    @Override
+    public UserSubscriberDto mapToUserSubscriberDto(User subscriber, Set<Long> userIds) {
+        log.debug("map User to UserSubscriberDto. User: {}", subscriber);
+        return UserSubscriberDto.builder()
+                .userId(subscriber.getId())
+                .userAvatar(subscriber.getUserAvatar())
+                .isUserSubscribeToSubscriber(userIds.contains(subscriber.getId()))
+                .lastName(subscriber.getLastName())
+                .firstName(subscriber.getFirstName())
+                .build();
+
+    }
+
+    @Override
+    public UserUnSubscriberDto mapToUserUnSubscriberDto(User user) {
+        return UserUnSubscriberDto.builder()
+                .userAvatar(user.getUserAvatar())
+                .userId(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build();
+    }
+
     private String makeFakeDataIfNeededIsEmpty(String data, String socialId) {
         if (data.isEmpty()) return socialId;
         return data;

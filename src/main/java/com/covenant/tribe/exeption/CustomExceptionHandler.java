@@ -1,6 +1,7 @@
 package com.covenant.tribe.exeption;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
+import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -38,6 +39,16 @@ public class CustomExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(SubscribeNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseErrorDTO handleUserExistException(SubscribeNotFoundException e) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.NOT_FOUND)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }
