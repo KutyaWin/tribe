@@ -33,6 +33,9 @@ public class EventType {
     @Column(name = "type_name", nullable = false, length = 50, unique = true)
     String typeName;
 
+    @Column(name = "type_name_en", length = 50, unique = true)
+    String eventNameEn;
+
     @Column(columnDefinition = "TEXT", name = "light_circle_animation")
     String lightCircleAnimation;
 
