@@ -7,8 +7,12 @@ import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.domain.event.EventAvatar;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInFavoriteDTO;
+import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
+import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
@@ -160,14 +164,14 @@ public class EventMapperImpl implements EventMapper {
     }
 
     @Override
-    public EventInUserProfileDTO mapToEventInUserProfileDTO(Event event) {
+    public EventInUserProfileDTO mapToEventInUserProfileDTO(Event event, Long userId) {
         return EventInUserProfileDTO.builder()
                 .id(event.getId())
                 .eventPhotoUrl(getEventAvatars(event.getEventAvatars()))
                 .eventName(event.getEventName())
                 .city(event.getEventAddress().getCity())
                 .startTime(event.getStartTime())
-                .isViewed(isEventViewed(event, event.getOrganizer().getId()))
+                .isParticipant(isEventViewed(event, userId))
                 .build();
     }
 
