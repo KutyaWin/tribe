@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.UniqueElements;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -71,4 +70,6 @@ public class DetailedEventInSearchDTO {
     @JsonProperty(value = "users_who_participants_of_event")
     @UniqueElements(message = "All elements in usersWhoParticipantsOfEvent must be unique")
     Set<UsersWhoParticipantsOfEventDTO> usersWhoParticipantsOfEvent = new HashSet<>();
+
+    Boolean isPrivate;
 }
