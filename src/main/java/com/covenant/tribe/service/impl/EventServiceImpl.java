@@ -252,11 +252,12 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
+        Long organizerIdLong = Long.parseLong(organizerId);
         return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
-                        Long.parseLong(organizerId), EventStatus.DELETED
+                        organizerIdLong, EventStatus.DELETED
                 )
                 .stream()
-                .map(eventMapper::mapToEventInUserProfileDTO)
+                .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
                 .toList();
     }
 
@@ -356,7 +357,7 @@ public class EventServiceImpl implements EventService {
                             && userRelationsWithEvent.isInvited();
                 })
                 .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
-                        userRelationsWithEvent.getEventRelations())
+                        userRelationsWithEvent.getEventRelations(), userRelationsWithEvent.getUserRelations().getId())
                 )
                 .toList();
     }
@@ -373,7 +374,7 @@ public class EventServiceImpl implements EventService {
                             && userRelationsWithEvent.isParticipant();
                 })
                 .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
-                        userRelationsWithEvent.getEventRelations())
+                        userRelationsWithEvent.getEventRelations(), userRelationsWithEvent.getUserRelations().getId())
                 )
                 .toList();
     }
