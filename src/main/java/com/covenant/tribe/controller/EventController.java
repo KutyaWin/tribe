@@ -572,7 +572,7 @@ public class EventController {
     @SecurityRequirement(name = "BearerJWT")
     public ResponseEntity<?> getAllEventByFilter(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
-            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "size", defaultValue = "100") Integer size,
             EventFilter eventFilter,
             HttpServletRequest token
     ) {
