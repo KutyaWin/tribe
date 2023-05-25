@@ -1,6 +1,6 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.repository.FileStorageRepository;
 import com.covenant.tribe.service.PhotoStorageService;
 import lombok.AllArgsConstructor;
@@ -21,7 +21,12 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
     }
 
     @Override
-    public ImageDTO getEventAvatar(String avatarFileName) throws FileNotFoundException {
+    public ImageDto getEventAvatar(String avatarFileName) throws FileNotFoundException {
         return fileStorageRepository.getEventAvatarByFileName(avatarFileName);
+    }
+
+    @Override
+    public ImageDto getUserAvatar(String fileName) throws FileNotFoundException {
+        return fileStorageRepository.getUserAvatarByFileName(fileName);
     }
 }
