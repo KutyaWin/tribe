@@ -3,11 +3,10 @@ package com.covenant.tribe.util.mapper.impl;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.auth.AuthMethodsDto;
 import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
-import com.covenant.tribe.dto.user.UserForSignInUpDTO;
-import com.covenant.tribe.dto.user.UserSubscriberDto;
-import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
-import com.covenant.tribe.dto.user.UserUnSubscriberDto;
+import com.covenant.tribe.dto.event.EventTypeInfoDto;
+import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -81,6 +81,28 @@ public class UserMapperImpl implements UserMapper {
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .build();
+    }
+
+    @Override
+    public UserProfileGetDto mapToUserProfileGetDto(
+            User user,
+            AuthMethodsDto authMethodsDto,
+            List<ProfessionDto> professionDtoList,
+            List<EventTypeInfoDto> eventTypeInfoDtoList
+    ) {
+        return UserProfileGetDto.builder()
+                .avatarUrl(user.getUserAvatar())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .birthday(user.getBirthday())
+                .interestingEventType(eventTypeInfoDtoList)
+                .professions(professionDtoList)
+                .email(user.getUserEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .availableAuthMethods(authMethodsDto)
+                .isGeolocationAvailable(user.isEnableGeolocation())
                 .build();
     }
 
