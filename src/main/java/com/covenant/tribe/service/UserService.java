@@ -2,6 +2,7 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.user.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,4 +33,6 @@ public interface UserService {
     );
 
     UserProfileGetDto getUserProfile(long userId);
+
+    void uploadAvatarToTempFolder(long userId, ImageDto imageDto);
 }

@@ -1,7 +1,7 @@
 package com.covenant.tribe.repository.impl;
 
 import com.covenant.tribe.configuration.PathConfiguration;
-import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.repository.FileStorageRepository;
 import lombok.AccessLevel;
@@ -92,7 +92,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
-    public ImageDTO getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException {
+    public ImageDto getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException {
         String filePath = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain())
                 .append("/")
@@ -108,7 +108,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
             Path pathToFile = Path.of(filePath);
             byte[] imageByteArray = Files.readAllBytes(pathToFile);
             String imageContentType = Files.probeContentType(pathToFile);
-            return new ImageDTO(imageContentType, imageByteArray);
+            return new ImageDto(imageContentType, imageByteArray);
         } catch (IOException e) {
             String message = String.format("File with name: %s does not exist", avatarFileName);
             throw new FileNotFoundException(message);
