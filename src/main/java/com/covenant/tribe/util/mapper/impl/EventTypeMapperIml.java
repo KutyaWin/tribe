@@ -2,6 +2,7 @@ package com.covenant.tribe.util.mapper.impl;
 
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.dto.event.EventTypeDTO;
+import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.util.mapper.EventTypeMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +69,14 @@ public class EventTypeMapperIml implements EventTypeMapper {
                         .animationJson(eventType.getDarkCircleAnimation())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public EventTypeInfoDto mapToEventTypeInfoDtoList(EventType eventType) {
+        log.debug("map EventType to EventTypeInfoDto. Passed eventType: {}", eventType);
+        return EventTypeInfoDto.builder()
+                .id(eventType.getId())
+                .typeName(eventType.getTypeName())
+                .build();
     }
 }

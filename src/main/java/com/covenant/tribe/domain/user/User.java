@@ -110,6 +110,13 @@ public class User {
     @Builder.Default
     Set<EventType> interestingEventType = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_profession",
+        joinColumns = @JoinColumn(name = "user_id", nullable = false),
+        inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
+    )
+    Set<Profession> userProfessions = new HashSet<>();
+
     @OneToMany(
             mappedBy = "userRelations",
             fetch = FetchType.LAZY,
