@@ -2,6 +2,7 @@ package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.user.*;
+import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,9 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.FileNotFoundException;
 
 @Slf4j
 @Tag(name = "User")
@@ -32,6 +36,7 @@ public class UserController {
 
     UserService userService;
     EventMapper eventMapper;
+    PhotoStorageService storageService;
 
     @Operation(
             description = "Категория: создание Евента. Экран: Приглашение участников. Поле для поиска." +
@@ -343,6 +348,37 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .build();
+    }
 
+    @Operation(
+            description = "Категория: Любая, где требуется аватар пользователя. Экран: Любой, где требуется аватар пользователя" +
+                    " Действие: Получение аватара пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = Byte.class)
+                                    )
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/avatar/{added_date}/{file_name}")
+    public ResponseEntity<?> getUserAvatar(
+            @PathVariable(name = "file_name") String fileName,
+            @PathVariable(name = "added_date") String addedDate
+    ) throws FileNotFoundException {
+        log.info("[CONTROLLER] start endpoint getAvatar with param: {}", fileName);
+
+        ImageDto imageDto = storageService.getUserAvatar(addedDate + "/" + fileName);
+
+        log.info("[CONTROLLER] end endpoint getAvatar");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.parseMediaType(imageDto.getContentType()))
+                .body(imageDto.getImage());
     }
 }

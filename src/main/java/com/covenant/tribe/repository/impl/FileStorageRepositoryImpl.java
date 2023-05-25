@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
@@ -92,6 +93,17 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
+    public ImageDto getUserAvatarByFileName(String fileName) throws FileNotFoundException {
+        String filePath = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getImage()).append("/")
+                .append(pathConfiguration.getUser()).append("/")
+                .append(pathConfiguration.getAvatar()).append("/")
+                .append(fileName).toString();
+        return getImageDto(fileName, filePath);
+    }
+
+    @Override
     public ImageDto getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException {
         String filePath = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain())
@@ -104,6 +116,11 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 .append("/")
                 .append(avatarFileName)
                 .toString();
+        return getImageDto(avatarFileName, filePath);
+    }
+
+    @NotNull
+    private static ImageDto getImageDto(String avatarFileName, String filePath) throws FileNotFoundException {
         try {
             Path pathToFile = Path.of(filePath);
             byte[] imageByteArray = Files.readAllBytes(pathToFile);

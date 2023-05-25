@@ -24,4 +24,9 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
     public ImageDto getEventAvatar(String avatarFileName) throws FileNotFoundException {
         return fileStorageRepository.getEventAvatarByFileName(avatarFileName);
     }
+
+    @Override
+    public ImageDto getUserAvatar(String fileName) throws FileNotFoundException {
+        return fileStorageRepository.getUserAvatarByFileName(fileName);
+    }
 }

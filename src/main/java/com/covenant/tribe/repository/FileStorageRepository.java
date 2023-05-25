@@ -15,4 +15,6 @@ public interface FileStorageRepository {
     public List<String> addEventImages(List<String> fileNames) throws IOException;
 
     public void deleteUnnecessaryAvatars(List<String> fileNames) throws IOException;
+
+    ImageDto getUserAvatarByFileName(String fileName) throws FileNotFoundException;
 }
