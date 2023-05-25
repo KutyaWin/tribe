@@ -289,4 +289,33 @@ public class UserController {
                 .body(isUsernameExist);
     }
 
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки внутри." +
+                    " Действие: Получение всех данных о пользователе, которые возможно изменить в профиле пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = UserProfileGetDto.class)
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserProfile(
+            @PathVariable String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint getUserProfile with param: {}", userId);
+
+        UserProfileGetDto userProfileGetDto = userService.getUserProfile(Long.parseLong(userId));
+
+        log.info("[CONTROLLER] end endpoint getUserProfile");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userProfileGetDto);
+    }
+
 }

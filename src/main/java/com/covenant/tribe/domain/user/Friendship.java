@@ -38,12 +38,12 @@ public class Friendship {
     OffsetDateTime unsubscribeAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_who_made_following")
+    @JoinColumn(name = "user_who_made_following", nullable = false)
     @ToString.Exclude
     User userWhoMadeFollowing;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_who_get_follower")
+    @JoinColumn(name = "user_who_get_follower", nullable = false)
     @ToString.Exclude
     User userWhoGetFollower;
 

@@ -3,15 +3,16 @@ package com.covenant.tribe.service.impl;
 import com.covenant.tribe.domain.user.Friendship;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.user.SubscriptionDto;
-import com.covenant.tribe.dto.user.UserSubscriberDto;
-import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
-import com.covenant.tribe.dto.user.UserUnSubscriberDto;
+import com.covenant.tribe.dto.auth.AuthMethodsDto;
+import com.covenant.tribe.dto.event.EventTypeInfoDto;
+import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.util.mapper.EventTypeMapper;
+import com.covenant.tribe.util.mapper.ProfessionMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,6 +35,8 @@ public class UserServiceImpl implements UserService {
     FriendshipRepository friendshipRepository;
     UserRepository userRepository;
     UserMapper userMapper;
+    ProfessionMapper professionMapper;
+    EventTypeMapper eventTypeMapper;
 
     @Override
     public User findUserByUsername(String username) {
@@ -101,6 +104,31 @@ public class UserServiceImpl implements UserService {
                 unsubscriberUsername, userId, RelationshipStatus.SUBSCRIBE, pageable
         );
         return unsubscribers.map(user -> userMapper.mapToUserUnSubscriberDto(user));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserProfileGetDto getUserProfile(long userId) {
+        User user = findUserById(userId);
+        AuthMethodsDto authMethodsDto = getAuthMethodsDto(user);
+        List<ProfessionDto> professionDto = user.getUserProfessions().stream()
+                .map(professionMapper::mapToProfessionDto)
+                .toList();
+        List<EventTypeInfoDto> eventTypeInfoDtoList = user.getInterestingEventType().stream()
+                .map(eventTypeMapper::mapToEventTypeInfoDtoList)
+                .toList();
+        return userMapper.mapToUserProfileGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
+    }
+
+    private AuthMethodsDto getAuthMethodsDto(User user) {
+        boolean isEmailAvailable = !user.getPassword().isEmpty();
+        return AuthMethodsDto.builder()
+                .isEmailAvailable(isEmailAvailable)
+                .isGoogleAvailable(false)
+                .isVkAvailable(false)
+                .isWhatsAppAvailable(false)
+                .isTelegramAvailable(false)
+                .build();
     }
 
     @Transactional()
