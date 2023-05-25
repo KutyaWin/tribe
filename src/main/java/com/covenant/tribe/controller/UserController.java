@@ -1,7 +1,7 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.user.*;
-import com.covenant.tribe.dto.event.EventInFavoriteDTO;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,10 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @Tag(name = "User")
@@ -245,6 +242,7 @@ public class UserController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+
     @Operation(
             description = "Категория: Вход/Регистрация. Экран: Любой, где необходима проверка." +
                     " Действие: Проверка существует ли пользователь с заданным email.",
@@ -318,4 +316,33 @@ public class UserController {
                 .body(userProfileGetDto);
     }
 
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки внутри." +
+                    " Действие: Добавление аватара пользователя во временную папку. После обновления данных " +
+                    "пользователя, аватар перемещается в постоянное хранилище изображений",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PostMapping("/avatar/{user_id}")
+    public ResponseEntity<?> uploadAvatarToTempFolder(
+            @PathVariable(name = "user_id") String userId,
+            @RequestBody ImageDto imageDto
+    ) {
+        log.info("[CONTROLLER] start endpoint uploadAvatarToTempFolder with param: {}, and contentType: {}",
+                userId, imageDto.getContentType());
+
+        userService.uploadAvatarToTempFolder(Long.parseLong(userId), imageDto);
+
+        log.info("[CONTROLLER] end endpoint uploadAvatarToTempFolder");
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .build();
+
+    }
 }

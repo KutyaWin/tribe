@@ -1,6 +1,6 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.dto.ImageDTO;
+import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.PageResponse;
 import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.dto.event.*;
@@ -529,7 +529,7 @@ public class EventController {
     )
     @PostMapping("/avatars")
     public ResponseEntity<?> addEventAvatarToTempDirectory(
-            @RequestBody ImageDTO imageDTO
+            @RequestBody ImageDto imageDTO
     ) {
         String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
         return ResponseEntity
@@ -552,7 +552,7 @@ public class EventController {
             @PathVariable(value = "added_date") String addedDate,
             @PathVariable(value = "avatar_file_name") String avatarFileName
     ) throws FileNotFoundException {
-        ImageDTO imageDTO = storageService.getEventAvatar(addedDate + "/" + avatarFileName);
+        ImageDto imageDTO = storageService.getEventAvatar(addedDate + "/" + avatarFileName);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .contentType(MediaType.parseMediaType(imageDTO.getContentType()))
