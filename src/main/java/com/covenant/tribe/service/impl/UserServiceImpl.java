@@ -3,6 +3,7 @@ package com.covenant.tribe.service.impl;
 import com.covenant.tribe.domain.user.Friendship;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
@@ -37,6 +38,8 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     ProfessionMapper professionMapper;
     EventTypeMapper eventTypeMapper;
+    FileStorageRepository fileStorageRepository;
+
 
     @Override
     public User findUserByUsername(String username) {
@@ -118,6 +121,11 @@ public class UserServiceImpl implements UserService {
                 .map(eventTypeMapper::mapToEventTypeInfoDtoList)
                 .toList();
         return userMapper.mapToUserProfileGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
+    }
+
+    @Override
+    public void uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
+        fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
     }
 
     private AuthMethodsDto getAuthMethodsDto(User user) {
