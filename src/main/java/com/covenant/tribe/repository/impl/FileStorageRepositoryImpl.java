@@ -83,6 +83,29 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
+    public String addUserAvatar(String fileNameForAdding) throws IOException {
+        String currentDate = LocalDate.now().toString();
+        String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getTmp()).toString();
+        String pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getImage()).append("/")
+                .append(pathConfiguration.getUser()).append("/")
+                .append(pathConfiguration.getAvatar()).append("/")
+                .append(currentDate).append("/")
+                .toString();
+        Files.createDirectories(Path.of(pathToNewFolder));
+        String pathForDb = currentDate + "/" + fileNameForAdding;
+        String pathForFile = pathToNewFolder + "/" + fileNameForAdding;
+        Files.copy(
+                Path.of(pathToTmpDir + "/" + fileNameForAdding),
+                Path.of(pathForFile));
+
+        return pathForDb;
+    }
+
+    @Override
     public void deleteUnnecessaryAvatars(List<String> fileNames) throws IOException {
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain()).append("/")

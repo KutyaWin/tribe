@@ -1,6 +1,8 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Friendship;
+import com.covenant.tribe.domain.user.Profession;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
@@ -8,7 +10,9 @@ import com.covenant.tribe.dto.auth.AuthMethodsDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
+import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
+import com.covenant.tribe.exeption.user.UserAlreadyExistException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.UserService;
@@ -24,8 +28,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,12 +40,14 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
 
+    EventTypeRepository eventTypeRepository;
     FriendshipRepository friendshipRepository;
     UserRepository userRepository;
     UserMapper userMapper;
     ProfessionMapper professionMapper;
     EventTypeMapper eventTypeMapper;
     FileStorageRepository fileStorageRepository;
+    ProfessionRepository professionRepository;
 
 
     @Override
@@ -49,6 +58,7 @@ public class UserServiceImpl implements UserService {
                     return new UserNotFoundException("User with username: " + username + " not found.");
                 });
     }
+
     @Transactional(readOnly = true)
     @Override
     public Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable) {
@@ -128,6 +138,95 @@ public class UserServiceImpl implements UserService {
         fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
     }
 
+    @Transactional
+    @Override
+    public void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto) {
+        User user = findUserById(userProfileUpdateDto.getUserId());
+        if (!userProfileUpdateDto.getUserAvatar().isEmpty()) {
+            if (!userProfileUpdateDto.getUserAvatar().equals(user.getUserAvatar())) {
+                try {
+                    setNewUserAvatar(userProfileUpdateDto.getUserAvatar(), user);
+                } catch (IOException ex) {
+                    String message = String.format("[EXCEPTION] IOException with message: %s", ex.getMessage());
+                    log.error(message);
+                    throw new FilesNotHandleException(message);
+                }
+            }
+        }
+
+        if (!userProfileUpdateDto.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsUserByUsername(userProfileUpdateDto.getUsername())) {
+                String message = String.format("[EXCEPTION] User with username: %s already exists",
+                        userProfileUpdateDto.getUsername()
+                );
+                log.error(message);
+                throw new UserAlreadyExistException(message);
+            }
+            user.setUsername(userProfileUpdateDto.getUsername());
+        }
+
+        if (!userProfileUpdateDto.getFirstName().equals(user.getFirstName())) {
+            user.setFirstName(userProfileUpdateDto.getFirstName());
+        }
+
+        if (!userProfileUpdateDto.getLastName().equals(user.getLastName())) {
+            user.setLastName(userProfileUpdateDto.getLastName());
+        }
+
+        if (!userProfileUpdateDto.getBirthday().isEqual(user.getBirthday())) {
+            user.setBirthday(userProfileUpdateDto.getBirthday());
+        }
+
+        Set<EventType> newEventTypes = new HashSet<>(eventTypeRepository
+                .findAllById(userProfileUpdateDto.getInterestingEventType()));
+        user.addInterestingEventTypes(newEventTypes);
+
+        if (!userProfileUpdateDto.getProfessionIds().isEmpty()) {
+            List<String> afterHandlingProfessionNames = userProfileUpdateDto.getNewProfessions().stream()
+                    .map(professionName -> {
+                        String lowerCaseProfessionName = professionName.toLowerCase();
+                        return lowerCaseProfessionName
+                                .substring(0, 1)
+                                .toUpperCase() +
+                                lowerCaseProfessionName.substring(1);
+                    })
+                    .toList();
+            Set<Profession> newProfessions = afterHandlingProfessionNames.stream()
+                    .map(professionName -> {
+                        return Profession.builder()
+                                .name(professionName)
+                                .build();
+                    })
+                    .collect(Collectors.toSet());
+            professionRepository.saveAll(newProfessions);
+            Set<Profession> professionsForUpdate = new HashSet<>(
+                    professionRepository.findAllById(userProfileUpdateDto.getProfessionIds())
+            );
+            professionsForUpdate.addAll(newProfessions);
+            user.addNewProfessions(professionsForUpdate);
+        }
+
+        if (userProfileUpdateDto.isGeolocationAvailable() != user.isEnableGeolocation()) {
+            user.setEnableGeolocation(userProfileUpdateDto.isGeolocationAvailable());
+        }
+
+        userRepository.save(user);
+
+        try {
+            fileStorageRepository.deleteUnnecessaryAvatars(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
+        } catch (IOException e) {
+            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+            log.error(message);
+            throw new FilesNotHandleException(message);
+        }
+
+    }
+
+    private void setNewUserAvatar(String fileNameForAdding, User user) throws IOException {
+        String newAvatarFileName = fileStorageRepository.addUserAvatar(fileNameForAdding);
+        user.setUserAvatar(newAvatarFileName);
+    }
+
     private AuthMethodsDto getAuthMethodsDto(User user) {
         boolean isEmailAvailable = !user.getPassword().isEmpty();
         return AuthMethodsDto.builder()
@@ -180,6 +279,7 @@ public class UserServiceImpl implements UserService {
         friendship.unsubscribeUser();
         friendshipRepository.save(friendship);
     }
+
     private User findUserById(Long userId) {
         return userRepository.findUserById(userId)
                 .orElseThrow(() -> {

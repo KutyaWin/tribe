@@ -126,6 +126,14 @@ public class User {
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
+    public void addNewProfessions(Set<Profession> professions) {
+        if (this.userProfessions == null) {
+            this.userProfessions = professions;
+        } else {
+            this.userProfessions.retainAll(professions);
+            this.userProfessions.addAll(professions);
+        }
+    }
 
     public void addUserRelationsWithEvent(UserRelationsWithEvent userRelationsWithEvent) {
         if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
@@ -213,11 +221,13 @@ public class User {
             );
         }
     }
-
     public void addInterestingEventTypes(Set<EventType> passedInterestingEventTypes) {
-        if (this.interestingEventType == null) this.interestingEventType = new HashSet<>();
-
-        passedInterestingEventTypes.forEach(this::addInterestingEventType);
+        if (this.interestingEventType == null) {
+            this.interestingEventType = passedInterestingEventTypes;
+        } else {
+            this.interestingEventType.retainAll(passedInterestingEventTypes);
+            this.interestingEventType.addAll(passedInterestingEventTypes);
+        }
     }
 
     public void addEventWhereUserAsOrganizer(Event eventWhereUserAsOrganizer) {
