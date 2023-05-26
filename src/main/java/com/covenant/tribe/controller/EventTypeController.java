@@ -1,8 +1,10 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.event.EventTypeDTO;
+import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.service.EventTypeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -66,5 +68,33 @@ public class EventTypeController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventTypeDTOs);
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки профиля." +
+                    " Действие: Получение всех возможных типов событий с именами и id",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                array = @ArraySchema(
+                                    schema = @Schema(implementation = EventTypeInfoDto.class)
+                                )
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/event/type/info")
+    public ResponseEntity<?> getEventTypeInfo() {
+        log.info("[CONTROLLER] start endpoint getEventTypeInfo");
+
+        List<EventTypeInfoDto> eventTypeInfoDtoList = eventTypeService.getEventTypeInfo();
+
+        log.info("[CONTROLLER] end endpoint getEventTypeInfo");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(eventTypeInfoDtoList);
     }
 }
