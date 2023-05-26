@@ -2,6 +2,7 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.dto.event.EventTypeDTO;
+import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,4 +15,5 @@ public interface EventTypeService {
 
     EventType getEventTypeByName(String eventTypeName);
 
+    List<EventTypeInfoDto> getEventTypeInfo();
 }
