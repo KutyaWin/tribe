@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -380,5 +381,31 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .contentType(MediaType.parseMediaType(imageDto.getContentType()))
                 .body(imageDto.getImage());
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки внутри." +
+                    " Действие: Обновление данных в профиле пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userProfileUpdateDto.userId.toString().equals(authentication.getName())")
+    @PatchMapping()
+    public ResponseEntity<?> updateUserProfile(
+         @RequestBody @Valid UserProfileUpdateDto userProfileUpdateDto
+    ) {
+        log.info("[CONTROLLER] start endpoint updateUserProfile with param: {}", userProfileUpdateDto);
+
+        userService.updateUserProfile(userProfileUpdateDto);
+
+        log.info("[CONTROLLER] end endpoint updateUserProfile");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
     }
 }

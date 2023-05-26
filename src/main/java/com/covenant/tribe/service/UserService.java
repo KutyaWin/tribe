@@ -35,4 +35,6 @@ public interface UserService {
     UserProfileGetDto getUserProfile(long userId);
 
     void uploadAvatarToTempFolder(long userId, ImageDto imageDto);
+
+    void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto);
 }
