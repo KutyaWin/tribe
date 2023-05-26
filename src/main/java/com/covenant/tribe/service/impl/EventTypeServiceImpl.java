@@ -2,6 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.dto.event.EventTypeDTO;
+import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.exeption.event.EventTypeNotFoundException;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.service.EventTypeService;
@@ -11,8 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -31,6 +34,15 @@ public class EventTypeServiceImpl implements EventTypeService {
                             String.format("[EXCEPTION]: EventType with name: %s, not found", eventTypeName)
                     );
                 });
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EventTypeInfoDto> getEventTypeInfo() {
+        return eventTypeRepository.findAll()
+                .stream()
+                .map(eventTypeMapper::mapToEventTypeInfoDtoList)
+                .collect(Collectors.toList());
     }
 
     @Override
