@@ -67,6 +67,9 @@ path:
   avatar: avatar
   event: event
   user: user
+  animation: animation
+  add-events: add events
+  onboard: onboard
 
 keys:
   access-private: access_private.der

@@ -36,16 +36,16 @@ public class EventType {
     @Column(name = "type_name_en", length = 50, unique = true)
     String eventNameEn;
 
-    @Column(columnDefinition = "TEXT", name = "light_circle_animation")
+    @Column(length = 50, name = "light_circle_animation_path")
     String lightCircleAnimation;
 
-    @Column(columnDefinition = "TEXT", name = "dark_circle_animation")
+    @Column(length = 50, name = "dark_circle_animation_path")
     String darkCircleAnimation;
 
-    @Column(columnDefinition = "TEXT", name = "light_rectangle_animation")
+    @Column(length = 50, name = "light_rectangle_animation_path")
     String lightRectangleAnimation;
 
-    @Column(columnDefinition = "TEXT", name = "dark_rectangle_animation")
+    @Column(length = 50, name = "dark_rectangle_animation_path")
     String darkRectangleAnimation;
 
     @OneToMany(mappedBy = "eventType", fetch = FetchType.LAZY)
