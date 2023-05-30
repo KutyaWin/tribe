@@ -5,6 +5,7 @@ import com.covenant.tribe.client.dto.VkValidationResponseDTO;
 import com.covenant.tribe.client.vk.VkClient;
 import com.covenant.tribe.client.vk.VkValidationParams;
 import com.covenant.tribe.domain.auth.ResetCodes;
+import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.RegistrantStatus;
@@ -355,10 +356,10 @@ public class AuthServiceImpl implements AuthService {
             GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
             if (idToken != null) {
                 Payload tokenPayload = idToken.getPayload();
-                String socialId = GOOGLE_TOKEN_TYPE + tokenPayload.getSubject();
+                Long googleUserId = Long.valueOf(tokenPayload.getSubject());
                 String email = tokenPayload.getEmail() == null ? "" : tokenPayload.getEmail();
                 userForSignInUpDTO.setEmail(email);
-                return getTokensDTO(userForSignInUpDTO, socialId);
+                return getTokensDTO(userForSignInUpDTO, googleUserId, SocialIdType.GOOGLE);
             } else {
                 throw new GoogleIntrospectionException("Invalid idToken");
             }
@@ -378,8 +379,8 @@ public class AuthServiceImpl implements AuthService {
                 && Objects.requireNonNull(vkResponse.getBody()).contains("response")
         ) {
             response = mapStringToVkValidationResponseDTO(vkResponse.getBody());
-            String socialId = VK_TOKEN_TYPE + response.getResponse().getUserId();
-            return getTokensDTO(userForSignInUpDTO, socialId);
+            Long vkUserId = response.getResponse().getUserId();
+            return getTokensDTO(userForSignInUpDTO, vkUserId, SocialIdType.VK);
         } else {
             VkValidationErrorDTO vkValidationResponseDTO = mapStringToVkValidationErrorDTO(vkResponse.getBody());
             throw new VkIntrospectionException(vkValidationResponseDTO.getError().getErrorMessage());
@@ -387,15 +388,21 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @NotNull
-    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
+    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, Long socialId, SocialIdType socialIdType) {
         try {
-            User user = userRepository.findBySocialId(socialId);
+            User user = null;
+            if (socialIdType == SocialIdType.GOOGLE) {
+                user = userRepository.findByGoogleId(socialId);
+            }
+            if (socialIdType == SocialIdType.VK) {
+                user = userRepository.findByVkId(socialId);
+            }
             if (user != null) {
                 TokensDTO tokensDTO = getTokenDTO(user.getId());
                 tokensDTO.setUserId(user.getId());
                 return tokensDTO;
             } else {
-                Long userId = registerNewUser(userForSignInUpDTO, socialId);
+                Long userId = registerNewUser(userForSignInUpDTO, socialId, socialIdType);
                 TokensDTO tokensDTO = getTokenDTO(userId);
                 tokensDTO.setUserId(userId);
                 return tokensDTO;
@@ -415,14 +422,23 @@ public class AuthServiceImpl implements AuthService {
         return objectMapper.readValue(error, VkValidationErrorDTO.class);
     }
 
-    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
+    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, Long socialId, SocialIdType socialIdType) {
         if (userRepository.existsUserByUsername(userForSignInUpDTO.getUsername())) {
             String message = String.format("Username: %s, already exists", userForSignInUpDTO.getUsername());
             log.error(message);
             throw new UserAlreadyExistException(message);
         }
+        User userToSave = null;
+        if (socialIdType == SocialIdType.GOOGLE) {
+            userToSave = userMapper.mapToUserFromUserGoogleRegistration(userForSignInUpDTO, socialId);
+        } else if (socialIdType == SocialIdType.VK) {
+            userToSave = userMapper.mapToUserFromUserVkRegistration(userForSignInUpDTO, socialId);
+        } else {
+            String message = String.format("Unknown socialIdType: %s", socialIdType);
+            log.error(message);
+            throw  new IllegalArgumentException(message);
+        }
 
-        User userToSave = userMapper.mapToUserFromUserForSignInUpDTO(userForSignInUpDTO, socialId);
         UnknownUser unknownUserWithUserToSaveBluetoothId = unknownUserRepository
                 .findUnknownUserByBluetoothId(userForSignInUpDTO.getBluetoothId());
         if (unknownUserWithUserToSaveBluetoothId != null) {

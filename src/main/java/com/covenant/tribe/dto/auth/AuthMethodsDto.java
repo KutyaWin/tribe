@@ -13,19 +13,19 @@ import java.io.Serializable;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthMethodsDto implements Serializable {
 
-    @JsonProperty("is_email_available")
-    boolean isEmailAvailable;
+    @JsonProperty("has_email_authentication")
+    boolean hasEmailAuthentication;
 
-    @JsonProperty("is_google_available")
-    boolean isGoogleAvailable;
+    @JsonProperty("has_google_authentication")
+    boolean hasGoogleAuthentication;
 
-    @JsonProperty("is_vk_available")
-    boolean isVkAvailable;
+    @JsonProperty("has_vk_authentication")
+    boolean hasVkAuthentication;
 
-    @JsonProperty("is_whatsapp_available")
-    boolean isWhatsAppAvailable;
+    @JsonProperty("has_whatsapp_authentication")
+    boolean hasWhatsAppAuthentication;
 
-    @JsonProperty("is_telegram_available")
-    boolean isTelegramAvailable;
+    @JsonProperty("has_telegram_authentication")
+    boolean hasTelegramAuthentication;
 
 }

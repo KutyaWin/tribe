@@ -86,7 +86,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllByInterestingEventType(EventType eventType);
 
-    User findBySocialId(String socialId);
+    User findByGoogleId(Long googleId);
+    User findByVkId(Long vkId);
 
     boolean existsUserByUserEmail(String email);
 

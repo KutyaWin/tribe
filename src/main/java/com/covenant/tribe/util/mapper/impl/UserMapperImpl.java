@@ -1,5 +1,6 @@
 package com.covenant.tribe.util.mapper.impl;
 
+import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
@@ -23,21 +24,32 @@ import java.util.Set;
 @Component
 public class UserMapperImpl implements UserMapper {
 
-    private final String VK_PREFIX = "vk";
-    private final String GOOGLE_PREFIX = "google";
-    private final String TRIBE_PREFIX = "tribe";
-
-    public User mapToUserFromUserForSignInUpDTO(UserForSignInUpDTO userDto, String socialUserId) {
-        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userDto);
+    public User mapToUserFromUserGoogleRegistration(UserForSignInUpDTO userForSignInUpDTO, Long googleUserId) {
+        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
         //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
         return User.builder()
-                .socialId(socialUserId)
-                .firebaseId(userDto.getFirebaseId())
-                .bluetoothId(userDto.getBluetoothId())
-                .username(userDto.getUsername())
-                .userEmail(makeFakeDataIfNeededIsEmpty(userDto.getEmail(), socialUserId))
-                .password(makeFakeDataIfNeededIsEmpty(userDto.getPassword(), socialUserId))
-                .phoneNumber(makeFakeDataIfNeededIsEmpty(userDto.getPhoneNumber(), socialUserId))
+                .googleId(googleUserId)
+                .firebaseId(userForSignInUpDTO.getFirebaseId())
+                .bluetoothId(userForSignInUpDTO.getBluetoothId())
+                .username(userForSignInUpDTO.getUsername())
+                .userEmail(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getEmail(), googleUserId.toString()))
+                .password(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPassword(), googleUserId.toString()))
+                .phoneNumber(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPhoneNumber(), googleUserId.toString()))
+                .build();
+    }
+
+    @Override
+    public User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, Long vkUserId) {
+        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
+        //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
+        return User.builder()
+                .vkId(vkUserId)
+                .firebaseId(userForSignInUpDTO.getFirebaseId())
+                .bluetoothId(userForSignInUpDTO.getBluetoothId())
+                .username(userForSignInUpDTO.getUsername())
+                .userEmail(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getEmail(), vkUserId.toString()))
+                .password(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPassword(), vkUserId.toString()))
+                .phoneNumber(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPhoneNumber(), vkUserId.toString()))
                 .build();
     }
 
@@ -46,13 +58,12 @@ public class UserMapperImpl implements UserMapper {
     ) {
         log.debug("map confirmRegistrationDTO to User. confirmRegistrationDTO: {}, " +
                 "registrant: {}, userInterests: {}", confirmRegistrationDTO, registrant, userInterests);
-        String socialId = TRIBE_PREFIX + registrant.getId();
+        String fakePhoneNumber = "tribe" + registrant.getId();
         return User.builder()
-                .socialId(TRIBE_PREFIX + registrant.getId())
                 .firebaseId(confirmRegistrationDTO.getFirebaseId())
                 .userEmail(registrant.getEmail())
                 .password(registrant.getPassword())
-                .phoneNumber(socialId)
+                .phoneNumber(fakePhoneNumber)
                 .username(registrant.getUsername())
                 .bluetoothId(confirmRegistrationDTO.getBluetoothId())
                 .enableGeolocation(false)

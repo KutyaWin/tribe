@@ -6,6 +6,7 @@ import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,9 +34,6 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
-    @Column(name = "social_id", unique = true)
-    String socialId;
 
     @Column(name = "firebase_id", nullable = false)
     String firebaseId;
@@ -74,6 +72,32 @@ public class User {
     @Column(name = "enable_geolocation", nullable = false)
     boolean enableGeolocation;
 
+    @Column(name = "has_email_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    boolean hasEmailAuthentication;
+
+    @Column(name = "has_google_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    boolean hasGoogleAuthentication;
+
+    @Column(name = "has_vk_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    boolean hasVkAuthentication;
+
+    @Column(name = "has_whatsapp_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    boolean hasWhatsappAuthentication;
+
+    @Column(name = "has_telegram_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    boolean hasTelegramAuthentication;
+
+    @Column(name = "google_id", unique = true)
+    Long googleId;
+
+    @Column(name = "vk_id", unique = true)
+    Long vkId;
+
     @OneToMany(
             mappedBy = "organizer",
             fetch = FetchType.LAZY
@@ -103,8 +127,8 @@ public class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_interests",
-        joinColumns = @JoinColumn(name = "user_id", nullable = false),
-        inverseJoinColumns = @JoinColumn(name = "event_type_id", nullable = false))
+            joinColumns = @JoinColumn(name = "user_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "event_type_id", nullable = false))
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
@@ -112,8 +136,8 @@ public class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_profession",
-        joinColumns = @JoinColumn(name = "user_id", nullable = false),
-        inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
+            joinColumns = @JoinColumn(name = "user_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
     )
     Set<Profession> userProfessions = new HashSet<>();
 
@@ -126,6 +150,7 @@ public class User {
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
+
     public void addNewProfessions(Set<Profession> professions) {
         if (this.userProfessions == null) {
             this.userProfessions = professions;
@@ -221,6 +246,7 @@ public class User {
             );
         }
     }
+
     public void addInterestingEventTypes(Set<EventType> passedInterestingEventTypes) {
         if (this.interestingEventType == null) {
             this.interestingEventType = passedInterestingEventTypes;
@@ -239,8 +265,8 @@ public class User {
         } else {
             log.error(
                     format("User already have event with same id. User events: %s, Passed event: %s",
-                    this.eventsWhereUserAsOrganizer.stream().map(Event::getId).toList(),
-                    eventWhereUserAsOrganizer.getId()
+                            this.eventsWhereUserAsOrganizer.stream().map(Event::getId).toList(),
+                            eventWhereUserAsOrganizer.getId()
                     ));
             throw new AlreadyExistArgumentForAddToEntityException(
                     format("User already have event with same id. User events: %s, Passed event: %s",
@@ -250,7 +276,7 @@ public class User {
     }
 
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || this.getClass() != o.getClass()) return false;
 
