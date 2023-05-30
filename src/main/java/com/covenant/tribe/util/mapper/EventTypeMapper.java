@@ -13,5 +13,7 @@ public interface EventTypeMapper {
     List<EventTypeDTO> mapToDarkRectangleEventTypeDTOList(List<EventType> eventTypeList);
     List<EventTypeDTO> maptoDarkCircleEventTypeDTOList(List<EventType> eventTypeList);
 
+    EventTypeDTO mapToEventTypeDto(EventType eventType, String animationJson);
+
     EventTypeInfoDto mapToEventTypeInfoDtoList(EventType eventType);
 }

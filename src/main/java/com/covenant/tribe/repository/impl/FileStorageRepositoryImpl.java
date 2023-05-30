@@ -106,6 +106,26 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
+    public String getRectangleAnimationJson(String fileName) throws IOException {
+        String filePath = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getAnimation()).append("/")
+                .append(pathConfiguration.getAddEvents()).append("/")
+                .append(fileName).toString();
+        return Files.readString(Path.of(filePath));
+    }
+
+    @Override
+    public String getCircleAnimationJson(String fileName) throws IOException {
+        String filePath = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getAnimation()).append("/")
+                .append(pathConfiguration.getOnboard()).append("/")
+                .append(fileName).toString();
+        return Files.readString(Path.of(filePath));
+    }
+
+    @Override
     public void deleteUnnecessaryAvatars(List<String> fileNames) throws IOException {
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain()).append("/")
