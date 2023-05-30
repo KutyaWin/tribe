@@ -228,13 +228,12 @@ public class UserServiceImpl implements UserService {
     }
 
     private AuthMethodsDto getAuthMethodsDto(User user) {
-        boolean isEmailAvailable = !user.getPassword().isEmpty();
         return AuthMethodsDto.builder()
-                .isEmailAvailable(isEmailAvailable)
-                .isGoogleAvailable(false)
-                .isVkAvailable(false)
-                .isWhatsAppAvailable(false)
-                .isTelegramAvailable(false)
+                .hasEmailAuthentication(user.hasEmailAuthentication())
+                .hasGoogleAuthentication(user.hasGoogleAuthentication())
+                .hasVkAuthentication(user.hasVkAuthentication())
+                .hasWhatsAppAuthentication(user.hasWhatsappAuthentication())
+                .hasTelegramAuthentication(user.hasTelegramAuthentication())
                 .build();
     }
 
