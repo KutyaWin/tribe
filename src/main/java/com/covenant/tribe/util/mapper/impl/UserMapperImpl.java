@@ -24,32 +24,28 @@ import java.util.Set;
 @Component
 public class UserMapperImpl implements UserMapper {
 
-    public User mapToUserFromUserGoogleRegistration(UserForSignInUpDTO userForSignInUpDTO, Long googleUserId) {
+    public User mapToUserFromUserGoogleRegistration(UserForSignInUpDTO userForSignInUpDTO, String googleUserId) {
         log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
-        //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
         return User.builder()
                 .googleId(googleUserId)
+                .hasGoogleAuthentication(true)
                 .firebaseId(userForSignInUpDTO.getFirebaseId())
-                .bluetoothId(userForSignInUpDTO.getBluetoothId())
                 .username(userForSignInUpDTO.getUsername())
-                .userEmail(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getEmail(), googleUserId.toString()))
-                .password(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPassword(), googleUserId.toString()))
-                .phoneNumber(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPhoneNumber(), googleUserId.toString()))
+                .userEmail(userForSignInUpDTO.getEmail())
+                .phoneNumber(userForSignInUpDTO.getPhoneNumber())
                 .build();
     }
 
     @Override
-    public User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, Long vkUserId) {
+    public User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId) {
         log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
-        //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
         return User.builder()
                 .vkId(vkUserId)
+                .hasVkAuthentication(true)
                 .firebaseId(userForSignInUpDTO.getFirebaseId())
-                .bluetoothId(userForSignInUpDTO.getBluetoothId())
                 .username(userForSignInUpDTO.getUsername())
-                .userEmail(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getEmail(), vkUserId.toString()))
-                .password(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPassword(), vkUserId.toString()))
-                .phoneNumber(makeFakeDataIfNeededIsEmpty(userForSignInUpDTO.getPhoneNumber(), vkUserId.toString()))
+                .userEmail(userForSignInUpDTO.getEmail())
+                .phoneNumber(userForSignInUpDTO.getPhoneNumber())
                 .build();
     }
 
@@ -58,14 +54,13 @@ public class UserMapperImpl implements UserMapper {
     ) {
         log.debug("map confirmRegistrationDTO to User. confirmRegistrationDTO: {}, " +
                 "registrant: {}, userInterests: {}", confirmRegistrationDTO, registrant, userInterests);
-        String fakePhoneNumber = "tribe" + registrant.getId();
         return User.builder()
+                .hasEmailAuthentication(true)
                 .firebaseId(confirmRegistrationDTO.getFirebaseId())
                 .userEmail(registrant.getEmail())
                 .password(registrant.getPassword())
-                .phoneNumber(fakePhoneNumber)
+                .phoneNumber(null)
                 .username(registrant.getUsername())
-                .bluetoothId(confirmRegistrationDTO.getBluetoothId())
                 .enableGeolocation(false)
                 .interestingEventType(userInterests)
                 .build();
@@ -116,23 +111,6 @@ public class UserMapperImpl implements UserMapper {
                 .isGeolocationAvailable(user.isEnableGeolocation())
                 .build();
     }
-
-    private String makeFakeDataIfNeededIsEmpty(String data, String socialId) {
-        if (data.isEmpty()) return socialId;
-        return data;
-    }
-
-    public UserForSignInUpDTO mapToTESTUserForSignUpDTO(User user) {
-        log.debug("map User to TESTUserForSignUpDTO. User: {}", user);
-
-        return UserForSignInUpDTO.builder()
-                .bluetoothId(user.getBluetoothId())
-                .email(user.getUserEmail())
-                .password(user.getPassword())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
-    }
-
     @Override
     public UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user) {
         log.debug("map User to UserToSendInvitationDTO. User: {}", user);

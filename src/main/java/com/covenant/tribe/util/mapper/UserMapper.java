@@ -16,12 +16,10 @@ public interface UserMapper {
 
     User mapToUserFromUserGoogleRegistration(
             UserForSignInUpDTO userForSignInUpDTO,
-            Long googleUserId
+            String googleUserId
     );
 
-    User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, Long vkUserId);
-
-    UserForSignInUpDTO mapToTESTUserForSignUpDTO(User user);
+    User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId);
 
     UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user);
 

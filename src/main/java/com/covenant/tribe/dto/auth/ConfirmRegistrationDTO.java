@@ -28,8 +28,4 @@ public class ConfirmRegistrationDTO {
     @JsonProperty(value = "firebase_id")
     String firebaseId;
 
-    @NotBlank(message = "bluetoothId should not be null or empty")
-    @JsonProperty(value = "bluetooth_id")
-    String bluetoothId;
-
 }
