@@ -71,23 +71,28 @@ public class User {
 
     @Column(name = "has_email_authentication", columnDefinition = "BOOLEAN")
     @Accessors(fluent = true)
-    boolean hasEmailAuthentication;
+    @Builder.Default
+    Boolean hasEmailAuthentication = false;
 
     @Column(name = "has_google_authentication", columnDefinition = "BOOLEAN")
     @Accessors(fluent = true)
-    boolean hasGoogleAuthentication;
+    @Builder.Default
+    Boolean hasGoogleAuthentication = false;
 
     @Column(name = "has_vk_authentication", columnDefinition = "BOOLEAN")
     @Accessors(fluent = true)
-    boolean hasVkAuthentication;
+    @Builder.Default
+    Boolean hasVkAuthentication = false;
 
     @Column(name = "has_whatsapp_authentication", columnDefinition = "BOOLEAN")
     @Accessors(fluent = true)
-    boolean hasWhatsappAuthentication;
+    @Builder.Default
+    Boolean hasWhatsappAuthentication = false;
 
     @Column(name = "has_telegram_authentication", columnDefinition = "BOOLEAN")
     @Accessors(fluent = true)
-    boolean hasTelegramAuthentication;
+    @Builder.Default
+    Boolean hasTelegramAuthentication = false;
 
     @Column(name = "google_id", unique = true)
     String googleId;
