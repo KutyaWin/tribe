@@ -15,14 +15,6 @@ import java.io.Serializable;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class  UserForSignInUpDTO implements Serializable {
 
-    @JsonProperty("user_id")
-    String userId;
-
-    @JsonProperty("bluetooth_id")
-    @NotBlank(message = "bluetooth_id should not be null or empty")
-    @Size(max = 100, message = "bluetooth_id must not consist of more than 100 characters")
-    String bluetoothId;
-
     @JsonProperty("firebase_id")
     @NotBlank(message = "firebase_id should not be null or empty")
     @Size(max = 100, message = "firebase_id must not consist of more than 100 characters")
@@ -30,9 +22,6 @@ public class  UserForSignInUpDTO implements Serializable {
 
     @Size(max = 50, message = "Email must not consist of more than 50 characters")
     String email;
-
-    @Size(max = 500, message = "Password must not consist of more than 500 characters")
-    String password;
 
     @NotBlank(message = "username should not be null or empty")
     @Size(max = 50, message = "username must not consist of more than 50 characters")

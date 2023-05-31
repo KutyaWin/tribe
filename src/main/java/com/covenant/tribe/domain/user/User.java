@@ -42,10 +42,10 @@ public class User {
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
     OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Column(name = "user_email", length = 50, nullable = false, unique = true)
+    @Column(name = "user_email", length = 50, unique = true)
     String userEmail;
 
-    @Column(length = 500, nullable = false)
+    @Column(length = 500)
     String password;
 
     @Column(name = "phone_number", unique = true)
@@ -65,9 +65,6 @@ public class User {
 
     @Column(name = "user_avatar", length = 200)
     String userAvatar;
-
-    @Column(name = "bluetooth_id", length = 100, nullable = false)
-    String bluetoothId;
 
     @Column(name = "enable_geolocation", nullable = false)
     boolean enableGeolocation;
@@ -93,10 +90,10 @@ public class User {
     boolean hasTelegramAuthentication;
 
     @Column(name = "google_id", unique = true)
-    Long googleId;
+    String googleId;
 
     @Column(name = "vk_id", unique = true)
-    Long vkId;
+    String vkId;
 
     @OneToMany(
             mappedBy = "organizer",

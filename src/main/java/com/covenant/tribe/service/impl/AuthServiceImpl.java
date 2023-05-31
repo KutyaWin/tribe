@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -115,15 +116,7 @@ public class AuthServiceImpl implements AuthService {
             String token, String tokenType, UserForSignInUpDTO userForSignInUpDTO
     ) throws JsonProcessingException {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-        String bluetoothId = userForSignInUpDTO.getBluetoothId();
         String firebaseId = userForSignInUpDTO.getFirebaseId();
-
-        if (bluetoothId.isEmpty() || firebaseId.isBlank()) {
-            throw new BadCredentialsException(
-                    String.format("BluetoothId: %s and FirebaseId: %s  can't be empty or null'",
-                            bluetoothId, firebaseId)
-            );
-        }
 
         if (tokenType.equals(GOOGLE_TOKEN_TYPE)) return getTokensForGoogleUser(token, userForSignInUpDTO);
         if (tokenType.equals(VK_TOKEN_TYPE)) return getTokenForVkUser(token, userForSignInUpDTO);
@@ -186,15 +179,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokensDTO confirmEmailRegistration(ConfirmRegistrationDTO confirmRegistrationDTO) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-        String bluetoothId = confirmRegistrationDTO.getBluetoothId();
         String firebaseId = confirmRegistrationDTO.getFirebaseId();
-
-        if (bluetoothId.isEmpty() || firebaseId.isBlank()) {
-            throw new BadCredentialsException(
-                    String.format("BluetoothId: %s and FirebaseId: %s  can't be empty or null'",
-                            bluetoothId, firebaseId)
-            );
-        }
 
         Registrant registrant = registrantRepository
                 .findById(confirmRegistrationDTO.getRegistrantId())
@@ -213,7 +198,7 @@ public class AuthServiceImpl implements AuthService {
             throw new WrongCodeException(confirmRegistrationDTO.getVerificationCode().toString());
         }
         UnknownUser unknownUser = unknownUserRepository
-                .findUnknownUserByBluetoothId(confirmRegistrationDTO.getBluetoothId());
+                .findUnknownUserByFirebaseId(confirmRegistrationDTO.getFirebaseId());
         Set<EventType> userInterests;
         if (unknownUser != null) {
             userInterests = new HashSet<>(unknownUser.getUserInterests());
@@ -356,8 +341,8 @@ public class AuthServiceImpl implements AuthService {
             GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
             if (idToken != null) {
                 Payload tokenPayload = idToken.getPayload();
-                Long googleUserId = Long.valueOf(tokenPayload.getSubject());
-                String email = tokenPayload.getEmail() == null ? "" : tokenPayload.getEmail();
+                String googleUserId = tokenPayload.getSubject();
+                String email = tokenPayload.getEmail() == null ? null : tokenPayload.getEmail();
                 userForSignInUpDTO.setEmail(email);
                 return getTokensDTO(userForSignInUpDTO, googleUserId, SocialIdType.GOOGLE);
             } else {
@@ -379,7 +364,7 @@ public class AuthServiceImpl implements AuthService {
                 && Objects.requireNonNull(vkResponse.getBody()).contains("response")
         ) {
             response = mapStringToVkValidationResponseDTO(vkResponse.getBody());
-            Long vkUserId = response.getResponse().getUserId();
+            String vkUserId = response.getResponse().getUserId().toString();
             return getTokensDTO(userForSignInUpDTO, vkUserId, SocialIdType.VK);
         } else {
             VkValidationErrorDTO vkValidationResponseDTO = mapStringToVkValidationErrorDTO(vkResponse.getBody());
@@ -388,7 +373,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @NotNull
-    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, Long socialId, SocialIdType socialIdType) {
+    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, String socialId, SocialIdType socialIdType) {
         try {
             User user = null;
             if (socialIdType == SocialIdType.GOOGLE) {
@@ -398,6 +383,7 @@ public class AuthServiceImpl implements AuthService {
                 user = userRepository.findByVkId(socialId);
             }
             if (user != null) {
+                user.setFirebaseId(userForSignInUpDTO.getFirebaseId());
                 TokensDTO tokensDTO = getTokenDTO(user.getId());
                 tokensDTO.setUserId(user.getId());
                 return tokensDTO;
@@ -422,7 +408,7 @@ public class AuthServiceImpl implements AuthService {
         return objectMapper.readValue(error, VkValidationErrorDTO.class);
     }
 
-    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, Long socialId, SocialIdType socialIdType) {
+    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId, SocialIdType socialIdType) {
         if (userRepository.existsUserByUsername(userForSignInUpDTO.getUsername())) {
             String message = String.format("Username: %s, already exists", userForSignInUpDTO.getUsername());
             log.error(message);
@@ -439,10 +425,10 @@ public class AuthServiceImpl implements AuthService {
             throw  new IllegalArgumentException(message);
         }
 
-        UnknownUser unknownUserWithUserToSaveBluetoothId = unknownUserRepository
-                .findUnknownUserByBluetoothId(userForSignInUpDTO.getBluetoothId());
-        if (unknownUserWithUserToSaveBluetoothId != null) {
-            userToSave.addInterestingEventTypes(new HashSet<>(unknownUserWithUserToSaveBluetoothId
+        UnknownUser unknownUserWithUserToSaveFirebaseId = unknownUserRepository
+                .findUnknownUserByFirebaseId(userForSignInUpDTO.getFirebaseId());
+        if (unknownUserWithUserToSaveFirebaseId != null) {
+            userToSave.addInterestingEventTypes(new HashSet<>(unknownUserWithUserToSaveFirebaseId
                     .getUserInterests()));
         } else {
             List<EventType> allEventTypes = eventTypeRepository.findAll();
@@ -466,12 +452,12 @@ public class AuthServiceImpl implements AuthService {
             throw new UserAlreadyExistException(
                     String.format("Passed username already exists: %s", user.getUsername()));
         }
-        if (userRepository.existsUserByUserEmail(user.getUserEmail())) {
+        if (user.getUserEmail() != null && userRepository.existsUserByUserEmail(user.getUserEmail())) {
             log.error("[EXCEPTION] User with passed email already exists. Email: {}", user.getUserEmail());
             throw new UserAlreadyExistException(
                     String.format("Passed email already exists: %s", user.getUserEmail()));
         }
-        if (userRepository.existsUserByPhoneNumber(user.getPhoneNumber())) {
+        if (user.getPhoneNumber() != null && userRepository.existsUserByPhoneNumber(user.getPhoneNumber())) {
             log.error("[EXCEPTION] User with passed phoneNumber already exists. PhoneNumber: {}", user.getPhoneNumber());
             throw new UserAlreadyExistException(
                     String.format("Passed phoneNumber already exists: %s", user.getPhoneNumber()));

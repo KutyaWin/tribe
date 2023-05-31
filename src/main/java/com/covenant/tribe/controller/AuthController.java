@@ -44,7 +44,7 @@ public class AuthController {
     public ResponseEntity<?> signInUpUser(
             @RequestHeader(name = "Type") String tokenType,
             @RequestHeader(name = "Authorization") String token,
-            @RequestBody UserForSignInUpDTO userLoginDTO
+            @Valid @RequestBody UserForSignInUpDTO userLoginDTO
     ) throws JsonProcessingException {
         log.info("[CONTROLLER] start endpoint signInUpUser with tokenType: {} and token: {} ", tokenType, token);
 

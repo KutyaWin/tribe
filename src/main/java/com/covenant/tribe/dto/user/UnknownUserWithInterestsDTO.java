@@ -17,7 +17,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UnknownUserWithInterestsDTO implements Serializable {
 
-    @JsonProperty("bluetooth_id")
+    @JsonProperty("firebase_id")
     @Size(max = 100, message = "firebase_id must not consist of more than 100 characters")
     String firebaseId;
 
