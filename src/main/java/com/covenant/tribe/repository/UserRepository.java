@@ -84,6 +84,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findUserByUserEmail(String email);
 
+    User findUserByPhoneNumber(String phoneNumber);
+
     List<User> findAllByInterestingEventType(EventType eventType);
 
     User findByGoogleId(String googleId);

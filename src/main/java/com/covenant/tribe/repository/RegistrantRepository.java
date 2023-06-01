@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RegistrantRepository extends JpaRepository<Registrant, Long> {
     Registrant findByEmail(String email);
+    Registrant findByPhoneNumber(String phoneNumber);
 }
