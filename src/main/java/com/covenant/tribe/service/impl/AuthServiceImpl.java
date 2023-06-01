@@ -4,6 +4,7 @@ import com.covenant.tribe.client.dto.VkValidationErrorDTO;
 import com.covenant.tribe.client.dto.VkValidationResponseDTO;
 import com.covenant.tribe.client.vk.VkClient;
 import com.covenant.tribe.client.vk.VkValidationParams;
+import com.covenant.tribe.domain.auth.PhoneVerificationCode;
 import com.covenant.tribe.domain.auth.ResetCodes;
 import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
@@ -45,7 +46,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -63,12 +63,15 @@ public class AuthServiceImpl implements AuthService {
 
     private final String FROM_EMAIL = "tribe@tribual.ru";
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
+
+    private final String WHATS_APP_NAME = "whatsapp";
     private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
 
-    private final Integer MIN_VALUE_FOR_PASSWORD = 1000;
-    private final Integer MAX_VALUE_FOR_PASSWORD = 9999;
+    private final Integer MIN_VERIFICATION_CODE_VALUE = 1000;
+    private final Integer MAX_VERIFICATION_CODE_VALUE = 9999;
 
     RegistrantRepository registrantRepository;
+    PhoneVerificationRepository phoneVerificationRepository;
     PasswordEncoder encoder;
     JavaMailSender mailSender;
     VkClient vkClient;
@@ -92,8 +95,9 @@ public class AuthServiceImpl implements AuthService {
     String apiVersion;
 
     @Autowired
-    public AuthServiceImpl(RegistrantRepository registrantRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
+        this.phoneVerificationRepository = phoneVerificationRepository;
         this.encoder = encoder;
         this.mailSender = mailSender;
         this.vkClient = vkClient;
@@ -318,9 +322,62 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Transactional
+    @Override
+    public void getCodeForLoginWithWhatsApp(PhoneNumberDto phoneNumberDto) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        User user = userRepository.findUserByPhoneNumber(phoneNumberDto.getPhoneNumber());
+        int verificationCode = getRandomVerificationNumber(
+                MIN_VERIFICATION_CODE_VALUE, MAX_VERIFICATION_CODE_VALUE
+        );
+
+        if (user != null) {
+            PhoneVerificationCode phoneVerificationCode = phoneVerificationRepository
+                    .findByPhoneNumberAndIsEnableIsTrue(phoneNumberDto.getPhoneNumber());
+            if (phoneVerificationCode != null) {
+                phoneVerificationCode.setVerificationCode(verificationCode);
+                phoneVerificationCode.setRequestTime(OffsetDateTime.now());
+            } else {
+                phoneVerificationCode = PhoneVerificationCode
+                        .builder()
+                        .verificationCode(verificationCode)
+                        .phoneNumber(phoneNumberDto.getPhoneNumber())
+                        .build();
+            }
+            phoneVerificationRepository.save(phoneVerificationCode);
+            //TODO: Отправляем код в whatsApp, удалить log.debug
+
+            if (!user.hasWhatsappAuthentication()) {
+                user.hasWhatsappAuthentication(true);
+                userRepository.save(user);
+            }
+
+            log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+            return;
+        }
+        Registrant registrant = registrantRepository.findByPhoneNumber(phoneNumberDto.getPhoneNumber());
+        if (registrant != null) {
+            registrant.setVerificationCode(verificationCode);
+            registrant.setCreatedAt(OffsetDateTime.now());
+            registrant.setStatus(RegistrantStatus.AWAITED);
+        } else {
+            registrant = Registrant
+                    .builder()
+                    .phoneNumber(phoneNumberDto.getPhoneNumber())
+                    .verificationCode(verificationCode)
+                    .username(WHATS_APP_NAME + phoneNumberDto.getPhoneNumber())
+                    .status(RegistrantStatus.AWAITED)
+                    .build();
+        }
+        registrantRepository.save(registrant);
+
+        log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+    }
+
     private int generateResetCode() {
         return new Random()
-                .nextInt(MAX_VALUE_FOR_PASSWORD - MIN_VALUE_FOR_PASSWORD) + MIN_VALUE_FOR_PASSWORD;
+                .nextInt(MAX_VERIFICATION_CODE_VALUE - MIN_VERIFICATION_CODE_VALUE) + MIN_VERIFICATION_CODE_VALUE;
     }
 
     private void sendEmail(String subject, String message, String email) {
@@ -422,7 +479,7 @@ public class AuthServiceImpl implements AuthService {
         } else {
             String message = String.format("Unknown socialIdType: %s", socialIdType);
             log.error(message);
-            throw  new IllegalArgumentException(message);
+            throw new IllegalArgumentException(message);
         }
 
         UnknownUser unknownUserWithUserToSaveFirebaseId = unknownUserRepository
