@@ -63,6 +63,8 @@ public class EventMapperImpl implements EventMapper {
         if (event.isPrivate()) {
             return SearchEventDTO.builder()
                     .eventId(event.getId())
+                    .organizerUsername(event.getOrganizer().getUsername())
+                    .description(event.getEventDescription())
                     .avatarUrl(event.getEventAvatars().stream()
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())

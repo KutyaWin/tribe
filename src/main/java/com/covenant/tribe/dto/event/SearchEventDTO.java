@@ -26,6 +26,10 @@ public class SearchEventDTO implements Serializable {
 
     String eventType;
 
+    String organizerUsername;
+
+    String description;
+
     EventAddressDTO eventAddress;
 
     LocalDateTime startTime;
