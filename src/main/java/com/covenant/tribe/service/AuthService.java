@@ -18,7 +18,9 @@ public interface AuthService {
 
     void changePassword(ChangePasswordDTO changePasswordDTO);
 
-    TokensDTO confirmResetCode(ConfirmCodeDTO confirmResetCodeDTO);
+    TokensDTO confirmResetCode(EmailConfirmCodeDto confirmResetCodeDTO);
 
     void getCodeForLoginWithWhatsApp(PhoneNumberDto phoneNumberDto);
+
+    TokensDTO confirmCodeForLoginWithWhatsApp(PhoneConfirmCodeDto phoneConfirmCodeDto);
 }
