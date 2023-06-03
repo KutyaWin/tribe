@@ -10,6 +10,6 @@ import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 
 public interface EventAvatarMapper {
 
-    EventAvatar mapToEventAvatar(String avatarFileName, Event event);
+    EventAvatar mapToEventAvatar(String avatarFileName);
 
 }

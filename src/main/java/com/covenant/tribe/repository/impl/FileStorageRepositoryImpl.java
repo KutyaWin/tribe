@@ -75,7 +75,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
             String pathForDb = currentDate + "/" + fileName;
             String pathForFile = pathToNewFolder + "/" + fileName;
             paths.add(pathForDb);
-            Files.move(
+            Files.copy(
                     Path.of(pathToTmpDir + "/" + fileName),
                     Path.of(pathForFile));
         }
