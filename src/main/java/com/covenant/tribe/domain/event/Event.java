@@ -53,7 +53,7 @@ public class Event {
     @Column(name = "event_name", length = 100, nullable = false)
     String eventName;
 
-    @Column(name = "event_description")
+    @Column(name = "event_description", columnDefinition = "TEXT")
     String eventDescription;
 
     @Column(name = "start_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
