@@ -44,6 +44,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -65,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
 
     private final String WHATS_APP_NAME = "whatsapp";
-    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
+    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 1;
 
     private final Integer MIN_VERIFICATION_CODE_VALUE = 1000;
     private final Integer MAX_VERIFICATION_CODE_VALUE = 9999;
@@ -283,7 +284,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokensDTO confirmResetCode(ConfirmCodeDTO confirmResetCodeDTO) {
+    public TokensDTO confirmResetCode(EmailConfirmCodeDto confirmResetCodeDTO) {
         ResetCodes resetCodes = resetCodeRepository
                 .findByEmailAndIsEnable(confirmResetCodeDTO.getEmail(), true);
         if (resetCodes == null) {
@@ -356,23 +357,125 @@ public class AuthServiceImpl implements AuthService {
             log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
             return;
         }
-        Registrant registrant = registrantRepository.findByPhoneNumber(phoneNumberDto.getPhoneNumber());
+        Registrant registrant = registrantRepository.findByPhoneNumberAndStatus(
+                phoneNumberDto.getPhoneNumber(), RegistrantStatus.AWAITED
+        );
         if (registrant != null) {
             registrant.setVerificationCode(verificationCode);
             registrant.setCreatedAt(OffsetDateTime.now());
-            registrant.setStatus(RegistrantStatus.AWAITED);
         } else {
             registrant = Registrant
                     .builder()
                     .phoneNumber(phoneNumberDto.getPhoneNumber())
                     .verificationCode(verificationCode)
-                    .username(WHATS_APP_NAME + phoneNumberDto.getPhoneNumber())
+                    .username(UUID.randomUUID().toString())
                     .status(RegistrantStatus.AWAITED)
                     .build();
         }
         registrantRepository.save(registrant);
 
         log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+    }
+
+    @Override
+    public TokensDTO confirmCodeForLoginWithWhatsApp(PhoneConfirmCodeDto phoneConfirmCodeDto) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        User user = userRepository.findUserByPhoneNumber(phoneConfirmCodeDto.getPhoneNumber());
+        if (user == null) {
+            Registrant registrant = registrantRepository.findByPhoneNumberAndStatus(
+                    phoneConfirmCodeDto.getPhoneNumber(), RegistrantStatus.AWAITED
+            );
+            if (registrant == null) {
+                String message = String.format(
+                        "There is no registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new RegistrantNotFoundException(message);
+            }
+            OffsetDateTime now = OffsetDateTime.now();
+            if (!registrant.getVerificationCode().equals(phoneConfirmCodeDto.getVerificationCode())) {
+                String message = String.format(
+                        "Verification code is wrong for registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new WrongCodeException(message);
+            }
+           if (now.isAfter(registrant.getCreatedAt().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES))) {
+                String message = String.format(
+                        "Verification code is expired for registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
+                );
+                if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+                    registrant.setStatus(RegistrantStatus.EXPIRED);
+                    registrantRepository.save(registrant);
+                }
+                log.error(message);
+                throw new ExpiredCodeException(message);
+            }
+            User newUser = User.builder()
+                    .username(registrant.getUsername())
+                    .firebaseId(phoneConfirmCodeDto.getFirebaseId())
+                    .phoneNumber(registrant.getPhoneNumber())
+                    .hasWhatsappAuthentication(true)
+                    .build();
+            try {
+                userRepository.save(newUser);
+                registrant.setStatus(RegistrantStatus.CONFIRMED);
+                registrantRepository.save(registrant);
+                return getTokenDTO(newUser.getId());
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                String message = String.format(
+                        "Failed to generate token for registrant with phone number %s, error: %s",
+                        phoneConfirmCodeDto.getPhoneNumber(),
+                        e.getCause()
+                );
+                log.error(message);
+                throw new MakeTokenException(message);
+            }
+        } else {
+            PhoneVerificationCode phoneVerificationCode = phoneVerificationRepository
+                    .findByPhoneNumberAndIsEnableIsTrue(phoneConfirmCodeDto.getPhoneNumber());
+            if (phoneVerificationCode == null) {
+                String message = String.format(
+                        "There is no verification code for user with phone number %s",
+                        phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new WrongCodeException(message);
+            }
+            if (phoneVerificationCode.getVerificationCode() != phoneConfirmCodeDto.getVerificationCode()) {
+                String message = String.format(
+                        "Verification code is wrong for user with phone number %s",
+                        phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new WrongCodeException(message);
+            }
+            OffsetDateTime now = OffsetDateTime.now();
+            if (now.isAfter(phoneVerificationCode.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES))) {
+                phoneVerificationCode.setEnable(false);
+                phoneVerificationRepository.save(phoneVerificationCode);
+                String message = String.format(
+                        "Verification code is expired for user with phone number %s",
+                        phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new ExpiredCodeException(message);
+            }
+            try {
+                phoneVerificationCode.setEnable(false);
+                phoneVerificationRepository.save(phoneVerificationCode);
+                return getTokenDTO(user.getId());
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                String message = String.format(
+                        "Failed to generate token for user with phone number %s, error: %s",
+                        phoneConfirmCodeDto.getPhoneNumber(),
+                        e.getCause()
+                );
+                log.error(message);
+                throw new MakeTokenException(message);
+            }
+        }
     }
 
     private int generateResetCode() {
