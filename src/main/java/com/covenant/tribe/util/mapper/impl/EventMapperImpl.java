@@ -258,9 +258,7 @@ public class EventMapperImpl implements EventMapper {
             event.addTagList(newTags.stream().toList());
         }
 
-        Set<EventAvatar> eventAvatars = dto.getAvatarsForAdding().stream()
-                .map(avatar -> eventAvatarMapper.mapToEventAvatar(avatar, event))
-                .collect(Collectors.toSet());
+
 
         List<User> invitedUsers = userRepository.findAllById(dto.getInvitedUserIds());
 
@@ -287,7 +285,6 @@ public class EventMapperImpl implements EventMapper {
                         .isViewed(false)
                         .build()
         );
-        event.setEventAvatars(eventAvatars);
         event.addEventsRelationsWithUsers(userRelationsWithEvents);
         event.getOrganizer().addEventWhereUserAsOrganizer(event);
         event.getEventAddress().addEvent(event);
