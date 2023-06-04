@@ -132,6 +132,11 @@ public class Event {
         }
     }
 
+    public void addEventAvatars(List<EventAvatar> eventAvatars) {
+        if (this.eventAvatars == null) this.eventAvatars = new HashSet<>();
+        this.eventAvatars.addAll(eventAvatars);
+    }
+
     public void addEventRelationsWithUser(UserRelationsWithEvent userRelationsWithEvent) {
         if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
 
