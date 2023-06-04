@@ -104,6 +104,8 @@ public class EventMapperImpl implements EventMapper {
         if (event.isPrivate()) {
             return SearchEventDTO.builder()
                     .eventId(event.getId())
+                    .description(event.getEventDescription())
+                    .organizerUsername(event.getOrganizer().getUsername())
                     .avatarUrl(event.getEventAvatars().stream()
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
@@ -115,6 +117,8 @@ public class EventMapperImpl implements EventMapper {
                 .eventId(event.getId())
                 .avatarUrl(event.getEventAvatars().stream()
                         .map(EventAvatar::getAvatarUrl).toList())
+                .description(event.getEventDescription())
+                .organizerUsername(event.getOrganizer().getUsername())
                 .eventName(event.getEventName())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime().toLocalDateTime())
@@ -254,9 +258,7 @@ public class EventMapperImpl implements EventMapper {
             event.addTagList(newTags.stream().toList());
         }
 
-        Set<EventAvatar> eventAvatars = dto.getAvatarsForAdding().stream()
-                .map(avatar -> eventAvatarMapper.mapToEventAvatar(avatar, event))
-                .collect(Collectors.toSet());
+
 
         List<User> invitedUsers = userRepository.findAllById(dto.getInvitedUserIds());
 
@@ -283,7 +285,6 @@ public class EventMapperImpl implements EventMapper {
                         .isViewed(false)
                         .build()
         );
-        event.setEventAvatars(eventAvatars);
         event.addEventsRelationsWithUsers(userRelationsWithEvents);
         event.getOrganizer().addEventWhereUserAsOrganizer(event);
         event.getEventAddress().addEvent(event);

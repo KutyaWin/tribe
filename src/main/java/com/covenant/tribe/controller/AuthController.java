@@ -1,5 +1,6 @@
 package com.covenant.tribe.controller;
 
+import com.covenant.tribe.domain.auth.PhoneVerificationCode;
 import com.covenant.tribe.dto.auth.*;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.service.AuthService;
@@ -15,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.el.parser.Token;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,6 +82,33 @@ public class AuthController {
     }
 
     @Operation(
+            description = "Категория: Вход/Регистрация. Экран: Вход по номеру, проверка номера. Input: 4 цифры" +
+                    " Действие: Ввод кода подтверждения номера телефона полученного в WhatsApp",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202",
+                            content = @Content(
+                                    schema = @Schema(implementation = TokensDTO.class)
+                            )
+                    )
+            }
+    )
+    @PostMapping("/login/phone/code/confirm")
+    public ResponseEntity<?> confirmCodeForLoginWithWhatsApp(
+            @Valid @RequestBody PhoneConfirmCodeDto phoneConfirmCodeDto
+    ) {
+        log.info("[CONTROLLER] start endpoint confirmCodeForLoginWithWhatsApp with phoneConfirmCodeDto: {}", phoneConfirmCodeDto);
+
+        TokensDTO tokenDTO = authService.confirmCodeForLoginWithWhatsApp(phoneConfirmCodeDto);
+
+        log.info("[CONTROLLER] end endpoint confirmCodeForLoginWithWhatsApp");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .body(tokenDTO);
+    }
+
+    @Operation(
             description = "Login screen. Login user with email and password",
             responses = {
                     @ApiResponse(
@@ -135,7 +164,7 @@ public class AuthController {
     )
     @PostMapping("/email/password/reset/code/confirm")
     public ResponseEntity<?> confirmResetCode(
-            @RequestBody @Valid ConfirmCodeDTO confirmResetCodeDTO
+            @RequestBody @Valid EmailConfirmCodeDto confirmResetCodeDTO
     ) {
         log.info("[CONTROLLER] start endpoint confirmResetCode with confirmResetCodeDTO: {}", confirmResetCodeDTO);
 
