@@ -399,11 +399,12 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
         userRelationsWithEvent.setParticipant(true);
+        userRelationsWithEvent.setInvited(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
@@ -415,7 +416,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
