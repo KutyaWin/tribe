@@ -427,11 +427,11 @@ public class EventServiceImpl implements EventService {
     @Override
     public void declineToParticipantInEvent(Long eventId, String userId) {
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
-                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
