@@ -11,6 +11,12 @@ spring:
             client-id: ${SPRING_VK_CLIENT_ID}
             client-secret: ${SPRING_VK_CLIENT_SECRET}
             api-version: ${SPRING_VK_API_VERSION}
+          whatsapp-client:
+            url: ${SPRING_WHATSAPP_API_HOST}
+            api-version: ${SPRING_WHATSAPP_API_VERSION}
+            access-token: ${SPRING_WHATSAPP_ACCESS_TOKEN}
+            phone-number-id: ${SPRING_WHATSAPP_PHONE_NUMBER_ID}
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
