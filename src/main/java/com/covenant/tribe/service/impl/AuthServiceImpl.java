@@ -4,6 +4,8 @@ import com.covenant.tribe.client.dto.VkValidationErrorDTO;
 import com.covenant.tribe.client.dto.VkValidationResponseDTO;
 import com.covenant.tribe.client.vk.VkClient;
 import com.covenant.tribe.client.vk.VkValidationParams;
+import com.covenant.tribe.client.whatsapp.WhatsAppClient;
+import com.covenant.tribe.client.whatsapp.dto.*;
 import com.covenant.tribe.domain.auth.PhoneVerificationCode;
 import com.covenant.tribe.domain.auth.ResetCodes;
 import com.covenant.tribe.domain.auth.SocialIdType;
@@ -76,6 +78,7 @@ public class AuthServiceImpl implements AuthService {
     PasswordEncoder encoder;
     JavaMailSender mailSender;
     VkClient vkClient;
+    WhatsAppClient whatsAppClient;
     GoogleIdTokenVerifier googleIdTokenVerifier;
     JwtProvider jwtProvider;
     UserRepository userRepository;
@@ -95,9 +98,19 @@ public class AuthServiceImpl implements AuthService {
     @Value(value = "${spring.cloud.openfeign.client.config.vk-client.api-version}")
     String apiVersion;
 
+    @Value("${spring.cloud.openfeign.client.config.whatsapp-client.api-version}")
+    String whatsAppApiVersion;
+
+    @Value("${spring.cloud.openfeign.client.config.whatsapp-client.access-token}")
+    String whatsAppAccessToken;
+
+    @Value("${spring.cloud.openfeign.client.config.whatsapp-client.phone-number-id}")
+    String whatsAppPhoneNumberId;
+
     @Autowired
-    public AuthServiceImpl(RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(WhatsAppClient whatsAppClient, RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
+        this.whatsAppClient = whatsAppClient;
         this.phoneVerificationRepository = phoneVerificationRepository;
         this.encoder = encoder;
         this.mailSender = mailSender;
@@ -348,6 +361,40 @@ public class AuthServiceImpl implements AuthService {
             }
             phoneVerificationRepository.save(phoneVerificationCode);
             //TODO: Отправляем код в whatsApp, удалить log.debug
+
+            WhatsAppMessageLanguageDto language = WhatsAppMessageLanguageDto.builder()
+                    .code("ru")
+                    .build();
+            WhatsAppMessageParameterDto parameter = WhatsAppMessageParameterDto.builder()
+                    .type("text")
+                    .text(String.valueOf(verificationCode))
+                    .build();
+            WhatsAppComponentDto bodyComponent = WhatsAppComponentDto.builder()
+                    .type("body")
+                    .parameters(List.of(parameter))
+                    .build();
+            WhatsAppComponentDto buttonComponent = WhatsAppComponentDto.builder()
+                    .type("button")
+                    .subType("url")
+                    .index("0")
+                    .parameters(List.of(parameter))
+                    .build();
+            WhatsAppMessageTemplateDto template = WhatsAppMessageTemplateDto.builder()
+                    .name("Код подтверждения")
+                    .language(language)
+                    .components(List.of(bodyComponent, buttonComponent))
+                    .build();
+            WhatsAppVerificationMsgDto message = WhatsAppVerificationMsgDto.builder()
+                    .messagingProduct("whatsapp")
+                    .recipientType("individual")
+                    .to("+79034320032")
+                    .type("template")
+                    .template(template)
+                    .build();
+
+            Object response = whatsAppClient.sendVerificationCode(
+                    whatsAppAccessToken, whatsAppApiVersion, whatsAppPhoneNumberId, message
+            );
 
             if (!user.hasWhatsappAuthentication()) {
                 user.hasWhatsappAuthentication(true);

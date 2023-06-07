@@ -20,6 +20,6 @@ public class WhatsAppComponentDto {
 
     String index;
 
-    List<WhatsAppMessageParameter> components;
+    List<WhatsAppMessageParameterDto> parameters;
 
 }
