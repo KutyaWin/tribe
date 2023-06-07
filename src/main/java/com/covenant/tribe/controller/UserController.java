@@ -1,6 +1,7 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDto;
+import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.service.UserService;
@@ -342,13 +343,13 @@ public class UserController {
         log.info("[CONTROLLER] start endpoint uploadAvatarToTempFolder with param: {}, and contentType: {}",
                 userId, imageDto.getContentType());
 
-        userService.uploadAvatarToTempFolder(Long.parseLong(userId), imageDto);
+        String fileName = userService.uploadAvatarToTempFolder(Long.parseLong(userId), imageDto);
 
         log.info("[CONTROLLER] end endpoint uploadAvatarToTempFolder");
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .build();
+                .body(new TempFileDTO(fileName));
     }
 
     @Operation(

@@ -134,8 +134,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
-        fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
+    public String uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
+        return fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
     }
 
     @Transactional
