@@ -12,6 +12,7 @@ spring:
             client-secret: ${SPRING_VK_CLIENT_SECRET}
             api-version: ${SPRING_VK_API_VERSION}
           whatsapp-client:
+            logger-level: full
             url: ${SPRING_WHATSAPP_API_HOST}
             api-version: ${SPRING_WHATSAPP_API_VERSION}
             access-token: ${SPRING_WHATSAPP_ACCESS_TOKEN}
@@ -57,6 +58,7 @@ spring:
 
 logging:
   level:
+    com.covenant.tribe.client.whatsapp: TRACE
     root: info
   file:
     path: ${SPRING_LOG_DIRECTORY}
@@ -83,6 +85,6 @@ keys:
   refresh-private: refresh_private.der
   refresh-public: refresh_public.pem
 google:
-#  client-id: 407408718192.apps.googleusercontent.com for tests Nikita
+  #  client-id: 407408718192.apps.googleusercontent.com for tests Nikita
   client-id: ${SPRING_GOOGLE_CLIENT_ID}
 
