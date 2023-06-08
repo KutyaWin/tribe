@@ -118,4 +118,15 @@ public class AuthExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(WhatsAppSendingCodeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleWhatsAppSendingCodeException(WhatsAppSendingCodeException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
 }
