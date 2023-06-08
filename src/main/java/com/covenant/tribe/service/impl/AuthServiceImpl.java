@@ -346,12 +346,17 @@ public class AuthServiceImpl implements AuthService {
                 MIN_VERIFICATION_CODE_VALUE, MAX_VERIFICATION_CODE_VALUE
         );
 
+        WhatsAppVerificationMsgDto message = getWhatsAppVerificationMsg(
+                verificationCode, phoneNumberDto.getPhoneNumber()
+        );
+        sendMessage(phoneNumberDto, message);
         if (user != null) {
             PhoneVerificationCode phoneVerificationCode = phoneVerificationRepository
                     .findByPhoneNumberAndIsEnableIsTrue(phoneNumberDto.getPhoneNumber());
             if (phoneVerificationCode != null) {
                 phoneVerificationCode.setVerificationCode(verificationCode);
                 phoneVerificationCode.setRequestTime(OffsetDateTime.now());
+
             } else {
                 phoneVerificationCode = PhoneVerificationCode
                         .builder()
@@ -360,41 +365,6 @@ public class AuthServiceImpl implements AuthService {
                         .build();
             }
             phoneVerificationRepository.save(phoneVerificationCode);
-            //TODO: Отправляем код в whatsApp, удалить log.debug
-
-            WhatsAppMessageLanguageDto language = WhatsAppMessageLanguageDto.builder()
-                    .code("ru")
-                    .build();
-            WhatsAppMessageParameterDto parameter = WhatsAppMessageParameterDto.builder()
-                    .type("text")
-                    .text(String.valueOf(verificationCode))
-                    .build();
-            WhatsAppComponentDto bodyComponent = WhatsAppComponentDto.builder()
-                    .type("body")
-                    .parameters(List.of(parameter))
-                    .build();
-            WhatsAppComponentDto buttonComponent = WhatsAppComponentDto.builder()
-                    .type("button")
-                    .subType("url")
-                    .index("0")
-                    .parameters(List.of(parameter))
-                    .build();
-            WhatsAppMessageTemplateDto template = WhatsAppMessageTemplateDto.builder()
-                    .name("Код подтверждения")
-                    .language(language)
-                    .components(List.of(bodyComponent, buttonComponent))
-                    .build();
-            WhatsAppVerificationMsgDto message = WhatsAppVerificationMsgDto.builder()
-                    .messagingProduct("whatsapp")
-                    .recipientType("individual")
-                    .to("+79034320032")
-                    .type("template")
-                    .template(template)
-                    .build();
-
-            Object response = whatsAppClient.sendVerificationCode(
-                    whatsAppAccessToken, whatsAppApiVersion, whatsAppPhoneNumberId, message
-            );
 
             if (!user.hasWhatsappAuthentication()) {
                 user.hasWhatsappAuthentication(true);
@@ -422,6 +392,48 @@ public class AuthServiceImpl implements AuthService {
         registrantRepository.save(registrant);
 
         log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+    }
+
+    private void sendMessage(PhoneNumberDto phoneNumberDto, WhatsAppVerificationMsgDto message) {
+        ResponseEntity<?> whatsappVerificationResponse = whatsAppClient.sendVerificationCode(
+                whatsAppAccessToken, whatsAppApiVersion, whatsAppPhoneNumberId, message
+        );
+        if  (whatsappVerificationResponse.getStatusCode() != HttpStatus.OK) {
+
+        }
+    }
+
+    private WhatsAppVerificationMsgDto getWhatsAppVerificationMsg(int verificationCode, String phoneNumber) {
+        WhatsAppMessageLanguageDto language = WhatsAppMessageLanguageDto.builder()
+                .code("ru")
+                .build();
+        WhatsAppMessageParameterDto parameter = WhatsAppMessageParameterDto.builder()
+                .type("text")
+                .text(String.valueOf(verificationCode))
+                .build();
+        WhatsAppComponentDto bodyComponent = WhatsAppComponentDto.builder()
+                .type("body")
+                .parameters(List.of(parameter))
+                .build();
+        WhatsAppComponentDto buttonComponent = WhatsAppComponentDto.builder()
+                .type("button")
+                .subType("url")
+                .index("0")
+                .parameters(List.of(parameter))
+                .build();
+        WhatsAppMessageTemplateDto template = WhatsAppMessageTemplateDto.builder()
+                .name("tribe_auth")
+                .language(language)
+                .components(List.of(bodyComponent, buttonComponent))
+                .build();
+        WhatsAppVerificationMsgDto message = WhatsAppVerificationMsgDto.builder()
+                .messagingProduct("whatsapp")
+                .recipientType("individual")
+                .to(phoneNumber)
+                .type("template")
+                .template(template)
+                .build();
+        return message;
     }
 
     @Override
