@@ -49,8 +49,6 @@ public class UserProfileSettingsDTO implements Serializable {
     @UniqueElements(message = "All elements in interesting_event_type must be unique")
     Set<EventTypeDTO> interestingEventType = new HashSet<>();
 
-    //todo: нужна ли профессия?
-
     @Size(max = 50, message = "Email must not consist of more than 50 characters")
     @NotBlank(message = "Email should not be null or empty")
     @Email(message = "Enter the correct email")

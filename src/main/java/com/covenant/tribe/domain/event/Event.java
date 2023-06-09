@@ -118,7 +118,6 @@ public class Event {
     List<UserRelationsWithEvent> eventRelationsWithUser = new ArrayList<>();
 
     public void addEventAvatar(EventAvatar eventAvatar) {
-        if (this.eventAvatars == null) this.eventAvatars = new HashSet<>();
         if (!this.eventAvatars.contains(eventAvatar)) {
             this.eventAvatars.add(eventAvatar);
             eventAvatar.setEvent(this);
@@ -130,6 +129,10 @@ public class Event {
             log.error(String.format(message));
             throw new AlreadyExistArgumentForAddToEntityException(message);
         }
+    }
+
+    public void addEventAvatars(Set<EventAvatar> eventAvatars) {
+        eventAvatars.forEach(this::addEventAvatar);
     }
 
     public void addEventRelationsWithUser(UserRelationsWithEvent userRelationsWithEvent) {

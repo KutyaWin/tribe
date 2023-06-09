@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
@@ -23,6 +24,11 @@ public class Profession {
 
     @Column(name = "name", length = 50, nullable = false, unique = true)
     String name;
+
+    @ManyToMany(mappedBy = "userProfessions", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Builder.Default
+    Set<User> users = new HashSet<>();
 
     @Override
     public boolean equals(Object o){

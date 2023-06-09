@@ -63,7 +63,7 @@ public class EventType {
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
-    Set<Tag> tagList = new HashSet<>();
+    List<Tag> tagList = new ArrayList<>();
 
     @ManyToMany(mappedBy = "interestingEventType", fetch = FetchType.LAZY)
     @ToString.Exclude
@@ -72,10 +72,9 @@ public class EventType {
     Set<User> usersWhoInterestedInEventType = new HashSet<>();
 
     public void addTag(Tag tag) {
-        if (this.tagList == null) this.tagList = new HashSet<>();
+        if (this.tagList == null) this.tagList = new ArrayList<>();
 
-        if (this.tagList.stream()
-                .noneMatch(t -> t.getTagName().equals(tag.getTagName()))) {
+        if (!this.tagList.contains(tag)) {
 
             this.tagList.add(tag);
             tag.getEventTypesToWhichTagBelong().add(this);
@@ -92,8 +91,8 @@ public class EventType {
             throw new AlreadyExistArgumentForAddToEntityException(message);
         }
     }
-    public void addTags(Set<Tag> tags) {
-        if (this.tagList == null) this.tagList = new HashSet<>();
+    public void addTags(List<Tag> tags) {
+        if (this.tagList == null) this.tagList = new ArrayList<>();
 
         tags.forEach(this::addTag);
     }
