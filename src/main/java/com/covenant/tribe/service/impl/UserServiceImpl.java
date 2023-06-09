@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserProfileGetDto getUserProfile(long userId) {
+    public UserGetDto getUser(long userId) {
         User user = findUserById(userId);
         AuthMethodsDto authMethodsDto = getAuthMethodsDto(user);
         List<ProfessionDto> professionDto = user.getUserProfessions().stream()
@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
         List<EventTypeInfoDto> eventTypeInfoDtoList = user.getInterestingEventType().stream()
                 .map(eventTypeMapper::mapToEventTypeInfoDtoList)
                 .toList();
-        return userMapper.mapToUserProfileGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
+        return userMapper.mapToUserGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
     }
 
     @Override
@@ -220,6 +220,13 @@ public class UserServiceImpl implements UserService {
             throw new FilesNotHandleException(message);
         }
 
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ProfileDto getProfile(long userId) {
+        User user = findUserById(userId);
+        return userMapper.mapToProfileDto(user);
     }
 
     private void setNewUserAvatar(String fileNameForAdding, User user) throws IOException {
