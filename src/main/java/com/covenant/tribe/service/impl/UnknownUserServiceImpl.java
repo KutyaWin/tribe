@@ -23,12 +23,12 @@ public class UnknownUserServiceImpl implements UnknownUserService {
     @Override
     public Long saveNewUnknownUserWithInterests(UnknownUserWithInterestsDTO unknownUserWithInterests) {
         List<EventType> eventTypes = getEventTypes(unknownUserWithInterests.getEventTypeIds());
-        UnknownUser unknownUser = unknownUserRepository.findUnknownUserByBluetoothId(
+        UnknownUser unknownUser = unknownUserRepository.findUnknownUserByFirebaseId(
                 unknownUserWithInterests.getFirebaseId()
                 );
         if (unknownUser == null) {
             unknownUser = new UnknownUser();
-            unknownUser.setBluetoothId(unknownUserWithInterests.getFirebaseId());
+            unknownUser.setFirebaseId(unknownUserWithInterests.getFirebaseId());
         }
         unknownUser.setUserInterests(eventTypes);
         unknownUserRepository.save(unknownUser);

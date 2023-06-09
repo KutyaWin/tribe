@@ -134,8 +134,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
-        fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
+    public String uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
+        return fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
     }
 
     @Transactional
@@ -143,7 +143,7 @@ public class UserServiceImpl implements UserService {
     public void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto) {
         User user = findUserById(userProfileUpdateDto.getUserId());
         if (!userProfileUpdateDto.getUserAvatar().isEmpty()) {
-            if (!userProfileUpdateDto.getUserAvatar().equals(user.getUserAvatar())) {
+            if (user.getUserAvatar() == null || !userProfileUpdateDto.getUserAvatar().equals(user.getUserAvatar())) {
                 try {
                     setNewUserAvatar(userProfileUpdateDto.getUserAvatar(), user);
                 } catch (IOException ex) {
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        if (!userProfileUpdateDto.getUsername().equals(user.getUsername())) {
+        if (user.getUsername() == null || !userProfileUpdateDto.getUsername().equals(user.getUsername())) {
             if (userRepository.existsUserByUsername(userProfileUpdateDto.getUsername())) {
                 String message = String.format("[EXCEPTION] User with username: %s already exists",
                         userProfileUpdateDto.getUsername()
@@ -165,15 +165,15 @@ public class UserServiceImpl implements UserService {
             user.setUsername(userProfileUpdateDto.getUsername());
         }
 
-        if (!userProfileUpdateDto.getFirstName().equals(user.getFirstName())) {
+        if (user.getFirstName() == null || !userProfileUpdateDto.getFirstName().equals(user.getFirstName())) {
             user.setFirstName(userProfileUpdateDto.getFirstName());
         }
 
-        if (!userProfileUpdateDto.getLastName().equals(user.getLastName())) {
+        if (user.getLastName() == null || !userProfileUpdateDto.getLastName().equals(user.getLastName())) {
             user.setLastName(userProfileUpdateDto.getLastName());
         }
 
-        if (!userProfileUpdateDto.getBirthday().isEqual(user.getBirthday())) {
+        if (user.getBirthday() == null || !userProfileUpdateDto.getBirthday().isEqual(user.getBirthday())) {
             user.setBirthday(userProfileUpdateDto.getBirthday());
         }
 
@@ -228,13 +228,12 @@ public class UserServiceImpl implements UserService {
     }
 
     private AuthMethodsDto getAuthMethodsDto(User user) {
-        boolean isEmailAvailable = !user.getPassword().isEmpty();
         return AuthMethodsDto.builder()
-                .isEmailAvailable(isEmailAvailable)
-                .isGoogleAvailable(false)
-                .isVkAvailable(false)
-                .isWhatsAppAvailable(false)
-                .isTelegramAvailable(false)
+                .hasEmailAuthentication(user.hasEmailAuthentication())
+                .hasGoogleAuthentication(user.hasGoogleAuthentication())
+                .hasVkAuthentication(user.hasVkAuthentication())
+                .hasWhatsAppAuthentication(user.hasWhatsappAuthentication())
+                .hasTelegramAuthentication(user.hasTelegramAuthentication())
                 .build();
     }
 

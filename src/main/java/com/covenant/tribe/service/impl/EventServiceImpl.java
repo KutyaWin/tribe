@@ -2,10 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventStatus;
-import com.covenant.tribe.domain.event.EventType;
-import com.covenant.tribe.domain.event.QEvent;
+import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
@@ -18,6 +15,7 @@ import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
+import com.covenant.tribe.util.mapper.EventAvatarMapper;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
@@ -57,6 +55,7 @@ public class EventServiceImpl implements EventService {
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
+    EventAvatarMapper eventAvatarMapper;
 
     @Transactional(readOnly = true)
     public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable) {
@@ -172,9 +171,22 @@ public class EventServiceImpl implements EventService {
         }
 
         try {
-            fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
+            List<String> avatarFileNames = fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
+
+            List<EventAvatar> eventAvatars = new ArrayList<>();
+            for (String fileName : avatarFileNames) {
+                EventAvatar eventAvatar = EventAvatar.builder()
+                        .event(event)
+                        .avatarUrl(fileName)
+                        .build();
+                eventAvatars.add(eventAvatar);
+            }
+            event.addEventAvatars(eventAvatars);
             event = saveEvent(event, event.getOrganizer().getId());
-            fileStorageRepository.deleteUnnecessaryAvatars(eventDto.getAvatarsForDeleting());
+            ArrayList<String> avatarsForDelete = new ArrayList<>();
+            avatarsForDelete.addAll(eventDto.getAvatarsForDeleting());
+            avatarsForDelete.addAll(eventDto.getAvatarsForAdding());
+            fileStorageRepository.deleteUnnecessaryAvatars(avatarsForDelete);
         } catch (IOException e) {
             String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
             log.error(message, e);
@@ -387,11 +399,12 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
         userRelationsWithEvent.setParticipant(true);
+        userRelationsWithEvent.setInvited(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
@@ -403,7 +416,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
@@ -415,11 +428,11 @@ public class EventServiceImpl implements EventService {
     @Override
     public void declineToParticipantInEvent(Long eventId, String userId) {
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
-                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
