@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,6 +24,20 @@ public class EventTypeServiceImpl implements EventTypeService {
     EventTypeRepository eventTypeRepository;
     EventTypeMapper eventTypeMapper;
 
+    @Override
+    public EventType save(EventType eventType) {
+        return eventTypeRepository.save(eventType);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EventType findEventTypeById(Long eventTypeId) {
+        return eventTypeRepository.findById(eventTypeId)
+                .orElseThrow(() -> new EventTypeNotFoundException(
+                        String.format("[EXCEPTION]: EventType with id: %s, not found", eventTypeId)
+                ));
+    }
+
     public EventType getEventTypeByName(String eventTypeName) {
         return eventTypeRepository.findEventTypeByTypeName(eventTypeName)
                 .orElseThrow(() -> {
@@ -31,6 +46,13 @@ public class EventTypeServiceImpl implements EventTypeService {
                             String.format("[EXCEPTION]: EventType with name: %s, not found", eventTypeName)
                     );
                 });
+    }
+
+    @Override
+    public EventType getEventTypeByIdFetchEventListWithTypeAndTagList(Long eventTypeId) {
+        return eventTypeRepository.findEventTypeByIdFetchEventListWithTypeAndTagList(eventTypeId)
+                .orElseThrow(() -> new EventTypeNotFoundException
+                        ("[EXCEPTION]: EventType with id: "+eventTypeId+" , not found"));
     }
 
     @Override

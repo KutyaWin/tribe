@@ -10,7 +10,9 @@ import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.repository.*;
+import com.covenant.tribe.repository.FileStorageRepository;
+import com.covenant.tribe.repository.FriendshipRepository;
+import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.EventTypeMapper;
 import com.covenant.tribe.util.mapper.ProfessionMapper;
@@ -40,6 +42,18 @@ public class UserServiceImpl implements UserService {
     EventTypeMapper eventTypeMapper;
     FileStorageRepository fileStorageRepository;
 
+    @Transactional(readOnly = true)
+    @Override
+    public User findUserByIdFetchUserAsOrganizer(Long id) {
+        return userRepository.findUserByIdFetchEventsWhereUserAsOrganizer(id)
+                .orElseThrow(() -> new UserNotFoundException("[EXCEPTION] User with id: " + id + " not found."));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<User> findAllById(Set<Long> usersId) {
+        return userRepository.findAllById(usersId);
+    }
 
     @Override
     public User findUserByUsername(String username) {
@@ -49,6 +63,7 @@ public class UserServiceImpl implements UserService {
                     return new UserNotFoundException("User with username: " + username + " not found.");
                 });
     }
+
     @Transactional(readOnly = true)
     @Override
     public Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable) {
@@ -180,11 +195,20 @@ public class UserServiceImpl implements UserService {
         friendship.unsubscribeUser();
         friendshipRepository.save(friendship);
     }
-    private User findUserById(Long userId) {
+
+    @Transactional(readOnly = true)
+    @Override
+    public User findUserById(Long userId) {
         return userRepository.findUserById(userId)
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
                 });
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<User> findAllByInterestingEventTypeContaining(Long eventTypeId) {
+        return userRepository.findAllByInterestingEventTypeContaining(eventTypeId);
     }
 }

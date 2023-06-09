@@ -7,6 +7,7 @@ import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.security.JwtProvider;
+import com.covenant.tribe.service.EventFacade;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.util.mapper.EventMapper;
@@ -47,6 +48,7 @@ public class EventController {
     EventService eventService;
     PhotoStorageService storageService;
     EventMapper eventMapper;
+    EventFacade eventFacade;
 
     JwtProvider jwtProvider;
 
@@ -128,10 +130,10 @@ public class EventController {
     @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.getName())")
     public ResponseEntity<?> createEvent(
             @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
-    ) throws FileNotFoundException {
+    ) {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 
-        DetailedEventInSearchDTO response = eventService.handleNewEvent(requestTemplateForCreatingEventDTO);
+        DetailedEventInSearchDTO response = eventFacade.handleNewEvent(requestTemplateForCreatingEventDTO);
 
         log.info("[CONTROLLER] end endpoint createEvent with response: {}", response);
         return ResponseEntity

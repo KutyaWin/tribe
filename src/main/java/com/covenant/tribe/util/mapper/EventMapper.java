@@ -1,20 +1,23 @@
 package com.covenant.tribe.util.mapper;
 
+import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public interface EventMapper {
 
-    Event mapToEvent(
-            RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
-    );
-    DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, Long userId);
+    Event mapDtoToEvent(RequestTemplateForCreatingEventDTO dto, User organizer, EventType eventType,
+                        @Nullable EventAddress eventAddress, @Nullable List<Tag> alreadyExistEventTags,
+                        @Nullable List<Tag> createdEventTagsByRequest, @Nullable List<User> invitedUserByRequest);
+
+    DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, User currentUserWhoSendRequest);
 
     EventInFavoriteDTO mapToEventInFavoriteDTO(Event event);
 
