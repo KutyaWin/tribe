@@ -1,7 +1,7 @@
 package com.covenant.tribe.util.mapper.impl;
 
-import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.user.Profession;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -91,13 +92,13 @@ public class UserMapperImpl implements UserMapper {
     }
 
     @Override
-    public UserProfileGetDto mapToUserProfileGetDto(
+    public UserGetDto mapToUserGetDto(
             User user,
             AuthMethodsDto authMethodsDto,
             List<ProfessionDto> professionDtoList,
             List<EventTypeInfoDto> eventTypeInfoDtoList
     ) {
-        return UserProfileGetDto.builder()
+        return UserGetDto.builder()
                 .avatarUrl(user.getUserAvatar())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -111,6 +112,30 @@ public class UserMapperImpl implements UserMapper {
                 .isGeolocationAvailable(user.isEnableGeolocation())
                 .build();
     }
+
+    @Override
+    public ProfileDto mapToProfileDto(User user) {
+        return ProfileDto.builder()
+                .userId(user.getId())
+                .avatarUrl(user.getUserAvatar())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .age(user.getAge())
+                .professions(
+                        user.getUserProfessions().stream()
+                                .map(Profession::getName)
+                                .collect(Collectors.toList())
+                )
+                .followersCount(user.getFollowers().size())
+                .followingCount(user.getFollowing().size())
+                .interests(
+                        user.getInterestingEventType().stream()
+                                .map(EventType::getTypeName)
+                                .collect(Collectors.toList())
+                )
+                .build();
+    }
+
     @Override
     public UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user) {
         log.debug("map User to UserToSendInvitationDTO. User: {}", user);

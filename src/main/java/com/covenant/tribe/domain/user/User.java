@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -277,6 +278,14 @@ public class User {
         }
     }
 
+    public String getFullName() {
+        return this.firstName + " " + this.lastName;
+    }
+
+    public int getAge() {
+        return Period.between(birthday, LocalDate.now()).getYears();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -290,4 +299,6 @@ public class User {
     public int hashCode() {
         return this.getClass().hashCode();
     }
+
+
 }
