@@ -1,5 +1,6 @@
 package com.covenant.tribe.util.mapper;
 
+import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
@@ -13,9 +14,12 @@ import java.util.Set;
 
 public interface UserMapper {
 
-    User mapToUserFromUserForSignInUpDTO(UserForSignInUpDTO userForSignInUpDTO, String socialTypeFromHeader);
+    User mapToUserFromUserGoogleRegistration(
+            UserForSignInUpDTO userForSignInUpDTO,
+            String googleUserId
+    );
 
-    UserForSignInUpDTO mapToTESTUserForSignUpDTO(User user);
+    User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId);
 
     UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user);
 

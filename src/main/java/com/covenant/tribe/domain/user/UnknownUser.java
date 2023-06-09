@@ -26,8 +26,8 @@ public class UnknownUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "bluetooth_id", nullable = false, unique = true, length = 100)
-    String bluetoothId;
+    @Column(name = "firebase_id", nullable = false, unique = true, length = 100)
+    String firebaseId;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

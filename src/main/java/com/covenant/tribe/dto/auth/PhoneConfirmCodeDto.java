@@ -14,17 +14,19 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ConfirmCodeDTO {
+public class PhoneConfirmCodeDto {
 
     @Min(value = 1000, message = "verificationCode should be at least 1000")
     @Max(value = 9999, message = "verificationCode should be at most 9999")
     @JsonProperty(value = "verification_code")
     Integer verificationCode;
 
-    @NotBlank(message = "Email should not be blank or null")
-    @Email(message = "Email should be valid")
-    String email;
+    @NotBlank(message = "Phone number should not be blank or null")
+    @JsonProperty(value = "phone_number")
+    String phoneNumber;
 
-
+    @NotBlank(message = "FirebaseId should not be blank or null")
+    @JsonProperty(value = "firebase_id")
+    String firebaseId;
 
 }

@@ -4,7 +4,11 @@ import com.covenant.tribe.client.dto.VkValidationErrorDTO;
 import com.covenant.tribe.client.dto.VkValidationResponseDTO;
 import com.covenant.tribe.client.vk.VkClient;
 import com.covenant.tribe.client.vk.VkValidationParams;
+import com.covenant.tribe.client.whatsapp.WhatsAppClient;
+import com.covenant.tribe.client.whatsapp.dto.*;
+import com.covenant.tribe.domain.auth.PhoneVerificationCode;
 import com.covenant.tribe.domain.auth.ResetCodes;
+import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.RegistrantStatus;
@@ -42,6 +46,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -61,15 +66,19 @@ public class AuthServiceImpl implements AuthService {
 
     private final String FROM_EMAIL = "tribe@tribual.ru";
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
-    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
 
-    private final Integer MIN_VALUE_FOR_PASSWORD = 1000;
-    private final Integer MAX_VALUE_FOR_PASSWORD = 9999;
+    private final String WHATS_APP_NAME = "whatsapp";
+    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 1;
+
+    private final Integer MIN_VERIFICATION_CODE_VALUE = 1000;
+    private final Integer MAX_VERIFICATION_CODE_VALUE = 9999;
 
     RegistrantRepository registrantRepository;
+    PhoneVerificationRepository phoneVerificationRepository;
     PasswordEncoder encoder;
     JavaMailSender mailSender;
     VkClient vkClient;
+    WhatsAppClient whatsAppClient;
     GoogleIdTokenVerifier googleIdTokenVerifier;
     JwtProvider jwtProvider;
     UserRepository userRepository;
@@ -89,9 +98,20 @@ public class AuthServiceImpl implements AuthService {
     @Value(value = "${spring.cloud.openfeign.client.config.vk-client.api-version}")
     String apiVersion;
 
+    @Value("${spring.cloud.openfeign.client.config.whatsapp-client.api-version}")
+    String whatsAppApiVersion;
+
+    @Value("${spring.cloud.openfeign.client.config.whatsapp-client.access-token}")
+    String whatsAppAccessToken;
+
+    @Value("${spring.cloud.openfeign.client.config.whatsapp-client.phone-number-id}")
+    String whatsAppPhoneNumberId;
+
     @Autowired
-    public AuthServiceImpl(RegistrantRepository registrantRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(WhatsAppClient whatsAppClient, RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
+        this.whatsAppClient = whatsAppClient;
+        this.phoneVerificationRepository = phoneVerificationRepository;
         this.encoder = encoder;
         this.mailSender = mailSender;
         this.vkClient = vkClient;
@@ -114,15 +134,7 @@ public class AuthServiceImpl implements AuthService {
             String token, String tokenType, UserForSignInUpDTO userForSignInUpDTO
     ) throws JsonProcessingException {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-        String bluetoothId = userForSignInUpDTO.getBluetoothId();
         String firebaseId = userForSignInUpDTO.getFirebaseId();
-
-        if (bluetoothId.isEmpty() || firebaseId.isBlank()) {
-            throw new BadCredentialsException(
-                    String.format("BluetoothId: %s and FirebaseId: %s  can't be empty or null'",
-                            bluetoothId, firebaseId)
-            );
-        }
 
         if (tokenType.equals(GOOGLE_TOKEN_TYPE)) return getTokensForGoogleUser(token, userForSignInUpDTO);
         if (tokenType.equals(VK_TOKEN_TYPE)) return getTokenForVkUser(token, userForSignInUpDTO);
@@ -185,15 +197,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokensDTO confirmEmailRegistration(ConfirmRegistrationDTO confirmRegistrationDTO) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-        String bluetoothId = confirmRegistrationDTO.getBluetoothId();
         String firebaseId = confirmRegistrationDTO.getFirebaseId();
-
-        if (bluetoothId.isEmpty() || firebaseId.isBlank()) {
-            throw new BadCredentialsException(
-                    String.format("BluetoothId: %s and FirebaseId: %s  can't be empty or null'",
-                            bluetoothId, firebaseId)
-            );
-        }
 
         Registrant registrant = registrantRepository
                 .findById(confirmRegistrationDTO.getRegistrantId())
@@ -212,7 +216,7 @@ public class AuthServiceImpl implements AuthService {
             throw new WrongCodeException(confirmRegistrationDTO.getVerificationCode().toString());
         }
         UnknownUser unknownUser = unknownUserRepository
-                .findUnknownUserByBluetoothId(confirmRegistrationDTO.getBluetoothId());
+                .findUnknownUserByFirebaseId(confirmRegistrationDTO.getFirebaseId());
         Set<EventType> userInterests;
         if (unknownUser != null) {
             userInterests = new HashSet<>(unknownUser.getUserInterests());
@@ -293,7 +297,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokensDTO confirmResetCode(ConfirmCodeDTO confirmResetCodeDTO) {
+    public TokensDTO confirmResetCode(EmailConfirmCodeDto confirmResetCodeDTO) {
         ResetCodes resetCodes = resetCodeRepository
                 .findByEmailAndIsEnable(confirmResetCodeDTO.getEmail(), true);
         if (resetCodes == null) {
@@ -332,9 +336,210 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Transactional
+    @Override
+    public void getCodeForLoginWithWhatsApp(PhoneNumberDto phoneNumberDto) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        User user = userRepository.findUserByPhoneNumber(phoneNumberDto.getPhoneNumber());
+        int verificationCode = getRandomVerificationNumber(
+                MIN_VERIFICATION_CODE_VALUE, MAX_VERIFICATION_CODE_VALUE
+        );
+
+        WhatsAppVerificationMsgDto message = getWhatsAppVerificationMsg(
+                verificationCode, phoneNumberDto.getPhoneNumber()
+        );
+        sendMessage(phoneNumberDto, message);
+        if (user != null) {
+            PhoneVerificationCode phoneVerificationCode = phoneVerificationRepository
+                    .findByPhoneNumberAndIsEnableIsTrue(phoneNumberDto.getPhoneNumber());
+            if (phoneVerificationCode != null) {
+                phoneVerificationCode.setVerificationCode(verificationCode);
+                phoneVerificationCode.setRequestTime(OffsetDateTime.now());
+
+            } else {
+                phoneVerificationCode = PhoneVerificationCode
+                        .builder()
+                        .verificationCode(verificationCode)
+                        .phoneNumber(phoneNumberDto.getPhoneNumber())
+                        .build();
+            }
+            phoneVerificationRepository.save(phoneVerificationCode);
+
+            if (!user.hasWhatsappAuthentication()) {
+                user.hasWhatsappAuthentication(true);
+                userRepository.save(user);
+            }
+
+            log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+            return;
+        }
+        Registrant registrant = registrantRepository.findByPhoneNumberAndStatus(
+                phoneNumberDto.getPhoneNumber(), RegistrantStatus.AWAITED
+        );
+        if (registrant != null) {
+            registrant.setVerificationCode(verificationCode);
+            registrant.setCreatedAt(OffsetDateTime.now());
+        } else {
+            registrant = Registrant
+                    .builder()
+                    .phoneNumber(phoneNumberDto.getPhoneNumber())
+                    .verificationCode(verificationCode)
+                    .username(UUID.randomUUID().toString())
+                    .status(RegistrantStatus.AWAITED)
+                    .build();
+        }
+        registrantRepository.save(registrant);
+
+        log.info("[TRANSACTION] Close transaction in class: " + this.getClass().getName());
+    }
+
+    private void sendMessage(PhoneNumberDto phoneNumberDto, WhatsAppVerificationMsgDto message) {
+        ResponseEntity<?> whatsappVerificationResponse = whatsAppClient.sendVerificationCode(
+                whatsAppAccessToken, whatsAppApiVersion, whatsAppPhoneNumberId, message
+        );
+        if  (whatsappVerificationResponse.getStatusCode() != HttpStatus.OK) {
+
+        }
+    }
+
+    private WhatsAppVerificationMsgDto getWhatsAppVerificationMsg(int verificationCode, String phoneNumber) {
+        WhatsAppMessageLanguageDto language = WhatsAppMessageLanguageDto.builder()
+                .code("ru")
+                .build();
+        WhatsAppMessageParameterDto parameter = WhatsAppMessageParameterDto.builder()
+                .type("text")
+                .text(String.valueOf(verificationCode))
+                .build();
+        WhatsAppComponentDto bodyComponent = WhatsAppComponentDto.builder()
+                .type("body")
+                .parameters(List.of(parameter))
+                .build();
+        WhatsAppComponentDto buttonComponent = WhatsAppComponentDto.builder()
+                .type("button")
+                .subType("url")
+                .index("0")
+                .parameters(List.of(parameter))
+                .build();
+        WhatsAppMessageTemplateDto template = WhatsAppMessageTemplateDto.builder()
+                .name("tribe_auth")
+                .language(language)
+                .components(List.of(bodyComponent, buttonComponent))
+                .build();
+        WhatsAppVerificationMsgDto message = WhatsAppVerificationMsgDto.builder()
+                .messagingProduct("whatsapp")
+                .recipientType("individual")
+                .to(phoneNumber)
+                .type("template")
+                .template(template)
+                .build();
+        return message;
+    }
+
+    @Override
+    public TokensDTO confirmCodeForLoginWithWhatsApp(PhoneConfirmCodeDto phoneConfirmCodeDto) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        User user = userRepository.findUserByPhoneNumber(phoneConfirmCodeDto.getPhoneNumber());
+        if (user == null) {
+            Registrant registrant = registrantRepository.findByPhoneNumberAndStatus(
+                    phoneConfirmCodeDto.getPhoneNumber(), RegistrantStatus.AWAITED
+            );
+            if (registrant == null) {
+                String message = String.format(
+                        "There is no registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new RegistrantNotFoundException(message);
+            }
+            OffsetDateTime now = OffsetDateTime.now();
+            if (!registrant.getVerificationCode().equals(phoneConfirmCodeDto.getVerificationCode())) {
+                String message = String.format(
+                        "Verification code is wrong for registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new WrongCodeException(message);
+            }
+           if (now.isAfter(registrant.getCreatedAt().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES))) {
+                String message = String.format(
+                        "Verification code is expired for registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
+                );
+                if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+                    registrant.setStatus(RegistrantStatus.EXPIRED);
+                    registrantRepository.save(registrant);
+                }
+                log.error(message);
+                throw new ExpiredCodeException(message);
+            }
+            User newUser = User.builder()
+                    .username(registrant.getUsername())
+                    .firebaseId(phoneConfirmCodeDto.getFirebaseId())
+                    .phoneNumber(registrant.getPhoneNumber())
+                    .hasWhatsappAuthentication(true)
+                    .build();
+            try {
+                userRepository.save(newUser);
+                registrant.setStatus(RegistrantStatus.CONFIRMED);
+                registrantRepository.save(registrant);
+                return getTokenDTO(newUser.getId());
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                String message = String.format(
+                        "Failed to generate token for registrant with phone number %s, error: %s",
+                        phoneConfirmCodeDto.getPhoneNumber(),
+                        e.getCause()
+                );
+                log.error(message);
+                throw new MakeTokenException(message);
+            }
+        } else {
+            PhoneVerificationCode phoneVerificationCode = phoneVerificationRepository
+                    .findByPhoneNumberAndIsEnableIsTrue(phoneConfirmCodeDto.getPhoneNumber());
+            if (phoneVerificationCode == null) {
+                String message = String.format(
+                        "There is no verification code for user with phone number %s",
+                        phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new WrongCodeException(message);
+            }
+            if (phoneVerificationCode.getVerificationCode() != phoneConfirmCodeDto.getVerificationCode()) {
+                String message = String.format(
+                        "Verification code is wrong for user with phone number %s",
+                        phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new WrongCodeException(message);
+            }
+            OffsetDateTime now = OffsetDateTime.now();
+            if (now.isAfter(phoneVerificationCode.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES))) {
+                phoneVerificationCode.setEnable(false);
+                phoneVerificationRepository.save(phoneVerificationCode);
+                String message = String.format(
+                        "Verification code is expired for user with phone number %s",
+                        phoneConfirmCodeDto.getPhoneNumber()
+                );
+                log.error(message);
+                throw new ExpiredCodeException(message);
+            }
+            try {
+                phoneVerificationCode.setEnable(false);
+                phoneVerificationRepository.save(phoneVerificationCode);
+                return getTokenDTO(user.getId());
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                String message = String.format(
+                        "Failed to generate token for user with phone number %s, error: %s",
+                        phoneConfirmCodeDto.getPhoneNumber(),
+                        e.getCause()
+                );
+                log.error(message);
+                throw new MakeTokenException(message);
+            }
+        }
+    }
+
     private int generateResetCode() {
         return new Random()
-                .nextInt(MAX_VALUE_FOR_PASSWORD - MIN_VALUE_FOR_PASSWORD) + MIN_VALUE_FOR_PASSWORD;
+                .nextInt(MAX_VERIFICATION_CODE_VALUE - MIN_VERIFICATION_CODE_VALUE) + MIN_VERIFICATION_CODE_VALUE;
     }
 
     private void sendEmail(String subject, String message, String email) {
@@ -355,10 +560,10 @@ public class AuthServiceImpl implements AuthService {
             GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
             if (idToken != null) {
                 Payload tokenPayload = idToken.getPayload();
-                String socialId = GOOGLE_TOKEN_TYPE + tokenPayload.getSubject();
-                String email = tokenPayload.getEmail() == null ? "" : tokenPayload.getEmail();
+                String googleUserId = tokenPayload.getSubject();
+                String email = tokenPayload.getEmail() == null ? null : tokenPayload.getEmail();
                 userForSignInUpDTO.setEmail(email);
-                return getTokensDTO(userForSignInUpDTO, socialId);
+                return getTokensDTO(userForSignInUpDTO, googleUserId, SocialIdType.GOOGLE);
             } else {
                 throw new GoogleIntrospectionException("Invalid idToken");
             }
@@ -378,8 +583,8 @@ public class AuthServiceImpl implements AuthService {
                 && Objects.requireNonNull(vkResponse.getBody()).contains("response")
         ) {
             response = mapStringToVkValidationResponseDTO(vkResponse.getBody());
-            String socialId = VK_TOKEN_TYPE + response.getResponse().getUserId();
-            return getTokensDTO(userForSignInUpDTO, socialId);
+            String vkUserId = response.getResponse().getUserId().toString();
+            return getTokensDTO(userForSignInUpDTO, vkUserId, SocialIdType.VK);
         } else {
             VkValidationErrorDTO vkValidationResponseDTO = mapStringToVkValidationErrorDTO(vkResponse.getBody());
             throw new VkIntrospectionException(vkValidationResponseDTO.getError().getErrorMessage());
@@ -387,15 +592,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @NotNull
-    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
+    private TokensDTO getTokensDTO(UserForSignInUpDTO userForSignInUpDTO, String socialId, SocialIdType socialIdType) {
         try {
-            User user = userRepository.findBySocialId(socialId);
+            User user = null;
+            if (socialIdType == SocialIdType.GOOGLE) {
+                user = userRepository.findByGoogleId(socialId);
+            }
+            if (socialIdType == SocialIdType.VK) {
+                user = userRepository.findByVkId(socialId);
+            }
             if (user != null) {
+                user.setFirebaseId(userForSignInUpDTO.getFirebaseId());
                 TokensDTO tokensDTO = getTokenDTO(user.getId());
                 tokensDTO.setUserId(user.getId());
                 return tokensDTO;
             } else {
-                Long userId = registerNewUser(userForSignInUpDTO, socialId);
+                Long userId = registerNewUser(userForSignInUpDTO, socialId, socialIdType);
                 TokensDTO tokensDTO = getTokenDTO(userId);
                 tokensDTO.setUserId(userId);
                 return tokensDTO;
@@ -415,18 +627,27 @@ public class AuthServiceImpl implements AuthService {
         return objectMapper.readValue(error, VkValidationErrorDTO.class);
     }
 
-    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId) {
+    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId, SocialIdType socialIdType) {
         if (userRepository.existsUserByUsername(userForSignInUpDTO.getUsername())) {
             String message = String.format("Username: %s, already exists", userForSignInUpDTO.getUsername());
             log.error(message);
             throw new UserAlreadyExistException(message);
         }
+        User userToSave = null;
+        if (socialIdType == SocialIdType.GOOGLE) {
+            userToSave = userMapper.mapToUserFromUserGoogleRegistration(userForSignInUpDTO, socialId);
+        } else if (socialIdType == SocialIdType.VK) {
+            userToSave = userMapper.mapToUserFromUserVkRegistration(userForSignInUpDTO, socialId);
+        } else {
+            String message = String.format("Unknown socialIdType: %s", socialIdType);
+            log.error(message);
+            throw new IllegalArgumentException(message);
+        }
 
-        User userToSave = userMapper.mapToUserFromUserForSignInUpDTO(userForSignInUpDTO, socialId);
-        UnknownUser unknownUserWithUserToSaveBluetoothId = unknownUserRepository
-                .findUnknownUserByBluetoothId(userForSignInUpDTO.getBluetoothId());
-        if (unknownUserWithUserToSaveBluetoothId != null) {
-            userToSave.addInterestingEventTypes(new HashSet<>(unknownUserWithUserToSaveBluetoothId
+        UnknownUser unknownUserWithUserToSaveFirebaseId = unknownUserRepository
+                .findUnknownUserByFirebaseId(userForSignInUpDTO.getFirebaseId());
+        if (unknownUserWithUserToSaveFirebaseId != null) {
+            userToSave.addInterestingEventTypes(new HashSet<>(unknownUserWithUserToSaveFirebaseId
                     .getUserInterests()));
         } else {
             List<EventType> allEventTypes = eventTypeRepository.findAll();
@@ -450,12 +671,12 @@ public class AuthServiceImpl implements AuthService {
             throw new UserAlreadyExistException(
                     String.format("Passed username already exists: %s", user.getUsername()));
         }
-        if (userRepository.existsUserByUserEmail(user.getUserEmail())) {
+        if (user.getUserEmail() != null && userRepository.existsUserByUserEmail(user.getUserEmail())) {
             log.error("[EXCEPTION] User with passed email already exists. Email: {}", user.getUserEmail());
             throw new UserAlreadyExistException(
                     String.format("Passed email already exists: %s", user.getUserEmail()));
         }
-        if (userRepository.existsUserByPhoneNumber(user.getPhoneNumber())) {
+        if (user.getPhoneNumber() != null && userRepository.existsUserByPhoneNumber(user.getPhoneNumber())) {
             log.error("[EXCEPTION] User with passed phoneNumber already exists. PhoneNumber: {}", user.getPhoneNumber());
             throw new UserAlreadyExistException(
                     String.format("Passed phoneNumber already exists: %s", user.getPhoneNumber()));

@@ -8,9 +8,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -75,7 +77,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
             String pathForDb = currentDate + "/" + fileName;
             String pathForFile = pathToNewFolder + "/" + fileName;
             paths.add(pathForDb);
-            Files.move(
+            Files.copy(
                     Path.of(pathToTmpDir + "/" + fileName),
                     Path.of(pathForFile));
         }
@@ -167,8 +169,10 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
         try {
             Path pathToFile = Path.of(filePath);
             byte[] imageByteArray = Files.readAllBytes(pathToFile);
-            String imageContentType = Files.probeContentType(pathToFile);
-            return new ImageDto(imageContentType, imageByteArray);
+            File image = new File(filePath);
+            Tika tika = new Tika();
+            String mimeType = tika.detect(image);
+            return new ImageDto(mimeType, imageByteArray);
         } catch (IOException e) {
             String message = String.format("File with name: %s does not exist", avatarFileName);
             throw new FileNotFoundException(message);
