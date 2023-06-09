@@ -1,6 +1,5 @@
 package com.covenant.tribe.util.mapper;
 
-import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
@@ -31,8 +30,10 @@ public interface UserMapper {
 
     UserUnSubscriberDto mapToUserUnSubscriberDto(User user);
 
-    UserProfileGetDto mapToUserProfileGetDto(
+    UserGetDto mapToUserGetDto(
             User user, AuthMethodsDto authMethodsDto, List<ProfessionDto> professionDto,
             List<EventTypeInfoDto> eventTypeInfoDtoList
     );
+
+    ProfileDto mapToProfileDto(User user);
 }

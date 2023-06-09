@@ -301,7 +301,7 @@ public class UserController {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
-                                    schema = @Schema(implementation = UserProfileGetDto.class)
+                                    schema = @Schema(implementation = UserGetDto.class)
                             )
                     )
             },
@@ -309,18 +309,18 @@ public class UserController {
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserProfile(
+    public ResponseEntity<?> getUser(
             @PathVariable String userId
     ) {
         log.info("[CONTROLLER] start endpoint getUserProfile with param: {}", userId);
 
-        UserProfileGetDto userProfileGetDto = userService.getUserProfile(Long.parseLong(userId));
+        UserGetDto userGetDto = userService.getUser(Long.parseLong(userId));
 
         log.info("[CONTROLLER] end endpoint getUserProfile");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(userProfileGetDto);
+                .body(userGetDto);
     }
 
     @Operation(
@@ -408,5 +408,34 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Профиль ADMIN, Профиль USRER" +
+                    " Действие: Получение информации о пользователе.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = ProfileDto.class)
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/profile/{user_id}")
+    public ResponseEntity<?> getUserProfile(
+            @PathVariable(name = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint getUserProfile with param: {}", userId);
+
+        ProfileDto profileDto = userService.getProfile(Long.parseLong(userId));
+
+        log.info("[CONTROLLER] end endpoint getUserProfile");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(profileDto);
     }
 }
