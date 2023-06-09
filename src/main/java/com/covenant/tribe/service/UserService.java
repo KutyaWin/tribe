@@ -1,14 +1,11 @@
 package com.covenant.tribe.service;
 
-import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.user.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public interface UserService {
@@ -32,9 +29,11 @@ public interface UserService {
             String unsubscriberUsername, long userId, Pageable pageable
     );
 
-    UserProfileGetDto getUserProfile(long userId);
+    UserGetDto getUser(long userId);
 
     String uploadAvatarToTempFolder(long userId, ImageDto imageDto);
 
     void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto);
+
+    ProfileDto getProfile(long userId);
 }
