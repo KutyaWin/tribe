@@ -22,6 +22,7 @@ import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.AuthService;
+import com.covenant.tribe.service.MailService;
 import com.covenant.tribe.util.mapper.RegistrantMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,19 +65,15 @@ import java.util.*;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
 
-    private final String FROM_EMAIL = "tribe@tribual.ru";
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
-
-    private final String WHATS_APP_NAME = "whatsapp";
     private final Integer CODE_EXPIRATION_TIME_IN_MIN = 1;
-
     private final Integer MIN_VERIFICATION_CODE_VALUE = 1000;
     private final Integer MAX_VERIFICATION_CODE_VALUE = 9999;
 
     RegistrantRepository registrantRepository;
     PhoneVerificationRepository phoneVerificationRepository;
     PasswordEncoder encoder;
-    JavaMailSender mailSender;
+    MailService mailService;
     VkClient vkClient;
     WhatsAppClient whatsAppClient;
     GoogleIdTokenVerifier googleIdTokenVerifier;
@@ -108,12 +105,12 @@ public class AuthServiceImpl implements AuthService {
     String whatsAppPhoneNumberId;
 
     @Autowired
-    public AuthServiceImpl(WhatsAppClient whatsAppClient, RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, JavaMailSender mailSender, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(WhatsAppClient whatsAppClient, RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, MailService mailService, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
         this.whatsAppClient = whatsAppClient;
         this.phoneVerificationRepository = phoneVerificationRepository;
         this.encoder = encoder;
-        this.mailSender = mailSender;
+        this.mailService = mailService;
         this.vkClient = vkClient;
         this.googleIdTokenVerifier = googleIdTokenVerifier;
         this.jwtProvider = jwtProvider;
@@ -170,7 +167,7 @@ public class AuthServiceImpl implements AuthService {
         if (registrant == null) {
             registrant = registrantMapper.mapToRegistrant(registrantRequestDTO, verificationCode);
             Registrant newRegistrant = registrantRepository.save(registrant);
-            sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
+            mailService.sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             return new RegistrantResponseDTO(newRegistrant.getId(), verificationCode);
         } else {
             if (registrant.getStatus() == RegistrantStatus.CONFIRMED ||
@@ -181,7 +178,7 @@ public class AuthServiceImpl implements AuthService {
             }
             registrant.setPassword(encoder.encode(registrantRequestDTO.getPassword()));
             registrant.setUsername(registrantRequestDTO.getUsername());
-            sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
+            mailService.sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             registrant.setVerificationCode(verificationCode);
             registrant.setStatus(RegistrantStatus.AWAITED);
             registrant.setCreatedAt(OffsetDateTime.now());
@@ -277,7 +274,7 @@ public class AuthServiceImpl implements AuthService {
                 .isEnable(true)
                 .build();
         resetCodeRepository.save(resetCodes);
-        sendEmail(title, message, resetPasswordDTO.getEmail());
+        mailService.sendEmail(title, message, resetPasswordDTO.getEmail());
         user.setPassword(encoder.encode(String.valueOf(resetConfirmationCode)));
         userRepository.save(user);
     }
@@ -541,16 +538,6 @@ public class AuthServiceImpl implements AuthService {
         return new Random()
                 .nextInt(MAX_VERIFICATION_CODE_VALUE - MIN_VERIFICATION_CODE_VALUE) + MIN_VERIFICATION_CODE_VALUE;
     }
-
-    private void sendEmail(String subject, String message, String email) {
-        SimpleMailMessage mailMsg = new SimpleMailMessage();
-        mailMsg.setFrom(FROM_EMAIL);
-        mailMsg.setTo(email);
-        mailMsg.setSubject(subject);
-        mailMsg.setText(message);
-        mailSender.send(mailMsg);
-    }
-
     private int getRandomVerificationNumber(int min, int max) {
         return new Random().nextInt(max - min) + min;
     }
