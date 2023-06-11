@@ -88,3 +88,9 @@ google:
   #  client-id: 407408718192.apps.googleusercontent.com for tests Nikita
   client-id: ${SPRING_GOOGLE_CLIENT_ID}
 
+verification:
+  code:
+    email:
+      min: 1000
+      max: 9999
+
