@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -24,6 +25,33 @@ public class TagServiceImpl implements TagService {
 
     TagRepository tagRepository;
     EventTypeRepository eventTypeRepository;
+
+    @Transactional
+    @Override
+    public List<Tag> saveAll(Set<String> tags) {
+        Set<Tag> newTags = tags.stream()
+                .map(String::toLowerCase)
+                .filter(t -> !this.isExistTagByName(t))
+                .map(tagName -> Tag.builder().tagName(tagName).build())
+                .collect(Collectors.toSet());
+
+        return tagRepository.saveAll(newTags);
+    }
+
+    public boolean isExistTagByName(String tagName) {
+        return tagRepository.existsByTagName(tagName);
+    }
+
+    @Override
+    public Tag findByName(String tagName) {
+        return tagRepository.findByTagName(tagName);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Tag> findTagsByTagId(Set<Long> tagsId) {
+        return tagRepository.findAllById(tagsId);
+    }
 
     @Override
     public Tag saveTag(Tag tag) {
@@ -50,7 +78,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public Set<Tag> getAllTagsByEventTypeId(Long eventTypeId) {
+    public List<Tag> getAllTagsByEventTypeId(Long eventTypeId) {
         EventType eventType = eventTypeRepository
                 .findById(eventTypeId)
                 .orElseThrow(() -> {
@@ -61,5 +89,10 @@ public class TagServiceImpl implements TagService {
                     throw new EventTypeNotFoundException(message);
                 });
         return eventType.getTagList();
+    }
+
+    @Override
+    public List<Tag> findAllByIdFetchEventListWithTagAndEventTypesToWhichTagBelong(Set<Long> ids) {
+        return tagRepository.findAllByIdFetchEventListWithTagAndEventTypesToWhichTagBelong(ids);
     }
 }

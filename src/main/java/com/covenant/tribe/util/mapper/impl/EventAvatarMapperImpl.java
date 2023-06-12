@@ -8,9 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class EventAvatarMapperImpl implements EventAvatarMapper {
     @Override
-    public EventAvatar mapToEventAvatar(String avatarFileName) {
+    public EventAvatar mapToEventAvatar(String avatarFileName, Event event) {
         return EventAvatar.builder()
                 .avatarUrl(avatarFileName)
+                .event(event)
                 .build();
     }
 }

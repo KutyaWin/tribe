@@ -147,6 +147,8 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
     )
+    @ToString.Exclude
+    @Builder.Default
     Set<Profession> userProfessions = new HashSet<>();
 
     @OneToMany(

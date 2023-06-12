@@ -8,9 +8,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+
 @Service
 public interface UserService {
+
+    User findUserByIdFetchUserAsOrganizer(Long id);
+
+    User findUserById(Long id);
+
     User findUserByUsername(String username);
+
+    List<User> findAllById(Set<Long> usersId);
 
     Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable);
     boolean isEmailExist(String email);
@@ -41,4 +51,6 @@ public interface UserService {
     void sendConfirmationCodeToEmail(UserEmailDto userEmailDto);
 
     void confirmEmailChange(EmailChangeDto emailConfirmCodeDto);
+
+    List<User> findAllByInterestingEventTypeContaining(Long eventTypeId);
 }

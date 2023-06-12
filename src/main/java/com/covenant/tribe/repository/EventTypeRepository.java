@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public interface EventTypeRepository extends JpaRepository<EventType, Long> {
+public interface EventTypeRepository extends JpaRepository<EventType, Long>, CustomEventTypeRepository {
 
     Optional<EventType> findEventTypeByTypeName(String typeName);
 
