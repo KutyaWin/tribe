@@ -31,6 +31,20 @@ public class EventTypeServiceImpl implements EventTypeService {
     FileStorageRepository fileStorageRepository;
     EventTypeMapper eventTypeMapper;
 
+    @Override
+    public EventType save(EventType eventType) {
+        return eventTypeRepository.save(eventType);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EventType findEventTypeById(Long eventTypeId) {
+        return eventTypeRepository.findById(eventTypeId)
+                .orElseThrow(() -> new EventTypeNotFoundException(
+                        String.format("[EXCEPTION]: EventType with id: %s, not found", eventTypeId)
+                ));
+    }
+
     public EventType getEventTypeByName(String eventTypeName) {
         return eventTypeRepository.findEventTypeByTypeName(eventTypeName)
                 .orElseThrow(() -> {
@@ -51,6 +65,13 @@ public class EventTypeServiceImpl implements EventTypeService {
     }
 
     @Transactional(readOnly = true)
+    @Override
+    public EventType getEventTypeByIdFetchEventListWithTypeAndTagList(Long eventTypeId) {
+        return eventTypeRepository.findEventTypeByIdFetchEventListWithTypeAndTagList(eventTypeId)
+                .orElseThrow(() -> new EventTypeNotFoundException
+                        ("[EXCEPTION]: EventType with id: "+eventTypeId+" , not found"));
+    }
+
     @Override
     public List<EventTypeDTO> getAllRectangleEventTypes(boolean isDark) {
         List<EventType> eventTypes = eventTypeRepository.findAll();

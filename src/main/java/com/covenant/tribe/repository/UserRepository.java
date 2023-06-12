@@ -17,6 +17,9 @@ import java.util.Set;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @Query("select distinct u from User u left join fetch u.eventsWhereUserAsOrganizer where u.id = :userId")
+    Optional<User> findUserByIdFetchEventsWhereUserAsOrganizer(@Param("userId") Long userId);
+
     Optional<User> findUserById(Long id);
 
     @Query("SELECT u FROM User u WHERE u.username LIKE %:partialUsername%")
@@ -89,7 +92,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByInterestingEventType(EventType eventType);
 
     User findByGoogleId(String googleId);
+
     User findByVkId(String vkId);
+
+    @Query(value = "SELECT * FROM users AS u " +
+            "LEFT JOIN user_interests ui on u.id = ui.user_id WHERE ui.event_type_id = ?1", nativeQuery = true)
+    List<User> findAllByInterestingEventTypeContaining(Long eventTypeId);
 
     boolean existsUserByUserEmail(String email);
 

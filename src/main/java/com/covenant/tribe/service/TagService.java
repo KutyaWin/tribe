@@ -9,6 +9,12 @@ import java.util.Set;
 @Service
 public interface TagService {
 
+    Tag findByName(String tagName);
+
+    List<Tag> saveAll(Set<String> tags);
+
+    List<Tag> findTagsByTagId(Set<Long> tagsId);
+
     Tag saveTag(Tag tag);
 
     Tag getTagOrSaveByTagName(String tagName);
@@ -17,5 +23,9 @@ public interface TagService {
 
     List<String> getTagsByContainingName(String tagName);
 
-    Set<Tag> getAllTagsByEventTypeId(Long eventTypeId);
+    List<Tag> getAllTagsByEventTypeId(Long eventTypeId);
+
+    boolean isExistTagByName(String tagName);
+
+    List<Tag> findAllByIdFetchEventListWithTagAndEventTypesToWhichTagBelong(Set<Long> ids);
 }
