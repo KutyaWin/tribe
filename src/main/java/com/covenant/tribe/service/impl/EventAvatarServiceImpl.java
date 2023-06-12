@@ -27,7 +27,7 @@ public class EventAvatarServiceImpl implements EventAvatarService {
     @Override
     public List<EventAvatar> saveEventAvatars(List<String> eventAvatarNames, Event event) {
         return eventAvatarRepository.saveAll(eventAvatarNames.stream()
-                .map(nameAvatar -> eventAvatarMapper.mapToEventAvatar(nameAvatar, event))
+                .map(avatar -> eventAvatarMapper.mapToEventAvatar(avatar, event))
                 .collect(Collectors.toSet()));
     }
 }

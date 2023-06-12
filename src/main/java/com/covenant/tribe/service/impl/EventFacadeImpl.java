@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -133,16 +134,18 @@ public class EventFacadeImpl implements EventFacade {
     private void processNecessaryPhotos(RequestTemplateForCreatingEventDTO requestTemplateForCreatingEvent,
                                         Event newEvent) {
 
-        if (requestTemplateForCreatingEvent.getAvatarsForDeleting() != null) {
-            photoStorageService.deletePhotosInTmpDir(requestTemplateForCreatingEvent.getAvatarsForDeleting());
-        }
-
         if (requestTemplateForCreatingEvent.getAvatarsForAdding() != null) {
             List<String> savedAvatarsInStorage = photoStorageService
                     .addEventAvatars(requestTemplateForCreatingEvent.getAvatarsForAdding());
             List<EventAvatar> savedAvatars = eventAvatarService.saveEventAvatars(savedAvatarsInStorage, newEvent);
             newEvent.addEventAvatars(new HashSet<>(savedAvatars));
             eventService.save(newEvent);
+        }
+        if (requestTemplateForCreatingEvent.getAvatarsForDeleting() != null) {
+            List<String> avatarsForDeleting = new ArrayList<>();
+            avatarsForDeleting.addAll(requestTemplateForCreatingEvent.getAvatarsForDeleting());
+            avatarsForDeleting.addAll(requestTemplateForCreatingEvent.getAvatarsForAdding());
+            photoStorageService.deletePhotosInTmpDir(avatarsForDeleting);
         }
     }
 }

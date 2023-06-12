@@ -8,7 +8,6 @@ import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
-import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
@@ -141,8 +140,6 @@ public class UserServiceImpl implements UserService {
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
     }
 
-    ;
-
     @Transactional(readOnly = true)
     @Override
     public Page<UserSubscriberDto> findAllSubscribers(long userId, Pageable pageable) {
@@ -264,7 +261,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         try {
-            fileStorageRepository.deleteUnnecessaryAvatars(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
+            fileStorageRepository.deleteFileInDir(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
         } catch (IOException e) {
             String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
             log.error(message);
