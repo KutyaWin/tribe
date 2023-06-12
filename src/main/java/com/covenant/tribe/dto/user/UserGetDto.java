@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserProfileGetDto implements Serializable {
+public class UserGetDto implements Serializable {
 
     @JsonProperty("avatar_url")
     String avatarUrl;

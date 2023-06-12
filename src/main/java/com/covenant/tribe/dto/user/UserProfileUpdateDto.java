@@ -1,9 +1,7 @@
 package com.covenant.tribe.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.UniqueElements;
@@ -11,20 +9,24 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserProfileDTO implements Serializable {
+public class UserProfileUpdateDto implements Serializable {
 
-    @JsonProperty("bluetooth_id")
-    @NotBlank(message = "bluetooth_id should not be null or empty")
-    @Size(max = 100, message = "bluetooth_id must not consist of more than 100 characters")
-    String bluetoothId;
+    @JsonProperty("user_id")
+    Long userId;
+
+    @JsonProperty("user_avatar")
+    @Size(max = 200, message = "user_avatar must not consist of more than 200 characters")
+    String userAvatar;
+
+    @JsonProperty("avatars_filenames_for_deleting")
+    List<String> avatarsFilenamesForDeleting;
 
     @Size(max = 100, message = "username must not consist of more than 100 characters")
     @NotBlank(message = "username should not be null or empty")
@@ -42,19 +44,19 @@ public class UserProfileDTO implements Serializable {
     @Past(message = "birthday date should be past")
     LocalDate birthday;
 
-    @JsonProperty("user_avatar")
-    @Size(max = 200, message = "user_avatar must not consist of more than 200 characters")
-    String userAvatar;
-
     @JsonProperty("interesting_event_type")
     @UniqueElements(message = "All elements in favorite_events_id must be unique")
-    @Builder.Default
-    Set<String> interestingEventType = new HashSet<>();
+    List<Long> interestingEventType;
 
-    @JsonProperty(value = "number_of_following")
-    Long numberOfFollowing;
+    @JsonProperty("profession_ids")
+    @UniqueElements(message = "All elements in favorite_events_id must be unique")
+    List<Long> professionIds;
 
-    @JsonProperty(value = "number_of_followers")
-    Long numberOfFollowers;
+    @JsonProperty("new_professions")
+    @UniqueElements(message = "All elements in new_professions must be unique")
+    List<String> newProfessions;
+
+    @JsonProperty("is_geolocation_available")
+    boolean isGeolocationAvailable;
 
 }

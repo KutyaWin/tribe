@@ -58,6 +58,14 @@ public class EventTypeMapperIml implements EventTypeMapper {
                 .collect(Collectors.toList());
     }
 
+    public EventTypeDTO mapToEventTypeDto(EventType eventType, String animationJson) {
+        return EventTypeDTO.builder()
+                .id(eventType.getId())
+                .typeName(eventType.getTypeName())
+                .animationJson(animationJson)
+                .build();
+    }
+
     @Override
     public List<EventTypeDTO> maptoDarkCircleEventTypeDTOList(List<EventType> eventTypeList) {
         log.debug("map DarkCircleEventTypeList to DarkCircleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);

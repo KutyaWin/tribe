@@ -87,4 +87,14 @@ public class CustomExceptionHandler {
                 .errorMessage(List.of(message))
                 .build();
     }
+
+    @ExceptionHandler(UnexpectedDataException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleUnexpectedDataException(UnexpectedDataException e) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
 }

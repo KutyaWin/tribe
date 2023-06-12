@@ -1,6 +1,7 @@
 package com.covenant.tribe.util.mapper.impl;
 
 import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.user.Profession;
 import com.covenant.tribe.domain.user.Registrant;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -23,21 +25,28 @@ import java.util.Set;
 @Component
 public class UserMapperImpl implements UserMapper {
 
-    private final String VK_PREFIX = "vk";
-    private final String GOOGLE_PREFIX = "google";
-    private final String TRIBE_PREFIX = "tribe";
-
-    public User mapToUserFromUserForSignInUpDTO(UserForSignInUpDTO userDto, String socialUserId) {
-        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userDto);
-        //Fake data используются до тех пор, пока не определимся с flow регистрации нового пользователя
+    public User mapToUserFromUserGoogleRegistration(UserForSignInUpDTO userForSignInUpDTO, String googleUserId) {
+        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
         return User.builder()
-                .socialId(socialUserId)
-                .firebaseId(userDto.getFirebaseId())
-                .bluetoothId(userDto.getBluetoothId())
-                .username(userDto.getUsername())
-                .userEmail(makeFakeDataIfNeededIsEmpty(userDto.getEmail(), socialUserId))
-                .password(makeFakeDataIfNeededIsEmpty(userDto.getPassword(), socialUserId))
-                .phoneNumber(makeFakeDataIfNeededIsEmpty(userDto.getPhoneNumber(), socialUserId))
+                .googleId(googleUserId)
+                .hasGoogleAuthentication(true)
+                .firebaseId(userForSignInUpDTO.getFirebaseId())
+                .username(userForSignInUpDTO.getUsername())
+                .userEmail(userForSignInUpDTO.getEmail())
+                .phoneNumber(userForSignInUpDTO.getPhoneNumber())
+                .build();
+    }
+
+    @Override
+    public User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId) {
+        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
+        return User.builder()
+                .vkId(vkUserId)
+                .hasVkAuthentication(true)
+                .firebaseId(userForSignInUpDTO.getFirebaseId())
+                .username(userForSignInUpDTO.getUsername())
+                .userEmail(userForSignInUpDTO.getEmail())
+                .phoneNumber(userForSignInUpDTO.getPhoneNumber())
                 .build();
     }
 
@@ -46,15 +55,13 @@ public class UserMapperImpl implements UserMapper {
     ) {
         log.debug("map confirmRegistrationDTO to User. confirmRegistrationDTO: {}, " +
                 "registrant: {}, userInterests: {}", confirmRegistrationDTO, registrant, userInterests);
-        String socialId = TRIBE_PREFIX + registrant.getId();
         return User.builder()
-                .socialId(TRIBE_PREFIX + registrant.getId())
+                .hasEmailAuthentication(true)
                 .firebaseId(confirmRegistrationDTO.getFirebaseId())
                 .userEmail(registrant.getEmail())
                 .password(registrant.getPassword())
-                .phoneNumber(socialId)
+                .phoneNumber(null)
                 .username(registrant.getUsername())
-                .bluetoothId(confirmRegistrationDTO.getBluetoothId())
                 .enableGeolocation(false)
                 .interestingEventType(userInterests)
                 .build();
@@ -85,13 +92,13 @@ public class UserMapperImpl implements UserMapper {
     }
 
     @Override
-    public UserProfileGetDto mapToUserProfileGetDto(
+    public UserGetDto mapToUserGetDto(
             User user,
             AuthMethodsDto authMethodsDto,
             List<ProfessionDto> professionDtoList,
             List<EventTypeInfoDto> eventTypeInfoDtoList
     ) {
-        return UserProfileGetDto.builder()
+        return UserGetDto.builder()
                 .avatarUrl(user.getUserAvatar())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -106,19 +113,26 @@ public class UserMapperImpl implements UserMapper {
                 .build();
     }
 
-    private String makeFakeDataIfNeededIsEmpty(String data, String socialId) {
-        if (data.isEmpty()) return socialId;
-        return data;
-    }
-
-    public UserForSignInUpDTO mapToTESTUserForSignUpDTO(User user) {
-        log.debug("map User to TESTUserForSignUpDTO. User: {}", user);
-
-        return UserForSignInUpDTO.builder()
-                .bluetoothId(user.getBluetoothId())
-                .email(user.getUserEmail())
-                .password(user.getPassword())
-                .phoneNumber(user.getPhoneNumber())
+    @Override
+    public ProfileDto mapToProfileDto(User user) {
+        return ProfileDto.builder()
+                .userId(user.getId())
+                .avatarUrl(user.getUserAvatar())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .age(user.getAge())
+                .professions(
+                        user.getUserProfessions().stream()
+                                .map(Profession::getName)
+                                .collect(Collectors.toList())
+                )
+                .followersCount(user.getFollowers().size())
+                .followingCount(user.getFollowing().size())
+                .interests(
+                        user.getInterestingEventType().stream()
+                                .map(EventType::getTypeName)
+                                .collect(Collectors.toList())
+                )
                 .build();
     }
 

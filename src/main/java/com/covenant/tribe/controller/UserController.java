@@ -1,6 +1,8 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDto;
+import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
+import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.service.UserService;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -271,6 +274,58 @@ public class UserController {
     }
 
     @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки профиля." +
+                    " Действие: Отправка кода подтверждения на email пользователя.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userEmailDto.getUserId().equals(authentication.getName())")
+    @PostMapping("/email/change/code")
+    public ResponseEntity<?> sendEmailConfirmationCode(
+        @RequestBody @Valid UserEmailDto userEmailDto
+    ) {
+        log.info("[CONTROLLER] start endpoint sendEmailConfirmationCode with param: {}", userEmailDto);
+
+        userService.sendConfirmationCodeToEmail(userEmailDto);
+
+        log.info("[CONTROLLER] end endpoint sendEmailConfirmationCode");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Пока нет." +
+                    " Действие: Подтверждение кода при изменении email пользователя.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/email/change/confirm")
+    public ResponseEntity<?> confirmEmailChange(
+            @RequestBody @Valid EmailChangeDto emailChangeDto
+
+    ) {
+        log.info("[CONTROLLER] start endpoint confirmEmailChange with param: {}", emailChangeDto);
+
+        userService.confirmEmailChange(emailChangeDto);
+
+        log.info("[CONTROLLER] end endpoint confirmEmailChange");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
             description = "Категория: Вход/Регистрация. Экран: Любой, где необходима проверка." +
                     " Действие: Проверка существует ли пользователь с заданным username.",
             responses = {
@@ -299,7 +354,7 @@ public class UserController {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
-                                    schema = @Schema(implementation = UserProfileGetDto.class)
+                                    schema = @Schema(implementation = UserGetDto.class)
                             )
                     )
             },
@@ -307,18 +362,18 @@ public class UserController {
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserProfile(
+    public ResponseEntity<?> getUser(
             @PathVariable String userId
     ) {
         log.info("[CONTROLLER] start endpoint getUserProfile with param: {}", userId);
 
-        UserProfileGetDto userProfileGetDto = userService.getUserProfile(Long.parseLong(userId));
+        UserGetDto userGetDto = userService.getUser(Long.parseLong(userId));
 
         log.info("[CONTROLLER] end endpoint getUserProfile");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(userProfileGetDto);
+                .body(userGetDto);
     }
 
     @Operation(
@@ -341,13 +396,13 @@ public class UserController {
         log.info("[CONTROLLER] start endpoint uploadAvatarToTempFolder with param: {}, and contentType: {}",
                 userId, imageDto.getContentType());
 
-        userService.uploadAvatarToTempFolder(Long.parseLong(userId), imageDto);
+        String fileName = userService.uploadAvatarToTempFolder(Long.parseLong(userId), imageDto);
 
         log.info("[CONTROLLER] end endpoint uploadAvatarToTempFolder");
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .build();
+                .body(new TempFileDTO(fileName));
     }
 
     @Operation(
@@ -380,5 +435,60 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .contentType(MediaType.parseMediaType(imageDto.getContentType()))
                 .body(imageDto.getImage());
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки внутри." +
+                    " Действие: Обновление данных в профиле пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userProfileUpdateDto.userId.toString().equals(authentication.getName())")
+    @PatchMapping()
+    public ResponseEntity<?> updateUserProfile(
+         @RequestBody @Valid UserProfileUpdateDto userProfileUpdateDto
+    ) {
+        log.info("[CONTROLLER] start endpoint updateUserProfile with param: {}", userProfileUpdateDto);
+
+        userService.updateUserProfile(userProfileUpdateDto);
+
+        log.info("[CONTROLLER] end endpoint updateUserProfile");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Профиль ADMIN, Профиль USRER" +
+                    " Действие: Получение информации о пользователе.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = ProfileDto.class)
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/profile/{user_id}")
+    public ResponseEntity<?> getUserProfile(
+            @PathVariable(name = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint getUserProfile with param: {}", userId);
+
+        ProfileDto profileDto = userService.getProfile(Long.parseLong(userId));
+
+        log.info("[CONTROLLER] end endpoint getUserProfile");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(profileDto);
     }
 }

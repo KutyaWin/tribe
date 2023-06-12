@@ -6,11 +6,13 @@ import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,9 +36,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "social_id", unique = true)
-    String socialId;
-
     @Column(name = "firebase_id", nullable = false)
     String firebaseId;
 
@@ -44,10 +43,10 @@ public class User {
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
     OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Column(name = "user_email", length = 50, nullable = false, unique = true)
+    @Column(name = "user_email", length = 50, unique = true)
     String userEmail;
 
-    @Column(length = 500, nullable = false)
+    @Column(length = 100)
     String password;
 
     @Column(name = "phone_number", unique = true)
@@ -68,11 +67,39 @@ public class User {
     @Column(name = "user_avatar", length = 200)
     String userAvatar;
 
-    @Column(name = "bluetooth_id", length = 100, nullable = false)
-    String bluetoothId;
-
     @Column(name = "enable_geolocation", nullable = false)
     boolean enableGeolocation;
+
+    @Column(name = "has_email_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    @Builder.Default
+    Boolean hasEmailAuthentication = false;
+
+    @Column(name = "has_google_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    @Builder.Default
+    Boolean hasGoogleAuthentication = false;
+
+    @Column(name = "has_vk_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    @Builder.Default
+    Boolean hasVkAuthentication = false;
+
+    @Column(name = "has_whatsapp_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    @Builder.Default
+    Boolean hasWhatsappAuthentication = false;
+
+    @Column(name = "has_telegram_authentication", columnDefinition = "BOOLEAN")
+    @Accessors(fluent = true)
+    @Builder.Default
+    Boolean hasTelegramAuthentication = false;
+
+    @Column(name = "google_id", unique = true)
+    String googleId;
+
+    @Column(name = "vk_id", unique = true)
+    String vkId;
 
     @OneToMany(
             mappedBy = "organizer",
@@ -103,8 +130,8 @@ public class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_interests",
-        joinColumns = @JoinColumn(name = "user_id", nullable = false),
-        inverseJoinColumns = @JoinColumn(name = "event_type_id", nullable = false))
+            joinColumns = @JoinColumn(name = "user_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "event_type_id", nullable = false))
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
@@ -112,8 +139,8 @@ public class User {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_profession",
-        joinColumns = @JoinColumn(name = "user_id", nullable = false),
-        inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
+            joinColumns = @JoinColumn(name = "user_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
     )
     @ToString.Exclude
     @Builder.Default
@@ -128,6 +155,15 @@ public class User {
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
+
+    public void addNewProfessions(Set<Profession> professions) {
+        if (this.userProfessions == null) {
+            this.userProfessions = professions;
+        } else {
+            this.userProfessions.retainAll(professions);
+            this.userProfessions.addAll(professions);
+        }
+    }
 
     public void addUserRelationsWithEvent(UserRelationsWithEvent userRelationsWithEvent) {
         if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
@@ -217,9 +253,12 @@ public class User {
     }
 
     public void addInterestingEventTypes(Set<EventType> passedInterestingEventTypes) {
-        if (this.interestingEventType == null) this.interestingEventType = new HashSet<>();
-
-        passedInterestingEventTypes.forEach(this::addInterestingEventType);
+        if (this.interestingEventType == null) {
+            this.interestingEventType = passedInterestingEventTypes;
+        } else {
+            this.interestingEventType.retainAll(passedInterestingEventTypes);
+            this.interestingEventType.addAll(passedInterestingEventTypes);
+        }
     }
 
     public void addEventWhereUserAsOrganizer(Event eventWhereUserAsOrganizer) {
@@ -231,8 +270,8 @@ public class User {
         } else {
             log.error(
                     format("User already have event with same id. User events: %s, Passed event: %s",
-                    this.eventsWhereUserAsOrganizer.stream().map(Event::getId).toList(),
-                    eventWhereUserAsOrganizer.getId()
+                            this.eventsWhereUserAsOrganizer.stream().map(Event::getId).toList(),
+                            eventWhereUserAsOrganizer.getId()
                     ));
             throw new AlreadyExistArgumentForAddToEntityException(
                     format("User already have event with same id. User events: %s, Passed event: %s",
@@ -241,8 +280,16 @@ public class User {
         }
     }
 
+    public String getFullName() {
+        return this.firstName + " " + this.lastName;
+    }
+
+    public int getAge() {
+        return Period.between(birthday, LocalDate.now()).getYears();
+    }
+
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || this.getClass() != o.getClass()) return false;
 
@@ -254,4 +301,6 @@ public class User {
     public int hashCode() {
         return this.getClass().hashCode();
     }
+
+
 }

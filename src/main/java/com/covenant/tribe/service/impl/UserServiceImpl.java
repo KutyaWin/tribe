@@ -1,46 +1,92 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.domain.auth.EmailVerificationCode;
+import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Friendship;
+import com.covenant.tribe.domain.user.Profession;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
+import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
+import com.covenant.tribe.exeption.UnexpectedDataException;
+import com.covenant.tribe.exeption.auth.ExpiredCodeException;
+import com.covenant.tribe.exeption.auth.VerificationCodeNotFoundException;
+import com.covenant.tribe.exeption.auth.WrongCodeException;
+import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
+import com.covenant.tribe.exeption.user.UserAlreadyExistException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.repository.FileStorageRepository;
-import com.covenant.tribe.repository.FriendshipRepository;
-import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.repository.*;
+import com.covenant.tribe.service.MailService;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.service.VerificationCodeService;
 import com.covenant.tribe.util.mapper.EventTypeMapper;
 import com.covenant.tribe.util.mapper.ProfessionMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
 
+    private final int CODE_EXPIRATION_TIME_IN_MIN = 5;
+    @Value("${verification.code.email.min}")
+    int minCodeValue;
+
+    @Value("${verification.code.email.max}")
+    int maxCodeValue;
+
+    EventTypeRepository eventTypeRepository;
     FriendshipRepository friendshipRepository;
     UserRepository userRepository;
     UserMapper userMapper;
     ProfessionMapper professionMapper;
     EventTypeMapper eventTypeMapper;
     FileStorageRepository fileStorageRepository;
+    ProfessionRepository professionRepository;
+    EmailVerificationRepository emailVerificationRepository;
+    MailService mailService;
+    VerificationCodeService verificationCodeService;
+
+    @Autowired
+    public UserServiceImpl(EventTypeRepository eventTypeRepository, FriendshipRepository friendshipRepository, UserRepository userRepository, UserMapper userMapper, ProfessionMapper professionMapper, EventTypeMapper eventTypeMapper, FileStorageRepository fileStorageRepository, ProfessionRepository professionRepository, EmailVerificationRepository emailVerificationRepository, MailService mailService, VerificationCodeService verificationCodeService) {
+        this.eventTypeRepository = eventTypeRepository;
+        this.friendshipRepository = friendshipRepository;
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.professionMapper = professionMapper;
+        this.eventTypeMapper = eventTypeMapper;
+        this.fileStorageRepository = fileStorageRepository;
+        this.professionRepository = professionRepository;
+        this.emailVerificationRepository = emailVerificationRepository;
+        this.mailService = mailService;
+        this.verificationCodeService = verificationCodeService;
+    }
 
     @Transactional(readOnly = true)
     @Override
@@ -126,7 +172,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserProfileGetDto getUserProfile(long userId) {
+    public UserGetDto getUser(long userId) {
         User user = findUserById(userId);
         AuthMethodsDto authMethodsDto = getAuthMethodsDto(user);
         List<ProfessionDto> professionDto = user.getUserProfessions().stream()
@@ -135,22 +181,214 @@ public class UserServiceImpl implements UserService {
         List<EventTypeInfoDto> eventTypeInfoDtoList = user.getInterestingEventType().stream()
                 .map(eventTypeMapper::mapToEventTypeInfoDtoList)
                 .toList();
-        return userMapper.mapToUserProfileGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
+        return userMapper.mapToUserGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
     }
 
     @Override
-    public void uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
-        fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
+    public String uploadAvatarToTempFolder(long userId, ImageDto imageDto) {
+        return fileStorageRepository.saveFileToTmpDir(imageDto.getContentType(), imageDto.getImage());
+    }
+
+    @Transactional
+    @Override
+    public void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto) {
+        User user = findUserById(userProfileUpdateDto.getUserId());
+        if (!userProfileUpdateDto.getUserAvatar().isEmpty()) {
+            if (user.getUserAvatar() == null || !userProfileUpdateDto.getUserAvatar().equals(user.getUserAvatar())) {
+                try {
+                    setNewUserAvatar(userProfileUpdateDto.getUserAvatar(), user);
+                } catch (IOException ex) {
+                    String message = String.format("[EXCEPTION] IOException with message: %s", ex.getMessage());
+                    log.error(message);
+                    throw new FilesNotHandleException(message);
+                }
+            }
+        }
+
+        if (user.getUsername() == null || !userProfileUpdateDto.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsUserByUsername(userProfileUpdateDto.getUsername())) {
+                String message = String.format("[EXCEPTION] User with username: %s already exists",
+                        userProfileUpdateDto.getUsername()
+                );
+                log.error(message);
+                throw new UserAlreadyExistException(message);
+            }
+            user.setUsername(userProfileUpdateDto.getUsername());
+        }
+
+        if (user.getFirstName() == null || !userProfileUpdateDto.getFirstName().equals(user.getFirstName())) {
+            user.setFirstName(userProfileUpdateDto.getFirstName());
+        }
+
+        if (user.getLastName() == null || !userProfileUpdateDto.getLastName().equals(user.getLastName())) {
+            user.setLastName(userProfileUpdateDto.getLastName());
+        }
+
+        if (user.getBirthday() == null || !userProfileUpdateDto.getBirthday().isEqual(user.getBirthday())) {
+            user.setBirthday(userProfileUpdateDto.getBirthday());
+        }
+
+        Set<EventType> newEventTypes = new HashSet<>(eventTypeRepository
+                .findAllById(userProfileUpdateDto.getInterestingEventType()));
+        user.addInterestingEventTypes(newEventTypes);
+
+        if (!userProfileUpdateDto.getProfessionIds().isEmpty()) {
+            List<String> afterHandlingProfessionNames = userProfileUpdateDto.getNewProfessions().stream()
+                    .map(professionName -> {
+                        String lowerCaseProfessionName = professionName.toLowerCase();
+                        return lowerCaseProfessionName
+                                .substring(0, 1)
+                                .toUpperCase() +
+                                lowerCaseProfessionName.substring(1);
+                    })
+                    .toList();
+            Set<Profession> newProfessions = afterHandlingProfessionNames.stream()
+                    .map(professionName -> {
+                        return Profession.builder()
+                                .name(professionName)
+                                .build();
+                    })
+                    .collect(Collectors.toSet());
+            professionRepository.saveAll(newProfessions);
+            Set<Profession> professionsForUpdate = new HashSet<>(
+                    professionRepository.findAllById(userProfileUpdateDto.getProfessionIds())
+            );
+            professionsForUpdate.addAll(newProfessions);
+            user.addNewProfessions(professionsForUpdate);
+        }
+
+        if (userProfileUpdateDto.isGeolocationAvailable() != user.isEnableGeolocation()) {
+            user.setEnableGeolocation(userProfileUpdateDto.isGeolocationAvailable());
+        }
+
+        userRepository.save(user);
+
+        try {
+            fileStorageRepository.deleteUnnecessaryAvatars(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
+        } catch (IOException e) {
+            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+            log.error(message);
+            throw new FilesNotHandleException(message);
+        }
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ProfileDto getProfile(long userId) {
+        User user = findUserById(userId);
+        return userMapper.mapToProfileDto(user);
+    }
+
+    @Transactional
+    @Override
+    public void sendConfirmationCodeToEmail(UserEmailDto userEmailDto) {
+        User user = userRepository
+                .findUserByUserEmail(userEmailDto.getOldEmail())
+                .orElseThrow(() -> {
+                    String message = String.format("[EXCEPTION] User with email: %s not found",
+                            userEmailDto.getOldEmail()
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
+        boolean isUserWithNewEmailExist = userRepository
+                .findUserByUserEmail(userEmailDto.getNewEmail())
+                .isPresent();
+        if  (isUserWithNewEmailExist) {
+            String message = String.format(
+                    "User with email %s is already exist", userEmailDto.getNewEmail()
+            );
+            log.error(message);
+            throw new UserAlreadyExistException(message);
+        }
+        if (user.getId().longValue() != Long.valueOf(userEmailDto.getUserId()).longValue()) {
+            String message = String.format("[EXCEPTION] User with id: %s don't have email %s'",
+                    userEmailDto.getUserId(),
+                    userEmailDto.getOldEmail()
+            );
+            log.error(message);
+            throw new UnexpectedDataException(message);
+        }
+        if  (userEmailDto.getOldEmail().equals(userEmailDto.getNewEmail())) {
+            String message = String.format(
+                    "New email: %s can't equals with old email: %s",
+                    userEmailDto.getNewEmail(),
+                    userEmailDto.getOldEmail()
+            );
+            log.error(message);
+            throw new UnexpectedDataException(message);
+        }
+        int verificationNumber = verificationCodeService.getVerificationCode(minCodeValue, maxCodeValue);
+        EmailVerificationCode emailVerificationCode = emailVerificationRepository.findByEmailAndIsEnable(
+                userEmailDto.getNewEmail(), true
+        );
+        if (emailVerificationCode == null) {
+            emailVerificationCode = EmailVerificationCode.builder()
+                    .email(userEmailDto.getNewEmail())
+                    .requestTime(Instant.now())
+                    .isEnable(true)
+                    .resetCode(verificationNumber)
+                    .build();
+        } else {
+            emailVerificationCode.setRequestTime(Instant.now());
+            emailVerificationCode.setResetCode(verificationNumber);
+        }
+        emailVerificationRepository.save(emailVerificationCode);
+
+        String emailMessage = String.format(
+                "Ваш код подтверждения: %s", verificationNumber
+        );
+        String subject = "Изменение email в сервисе Tribe";
+        mailService.sendEmail(subject, emailMessage, userEmailDto.getNewEmail());
+    }
+
+    @Transactional
+    @Override
+    public void confirmEmailChange(EmailChangeDto emailConfirmCodeDto) {
+        EmailVerificationCode emailVerificationCode = emailVerificationRepository
+                .findByEmailAndIsEnable(emailConfirmCodeDto.getNewEmail(), true);
+        if (emailVerificationCode == null) {
+            String message = "[EXCEPTION] Email verification code not found";
+            log.error(message);
+            throw new VerificationCodeNotFoundException(message);
+        }
+        if (emailVerificationCode.getResetCode() != emailConfirmCodeDto.getVerificationCode()) {
+            String message = "[EXCEPTION] Incorrect verification code";
+            log.error(message);
+            throw new WrongCodeException(message);
+        }
+        if (emailVerificationCode.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            emailVerificationCode.setEnable(false);
+            String message = String.format("Confirmation code for email: %s, is expired", emailConfirmCodeDto.getNewEmail());
+            log.error(message);
+            throw new ExpiredCodeException(message);
+        }
+        User user = userRepository
+                .findUserByUserEmail(emailConfirmCodeDto.getOldEmail())
+                .orElseThrow(() -> {
+                    String message = String.format("[EXCEPTION] User with email: %s not found",
+                            emailConfirmCodeDto.getOldEmail()
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                }) ;
+        user.setUserEmail(emailConfirmCodeDto.getNewEmail());
+        userRepository.save(user);
+    }
+
+    private void setNewUserAvatar(String fileNameForAdding, User user) throws IOException {
+        String newAvatarFileName = fileStorageRepository.addUserAvatar(fileNameForAdding);
+        user.setUserAvatar(newAvatarFileName);
     }
 
     private AuthMethodsDto getAuthMethodsDto(User user) {
-        boolean isEmailAvailable = !user.getPassword().isEmpty();
         return AuthMethodsDto.builder()
-                .isEmailAvailable(isEmailAvailable)
-                .isGoogleAvailable(false)
-                .isVkAvailable(false)
-                .isWhatsAppAvailable(false)
-                .isTelegramAvailable(false)
+                .hasEmailAuthentication(user.hasEmailAuthentication())
+                .hasGoogleAuthentication(user.hasGoogleAuthentication())
+                .hasVkAuthentication(user.hasVkAuthentication())
+                .hasWhatsAppAuthentication(user.hasWhatsappAuthentication())
+                .hasTelegramAuthentication(user.hasTelegramAuthentication())
                 .build();
     }
 

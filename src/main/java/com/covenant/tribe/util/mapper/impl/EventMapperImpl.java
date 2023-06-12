@@ -53,6 +53,8 @@ public class EventMapperImpl implements EventMapper {
         if (event.isPrivate()) {
             return SearchEventDTO.builder()
                     .eventId(event.getId())
+                    .organizerUsername(event.getOrganizer().getUsername())
+                    .description(event.getEventDescription())
                     .avatarUrl(event.getEventAvatars().stream()
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
@@ -92,6 +94,8 @@ public class EventMapperImpl implements EventMapper {
         if (event.isPrivate()) {
             return SearchEventDTO.builder()
                     .eventId(event.getId())
+                    .description(event.getEventDescription())
+                    .organizerUsername(event.getOrganizer().getUsername())
                     .avatarUrl(event.getEventAvatars().stream()
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
@@ -103,6 +107,8 @@ public class EventMapperImpl implements EventMapper {
                 .eventId(event.getId())
                 .avatarUrl(event.getEventAvatars().stream()
                         .map(EventAvatar::getAvatarUrl).toList())
+                .description(event.getEventDescription())
+                .organizerUsername(event.getOrganizer().getUsername())
                 .eventName(event.getEventName())
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
