@@ -8,10 +8,14 @@ import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
+import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import com.covenant.tribe.exeption.UnexpectedDataException;
+import com.covenant.tribe.exeption.auth.ExpiredCodeException;
+import com.covenant.tribe.exeption.auth.VerificationCodeNotFoundException;
+import com.covenant.tribe.exeption.auth.WrongCodeException;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import com.covenant.tribe.exeption.user.UserAlreadyExistException;
@@ -37,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,6 +54,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
 
+    private final int CODE_EXPIRATION_TIME_IN_MIN = 5;
     @Value("${verification.code.email.min}")
     int minCodeValue;
 
@@ -318,10 +324,44 @@ public class UserServiceImpl implements UserService {
         emailVerificationRepository.save(emailVerificationCode);
 
         String emailMessage = String.format(
-                "Ваш код подтверждения: %s", emailVerificationCode
+                "Ваш код подтверждения: %s", verificationNumber
         );
         String subject = "Изменение email в сервисе Tribe";
         mailService.sendEmail(subject, emailMessage, userEmailDto.getNewEmail());
+    }
+
+    @Transactional
+    @Override
+    public void confirmEmailChange(EmailChangeDto emailConfirmCodeDto) {
+        EmailVerificationCode emailVerificationCode = emailVerificationRepository
+                .findByEmailAndIsEnable(emailConfirmCodeDto.getNewEmail(), true);
+        if (emailVerificationCode == null) {
+            String message = "[EXCEPTION] Email verification code not found";
+            log.error(message);
+            throw new VerificationCodeNotFoundException(message);
+        }
+        if (emailVerificationCode.getResetCode() != emailConfirmCodeDto.getVerificationCode()) {
+            String message = "[EXCEPTION] Incorrect verification code";
+            log.error(message);
+            throw new WrongCodeException(message);
+        }
+        if (emailVerificationCode.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            emailVerificationCode.setEnable(false);
+            String message = String.format("Confirmation code for email: %s, is expired", emailConfirmCodeDto.getNewEmail());
+            log.error(message);
+            throw new ExpiredCodeException(message);
+        }
+        User user = userRepository
+                .findUserByUserEmail(emailConfirmCodeDto.getOldEmail())
+                .orElseThrow(() -> {
+                    String message = String.format("[EXCEPTION] User with email: %s not found",
+                            emailConfirmCodeDto.getOldEmail()
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                }) ;
+        user.setUserEmail(emailConfirmCodeDto.getNewEmail());
+        userRepository.save(user);
     }
 
     private void setNewUserAvatar(String fileNameForAdding, User user) throws IOException {

@@ -2,6 +2,7 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
+import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.user.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,4 +39,6 @@ public interface UserService {
     ProfileDto getProfile(long userId);
 
     void sendConfirmationCodeToEmail(UserEmailDto userEmailDto);
+
+    void confirmEmailChange(EmailChangeDto emailConfirmCodeDto);
 }
