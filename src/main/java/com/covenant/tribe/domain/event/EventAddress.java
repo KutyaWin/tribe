@@ -60,7 +60,7 @@ public class EventAddress {
     @OneToMany(mappedBy = "eventAddress", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)
-    List<Event> listEvents;
+    List<Event> listEvents = new ArrayList<>();
 
     static final int SRID = 4326;
     static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), SRID);

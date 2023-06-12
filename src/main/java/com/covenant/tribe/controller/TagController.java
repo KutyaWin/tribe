@@ -2,7 +2,6 @@ package com.covenant.tribe.controller;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.dto.TagDTO;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventTagDTO;
 import com.covenant.tribe.service.TagService;
 import com.covenant.tribe.util.mapper.EventTagMapper;
@@ -11,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @AllArgsConstructor
@@ -52,7 +49,7 @@ public class TagController {
     public ResponseEntity<?> getAllTagsByEventTypeId(
             @PathVariable("event_type_id") Long eventTypeId
     ) {
-        Set<Tag> eventTags = tagService.getAllTagsByEventTypeId(eventTypeId);
+        List<Tag> eventTags = tagService.getAllTagsByEventTypeId(eventTypeId);
         List<EventTagDTO> eventTagDTOs = eventTags
                 .stream()
                 .map(eventTag -> eventTagMapper

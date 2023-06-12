@@ -24,7 +24,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
     show_sql: true
     open-in-view: true #lock auto start transactional anywhere
     properties:

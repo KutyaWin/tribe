@@ -33,7 +33,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     public String saveFileToTmpDir(String contentType, byte[] image) throws FilesNotHandleException {
         String fileName = UUID.randomUUID().toString();
         String fileExtension = contentType.split("/")[1];
-        StringBuilder pathToTmpDirBuilder = new StringBuilder(pathConfiguration.getHome()) // TODO После изменения пользоватебя в docker, необходимо заменить / на ~/
+        StringBuilder pathToTmpDirBuilder = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain())
                 .append("/")
                 .append(pathConfiguration.getTmp());
@@ -57,7 +57,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
-    public List<String> addEventImages(List<String> fileNames) throws IOException {
+    public List<String> addEventAvatars(List<String> fileNames) throws IOException {
         String currentDate = LocalDate.now().toString();
         ArrayList<String> paths = new ArrayList<>();
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
@@ -128,7 +128,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
-    public void deleteUnnecessaryAvatars(List<String> fileNames) throws IOException {
+    public void deleteFileInDir(List<String> fileNames) throws IOException {
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain()).append("/")
                 .append(pathConfiguration.getTmp()).toString();

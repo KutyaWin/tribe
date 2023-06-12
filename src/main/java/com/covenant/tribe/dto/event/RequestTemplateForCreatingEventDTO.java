@@ -1,18 +1,14 @@
 package com.covenant.tribe.dto.event;
 
-import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.UniqueElements;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,11 +33,13 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
 
     @JsonProperty(value = "start_time")
     @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    @NotNull
     OffsetDateTime startTime;
 
     @JsonProperty(value = "end_time")
     @Future(message = "end_time must be future")
     @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    @NotNull
     OffsetDateTime endTime;
 
     @JsonProperty(value = "new_event_tags_names")
@@ -62,7 +60,7 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     List<String> avatarsForAdding;
 
     @JsonProperty(value = "invited_user_ids")
-    @UniqueElements(message = "All elements in users_who_invited must be unique")
+    @UniqueElements(message = "All elements in invited_user_ids must be unique")
     Set<Long> invitedUserIds;
 
     @JsonProperty(value = "show_event_in_search")

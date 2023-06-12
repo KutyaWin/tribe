@@ -10,11 +10,12 @@ import java.util.List;
 @Component
 public interface FileStorageRepository {
     public String saveFileToTmpDir(String contentType, byte[] photo);
+
     public ImageDto getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException;
 
-    public List<String> addEventImages(List<String> fileNames) throws IOException;
+    public List<String> addEventAvatars(List<String> fileNames) throws IOException;
 
-    public void deleteUnnecessaryAvatars(List<String> fileNames) throws IOException;
+    public void deleteFileInDir(List<String> fileNames) throws IOException;
 
     ImageDto getUserAvatarByFileName(String fileName) throws FileNotFoundException;
 

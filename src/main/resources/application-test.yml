@@ -1,2 +1,80 @@
 server:
-  port: ${APP_PORT}
+  port: 8085
+
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          vk-client:
+            url: mock
+            client-id: 777
+            client-secret: 777
+            api-version: 777
+          whatsapp-client:
+            logger-level: full
+            url: mock
+            api-version: 777
+            access-token: mock
+            phone-number-id: 777
+  jpa:
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+    show_sql: true
+    open-in-view: true #lock auto start transactional anywhere
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  mail:
+    host: mail.jino.ru
+    port: 587
+    username: tribe@tribual.ru
+    password: M5T&ojn@PF$Czx*b
+    protocol: smtp
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+        starttls:
+          enable: true
+
+
+# swagger
+springdoc:
+  default-produces-media-type: application/json
+
+path:
+  home: ${SPRING_PARENT_DIRECTORY}
+  main: tribe
+  tmp: temp
+  image: image
+  avatar: avatar
+  event: event
+  user: user
+
+keys:
+  access-private: access_private.der
+  access-public: access_public.pem
+  refresh-private: refresh_private.der
+  refresh-public: refresh_public.pem
+google:
+  #  client-id: 407408718192.apps.googleusercontent.com for tests Nikita
+  client-id: mock
+
+logging:
+  level:
+    root: info
+
+verification:
+  code:
+    email:
+      min: 1000
+      max: 9999

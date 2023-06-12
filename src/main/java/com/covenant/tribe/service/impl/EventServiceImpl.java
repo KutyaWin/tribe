@@ -4,14 +4,15 @@ import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
-import com.covenant.tribe.dto.event.*;
-import com.covenant.tribe.dto.user.UserWhoInvitedToEventAsParticipantDTO;
+import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventInUserProfileDTO;
+import com.covenant.tribe.dto.event.EventVerificationDTO;
+import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.exeption.event.*;
-import com.covenant.tribe.exeption.storage.FilesNotHandleException;
-import com.covenant.tribe.exeption.event.UserAlreadyInvitedException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.exeption.event.UserRelationsWithEventNotFoundException;
-import com.covenant.tribe.repository.*;
+import com.covenant.tribe.repository.EventRepository;
+import com.covenant.tribe.repository.UserRelationsWithEventRepository;
+import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
@@ -20,7 +21,6 @@ import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
 import com.covenant.tribe.util.querydsl.QPredicates;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -34,11 +34,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.time.*;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,14 +48,16 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
 
     EventRepository eventRepository;
-    EventTypeRepository eventTypeRepository;
-    FirebaseService firebaseService;
-    FileStorageRepository fileStorageRepository;
     UserRepository userRepository;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
     EventAvatarMapper eventAvatarMapper;
+
+    @Override
+    public Event save(Event event) {
+        return eventRepository.save(event);
+    }
 
     @Transactional(readOnly = true)
     public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable) {
@@ -145,117 +147,23 @@ public class EventServiceImpl implements EventService {
         return filteredEvents.map(eventMapper::mapToSearchEventDTO);
     }
 
-    @Transactional
-    @Override
-    public DetailedEventInSearchDTO handleNewEvent(RequestTemplateForCreatingEventDTO eventDto) {
-        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-
-        Event event = eventMapper.mapToEvent(eventDto);
-        EventType eventType = eventTypeRepository
-                .findById(eventDto.getEventTypeId())
-                .orElseThrow(() -> {
-                    String message = String.format(
-                            "[EXCEPTION] Event type with id %s, dont exist", eventDto.getEventTypeId()
-                    );
-                    log.error(message);
-                    return new EventNotFoundException(message);
-                });
-
-        if (eventDto.getSendToAllUsersByInterests() && !eventDto.getIsPrivate()) {
-            List<Long> userIds = userRepository
-                    .findAllByInterestingEventType(eventType)
-                    .stream()
-                    .map(User::getId)
-                    .toList();
-            sendInvitationsToUsers(eventDto.getEventTypeId(), userIds, eventDto.getIsEighteenYearLimit());
-        }
-
-        try {
-            List<String> avatarFileNames = fileStorageRepository.addEventImages(eventDto.getAvatarsForAdding());
-
-            List<EventAvatar> eventAvatars = new ArrayList<>();
-            for (String fileName : avatarFileNames) {
-                EventAvatar eventAvatar = EventAvatar.builder()
-                        .event(event)
-                        .avatarUrl(fileName)
-                        .build();
-                eventAvatars.add(eventAvatar);
-            }
-            event.addEventAvatars(eventAvatars);
-            event = saveEvent(event, event.getOrganizer().getId());
-            ArrayList<String> avatarsForDelete = new ArrayList<>();
-            avatarsForDelete.addAll(eventDto.getAvatarsForDeleting());
-            avatarsForDelete.addAll(eventDto.getAvatarsForAdding());
-            fileStorageRepository.deleteUnnecessaryAvatars(avatarsForDelete);
-        } catch (IOException e) {
-            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
-            log.error(message, e);
-            throw new FilesNotHandleException(message);
-        }
-
-        sendInvitationsToUsers(
-                event.getId(),
-                eventDto.getInvitedUserIds().stream().toList(),
-                eventDto.getIsEighteenYearLimit()
-        );
-
-        DetailedEventInSearchDTO detailedEventInSearchDTO =
-                eventMapper.mapToDetailedEventInSearchDTO(event, event.getOrganizer().getId());
-
-        log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
-        return detailedEventInSearchDTO;
-    }
-
-    private void sendInvitationsToUsers(Long eventId, List<Long> userIds, boolean ageRestriction) {
-        List<String> firebaseIds = getFirebaseIds(userIds, ageRestriction);
-        if (firebaseIds.isEmpty()) return;
-        String message = "Текст приглашения нужно придумать, id мероприятия лежит в поле data";
-        String title = "Gazgolder ждет тебя";
-        try {
-            firebaseService.sendNotificationsByFirebaseIds(firebaseIds, title, message, eventId);
-        } catch (FirebaseMessagingException e) {
-            String errMessage = String.format("Messages dont send because firebase return: %s", e.getMessage());
-            log.error(errMessage);
-            throw new MessageDidntSendException(errMessage);
-        }
-    }
-
-    private List<String> getFirebaseIds(List<Long> userIds, boolean ageRestriction) {
-        List<String> firebaseIds = null;
-        if (ageRestriction) {
-            ZonedDateTime nowMinusEighteenYears = Instant.now().atZone(ZoneId.systemDefault()).minusYears(18);
-
-            firebaseIds = userRepository
-                    .findAllById(userIds)
-                    .stream()
-                    .filter(user -> {
-                        if (user.getBirthday() != null) {
-                            return user.getBirthday()
-                                    .atStartOfDay(ZoneId.systemDefault())
-                                    .isBefore(nowMinusEighteenYears);
-                        } else {
-                            return true;
-                        }
-                    })
-                    .map(User::getFirebaseId)
-                    .toList();
-        } else {
-            firebaseIds = userRepository
-                    .findAllById(userIds)
-                    .stream()
-                    .map(User::getFirebaseId)
-                    .toList();
-        }
-        return firebaseIds;
-    }
-
     @Transactional(readOnly = true)
     public DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         Event event = getEventById(eventId);
         checkEventStatus(event);
-        DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper.mapToDetailedEventInSearchDTO(event, userId);
+
+        User currentUser = userRepository.findById(userId).orElseThrow(() -> {
+                    String message = String.format(
+                            "User with id %s didn't found", userId
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+        });
+
+        DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper
+                .mapToDetailedEvent(event, currentUser);
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;
@@ -291,9 +199,11 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public Event saveEvent(Event event, Long organizerId) {
+    @Transactional
+    @Override
+    public Event saveNewEvent(Event event) {
         if (eventRepository.findByEventNameAndStartTimeAndOrganizerId(
-                event.getEventName(), event.getStartTime(), organizerId).isEmpty()) {
+                event.getEventName(), event.getStartTime(), event.getOrganizer().getId()).isEmpty()) {
 
             return eventRepository.save(event);
         } else {
@@ -311,15 +221,6 @@ public class EventServiceImpl implements EventService {
                     log.error("[EXCEPTION] event with id {}, does not exist", eventId);
                     return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                 });
-    }
-
-    @Transactional
-    @Override
-    public Set<User> inviteUsersAsParticipantsToEvent(
-            UserWhoInvitedToEventAsParticipantDTO userWhoInvitedToEventAsParticipantDTO, String eventId) {
-
-        //todo: refactor method
-        return null;
     }
 
     @Transactional(readOnly = true)
