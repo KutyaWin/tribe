@@ -1,6 +1,7 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDto;
+import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.service.PhotoStorageService;
@@ -285,13 +286,39 @@ public class UserController {
     @PreAuthorize("#userEmailDto.getUserId().equals(authentication.getName())")
     @PostMapping("/email/change/code")
     public ResponseEntity<?> sendEmailConfirmationCode(
-        @RequestBody UserEmailDto userEmailDto
+        @RequestBody @Valid UserEmailDto userEmailDto
     ) {
         log.info("[CONTROLLER] start endpoint sendEmailConfirmationCode with param: {}", userEmailDto);
 
         userService.sendConfirmationCodeToEmail(userEmailDto);
 
         log.info("[CONTROLLER] end endpoint sendEmailConfirmationCode");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Пока нет." +
+                    " Действие: Подтверждение кода при изменении email пользователя.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/email/change/confirm")
+    public ResponseEntity<?> confirmEmailChange(
+            @RequestBody @Valid EmailChangeDto emailChangeDto
+
+    ) {
+        log.info("[CONTROLLER] start endpoint confirmEmailChange with param: {}", emailChangeDto);
+
+        userService.confirmEmailChange(emailChangeDto);
+
+        log.info("[CONTROLLER] end endpoint confirmEmailChange");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
