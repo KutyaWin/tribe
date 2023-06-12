@@ -99,8 +99,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LEFT JOIN user_interests ui on u.id = ui.user_id WHERE ui.event_type_id = ?1", nativeQuery = true)
     List<User> findAllByInterestingEventTypeContaining(Long eventTypeId);
 
-    User findBySocialId(String socialId);
-
     boolean existsUserByUserEmail(String email);
 
     boolean existsUserByUsername(String username);

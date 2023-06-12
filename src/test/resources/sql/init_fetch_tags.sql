@@ -7,8 +7,8 @@ insert into event_types(id, type_name)
 values (1000, 'test1'),
        (1001, 'test2');
 
-insert into users(id, bluetooth_id, created_at, enable_geolocation, firebase_id, password, user_email)
-VALUES (1000, 'test1', now(), true, 'test1', 'test1', 'test1');
+insert into users(id, created_at, enable_geolocation, firebase_id, password, user_email)
+VALUES (1000, now(), true, 'test1', 'test1', 'test1');
 
 insert into events(id, created_at, start_time, end_time, event_name, event_status, is_eighteen_year_limit, is_free,
                    is_presence_of_alcohol, is_private, send_to_all_users_by_interests, show_event_in_search,
