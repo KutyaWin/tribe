@@ -36,4 +36,6 @@ public interface UserService {
     void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto);
 
     ProfileDto getProfile(long userId);
+
+    void sendConfirmationCodeToEmail(UserEmailDto userEmailDto);
 }

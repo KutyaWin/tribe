@@ -28,7 +28,7 @@ public class Registrant {
     String phoneNumber;
 
     @ToString.Exclude
-    @Column(name = "password", length = 50)
+    @Column(name = "password", length = 100)
     String password;
 
     @Column(name = "verification_code", length = 4)

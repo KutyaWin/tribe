@@ -7,7 +7,7 @@ import com.covenant.tribe.client.vk.VkValidationParams;
 import com.covenant.tribe.client.whatsapp.WhatsAppClient;
 import com.covenant.tribe.client.whatsapp.dto.*;
 import com.covenant.tribe.domain.auth.PhoneVerificationCode;
-import com.covenant.tribe.domain.auth.ResetCodes;
+import com.covenant.tribe.domain.auth.EmailVerificationCode;
 import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Registrant;
@@ -23,6 +23,7 @@ import com.covenant.tribe.repository.*;
 import com.covenant.tribe.security.JwtProvider;
 import com.covenant.tribe.service.AuthService;
 import com.covenant.tribe.service.MailService;
+import com.covenant.tribe.service.VerificationCodeService;
 import com.covenant.tribe.util.mapper.RegistrantMapper;
 import com.covenant.tribe.util.mapper.UserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,8 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -66,12 +65,11 @@ import java.util.*;
 public class AuthServiceImpl implements AuthService {
 
     private final String EMAIL_SUBJECT = "Регистрация в приложении Tribe";
-    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 1;
-    private final Integer MIN_VERIFICATION_CODE_VALUE = 1000;
-    private final Integer MAX_VERIFICATION_CODE_VALUE = 9999;
+    private final Integer CODE_EXPIRATION_TIME_IN_MIN = 5;
 
     RegistrantRepository registrantRepository;
     PhoneVerificationRepository phoneVerificationRepository;
+    VerificationCodeService verificationCodeService;
     PasswordEncoder encoder;
     MailService mailService;
     VkClient vkClient;
@@ -81,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
     UserRepository userRepository;
     UserMapper userMapper;
     UnknownUserRepository unknownUserRepository;
-    ResetCodeRepository resetCodeRepository;
+    EmailVerificationRepository emailVerificationRepository;
     EventTypeRepository eventTypeRepository;
     RegistrantMapper registrantMapper;
 
@@ -104,9 +102,16 @@ public class AuthServiceImpl implements AuthService {
     @Value("${spring.cloud.openfeign.client.config.whatsapp-client.phone-number-id}")
     String whatsAppPhoneNumberId;
 
+    @Value("${verification.code.email.min}")
+    int minCodeValue;
+
+    @Value("${verification.code.email.max}")
+    int maxCodeValue;
+
     @Autowired
-    public AuthServiceImpl(WhatsAppClient whatsAppClient, RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, ResetCodeRepository resetCodeRepository, MailService mailService, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
+    public AuthServiceImpl(WhatsAppClient whatsAppClient, VerificationCodeService verificationCodeService, RegistrantRepository registrantRepository, PhoneVerificationRepository phoneVerificationRepository, PasswordEncoder encoder, EmailVerificationRepository emailVerificationRepository, MailService mailService, VkClient vkClient, GoogleIdTokenVerifier googleIdTokenVerifier, JwtProvider jwtProvider, UserRepository userRepository, UserMapper userMapper, UnknownUserRepository unknownUserRepository, EventTypeRepository eventTypeRepository, RegistrantMapper registrantMapper) {
         this.registrantRepository = registrantRepository;
+        this.verificationCodeService = verificationCodeService;
         this.whatsAppClient = whatsAppClient;
         this.phoneVerificationRepository = phoneVerificationRepository;
         this.encoder = encoder;
@@ -119,7 +124,7 @@ public class AuthServiceImpl implements AuthService {
         this.unknownUserRepository = unknownUserRepository;
         this.eventTypeRepository = eventTypeRepository;
         this.registrantMapper = registrantMapper;
-        this.resetCodeRepository = resetCodeRepository;
+        this.emailVerificationRepository = emailVerificationRepository;
     }
 
     private final String GOOGLE_TOKEN_TYPE = "google";
@@ -161,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
-        int verificationCode = getRandomVerificationNumber(1000, 9999);
+        int verificationCode = verificationCodeService.getVerificationCode(minCodeValue, maxCodeValue);
         Registrant registrant = registrantRepository.findByEmail(registrantRequestDTO.getEmail());
         String emailMessage = String.format("Код подтверждения: %s", verificationCode);
         if (registrant == null) {
@@ -260,20 +265,20 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format("User with email: %s, does not exist", resetPasswordDTO.getEmail())
                 ));
-        int resetConfirmationCode = generateResetCode();
+        int resetConfirmationCode = verificationCodeService.getVerificationCode(minCodeValue, maxCodeValue);
         String title = "Код для подтверждения сброса пароля";
         String message = String
                 .format(
                         "Ваш код для подтверждения сброса пароля: %s",
                         resetConfirmationCode
                 );
-        ResetCodes resetCodes = ResetCodes.builder()
+        EmailVerificationCode emailVerificationCode = EmailVerificationCode.builder()
                 .resetCode(resetConfirmationCode)
                 .email(resetPasswordDTO.getEmail())
                 .requestTime(Instant.now())
                 .isEnable(true)
                 .build();
-        resetCodeRepository.save(resetCodes);
+        emailVerificationRepository.save(emailVerificationCode);
         mailService.sendEmail(title, message, resetPasswordDTO.getEmail());
         user.setPassword(encoder.encode(String.valueOf(resetConfirmationCode)));
         userRepository.save(user);
@@ -295,22 +300,22 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokensDTO confirmResetCode(EmailConfirmCodeDto confirmResetCodeDTO) {
-        ResetCodes resetCodes = resetCodeRepository
+        EmailVerificationCode emailVerificationCode = emailVerificationRepository
                 .findByEmailAndIsEnable(confirmResetCodeDTO.getEmail(), true);
-        if (resetCodes == null) {
+        if (emailVerificationCode == null) {
             log.error("Reset code with email: " + confirmResetCodeDTO.getEmail() + " does not exist");
             throw new UserNotFoundException(
                     String.format("Reset code with email: %s, does not exist", confirmResetCodeDTO.getEmail())
             );
         }
-        if (resetCodes.getResetCode() != confirmResetCodeDTO.getVerificationCode()) {
-            resetCodes.setEnable(false);
+        if (emailVerificationCode.getResetCode() != confirmResetCodeDTO.getVerificationCode()) {
+            emailVerificationCode.setEnable(false);
             String message = String.format("Reset code for email: %s, does not match", confirmResetCodeDTO.getEmail());
             log.error(message);
             throw new WrongCodeException(message);
         }
-        if (resetCodes.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(Instant.now())) {
-            resetCodes.setEnable(false);
+        if (emailVerificationCode.getRequestTime().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            emailVerificationCode.setEnable(false);
             String message = String.format("Reset code for email: %s, expired", confirmResetCodeDTO.getEmail());
             log.error(message);
             throw new ExpiredCodeException(message);
@@ -325,8 +330,8 @@ public class AuthServiceImpl implements AuthService {
                 });
         try {
             TokensDTO tokens = getTokenDTO(user.getId());
-            resetCodes.setEnable(false);
-            resetCodeRepository.save(resetCodes);
+            emailVerificationCode.setEnable(false);
+            emailVerificationRepository.save(emailVerificationCode);
             return tokens;
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new MakeTokenException(e.getMessage());
@@ -339,8 +344,8 @@ public class AuthServiceImpl implements AuthService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         User user = userRepository.findUserByPhoneNumber(phoneNumberDto.getPhoneNumber());
-        int verificationCode = getRandomVerificationNumber(
-                MIN_VERIFICATION_CODE_VALUE, MAX_VERIFICATION_CODE_VALUE
+        int verificationCode = verificationCodeService.getVerificationCode(
+                minCodeValue, maxCodeValue
         );
 
         WhatsAppVerificationMsgDto message = getWhatsAppVerificationMsg(
@@ -533,15 +538,6 @@ public class AuthServiceImpl implements AuthService {
             }
         }
     }
-
-    private int generateResetCode() {
-        return new Random()
-                .nextInt(MAX_VERIFICATION_CODE_VALUE - MIN_VERIFICATION_CODE_VALUE) + MIN_VERIFICATION_CODE_VALUE;
-    }
-    private int getRandomVerificationNumber(int min, int max) {
-        return new Random().nextInt(max - min) + min;
-    }
-
     private TokensDTO getTokensForGoogleUser(String token, UserForSignInUpDTO userForSignInUpDTO) {
         try {
             GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
