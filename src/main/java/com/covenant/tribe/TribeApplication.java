@@ -25,6 +25,7 @@ public class TribeApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(TribeApplication.class, args);
+        System.out.println("Documentation http://localhost:{EXTERNAL_APP_PORT}/swagger-ui/index.html");
     }
 
 }

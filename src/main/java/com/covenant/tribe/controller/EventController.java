@@ -137,7 +137,7 @@ public class EventController {
 
         log.info("[CONTROLLER] end endpoint createEvent with response: {}", response);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(response);
     }
 

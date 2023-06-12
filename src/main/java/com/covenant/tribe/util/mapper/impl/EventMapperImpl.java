@@ -99,16 +99,19 @@ public class EventMapperImpl implements EventMapper {
                     .isPrivate(true)
                     .build();
         }
-        return SearchEventDTO.builder()
+        var eventDto = SearchEventDTO.builder()
                 .eventId(event.getId())
                 .avatarUrl(event.getEventAvatars().stream()
                         .map(EventAvatar::getAvatarUrl).toList())
                 .eventName(event.getEventName())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
                 .isPrivate(event.isPrivate())
                 .build();
+        if (event.getEventAddress() != null) {
+            eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
+        }
+        return eventDto;
     }
 
     @Override
@@ -189,11 +192,11 @@ public class EventMapperImpl implements EventMapper {
     }
 
     @Override
-    public Event mapDtoToEvent(RequestTemplateForCreatingEventDTO dto, User organizer,
-                               EventType eventType, @Nullable EventAddress eventAddress,
-                               @Nullable List<Tag> alreadyExistEventTags,
-                               @Nullable List<Tag> createdEventTagsByRequest,
-                               @Nullable List<User> invitedUserByRequest)
+    public Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer,
+                            EventType eventType, @Nullable EventAddress eventAddress,
+                            @Nullable List<Tag> alreadyExistEventTags,
+                            @Nullable List<Tag> createdEventTagsByRequest,
+                            @Nullable List<User> invitedUserByRequest)
     {
         log.debug("map RequestTemplateForCreatingEventDTO to Event. Passed param: {},\n {},\n {},\n {},\n {},\n {},\n {}",
                 dto, organizer, eventType, eventAddress, alreadyExistEventTags, createdEventTagsByRequest, invitedUserByRequest);
@@ -256,7 +259,7 @@ public class EventMapperImpl implements EventMapper {
     }
 
     @Override
-    public DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, User currentUserWhoSendRequest) {
+    public DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest) {
         log.debug("map Event to DetailedEventInSearchDTO. Event: {}", event);
 
         List<String> eventAvatars = event.getEventAvatars().stream()
@@ -278,14 +281,13 @@ public class EventMapperImpl implements EventMapper {
                     .isPrivate(event.isPrivate())
                     .build();
         }
-        return DetailedEventInSearchDTO.builder()
+        var responseDto = DetailedEventInSearchDTO.builder()
                 .eventId(event.getId())
                 .eventPhoto(eventAvatars)
                 .favoriteEvent(isFavoriteEvent)
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .eventName(event.getEventName())
                 .organizerUsername(event.getOrganizer().getUsername())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
                 .eventDuration(
                         Duration.between(event.getStartTime(), event.getEndTime()).toString())
@@ -298,6 +300,10 @@ public class EventMapperImpl implements EventMapper {
                                         .collect(Collectors.toSet())))
                 .isPrivate(event.isPrivate())
                 .build();
+        if (event.getEventAddress() != null) {
+            responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
+        }
+        return responseDto;
     }
 
     private Set<UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {

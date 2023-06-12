@@ -19,7 +19,7 @@ public interface TagRepository extends JpaRepository<Tag, Long>, CustomTagReposi
 
     List<Tag> findAllByTagNameContainingIgnoreCase(String tagName);
 
-    @Query(value = "SELECT * FROM tags " +
-            "WHERE tag_name = :tagName OR tag_name_en = :tagName", nativeQuery = true)
-    Optional<Tag> existsByTagName(String tagName);
+    @Query(value = "SELECT EXISTS(SELECT * FROM tags WHERE tag_name = :tagName OR tag_name_en = :tagName)" +
+            " AS tags_exists", nativeQuery = true)
+    boolean existsByTagName(String tagName);
 }
