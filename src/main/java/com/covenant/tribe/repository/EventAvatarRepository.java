@@ -1,9 +1,9 @@
 package com.covenant.tribe.repository;
 
-import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventAvatar;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EventAvatarRepository extends JpaRepository<Event, Long> {
+public interface EventAvatarRepository extends JpaRepository<EventAvatar, Long> {
 }

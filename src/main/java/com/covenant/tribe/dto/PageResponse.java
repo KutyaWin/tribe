@@ -12,7 +12,6 @@ public record PageResponse<T>(List<T> content, com.covenant.tribe.dto.PageRespon
         return new PageResponse<>(page.getContent(), metadata);
     }
 
-        public record Metadata(int page, int size, long totalElements) {
+    public record Metadata(int page, int size, long totalElements) {
     }
-
 }

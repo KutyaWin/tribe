@@ -8,7 +8,6 @@ import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
-import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
@@ -88,6 +87,19 @@ public class UserServiceImpl implements UserService {
         this.verificationCodeService = verificationCodeService;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public User findUserByIdFetchUserAsOrganizer(Long id) {
+        return userRepository.findUserByIdFetchEventsWhereUserAsOrganizer(id)
+                .orElseThrow(() -> new UserNotFoundException("[EXCEPTION] User with id: " + id + " not found."));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<User> findAllById(Set<Long> usersId) {
+        return userRepository.findAllById(usersId);
+    }
+
     @Override
     public User findUserByUsername(String username) {
         return userRepository.findUserByUsername(username)
@@ -127,8 +139,6 @@ public class UserServiceImpl implements UserService {
 
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
     }
-
-    ;
 
     @Transactional(readOnly = true)
     @Override
@@ -251,7 +261,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         try {
-            fileStorageRepository.deleteUnnecessaryAvatars(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
+            fileStorageRepository.deleteFileInDir(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
         } catch (IOException e) {
             String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
             log.error(message);
@@ -421,11 +431,19 @@ public class UserServiceImpl implements UserService {
         friendshipRepository.save(friendship);
     }
 
-    private User findUserById(Long userId) {
+    @Transactional(readOnly = true)
+    @Override
+    public User findUserById(Long userId) {
         return userRepository.findUserById(userId)
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
                 });
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<User> findAllByInterestingEventTypeContaining(Long eventTypeId) {
+        return userRepository.findAllByInterestingEventTypeContaining(eventTypeId);
     }
 }
