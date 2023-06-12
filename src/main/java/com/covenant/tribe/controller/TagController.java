@@ -42,7 +42,7 @@ public class TagController {
                             responseCode = "200",
                             content = @Content(
                                     array = @ArraySchema(
-                                            schema = @Schema(implementation = TagDTO.class))))}
+                                            schema = @Schema(implementation = EventTagDTO.class))))}
     )
     @Transactional
     @GetMapping("/{event_type_id}")

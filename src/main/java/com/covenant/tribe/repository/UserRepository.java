@@ -87,7 +87,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findUserByUserEmail(String email);
 
+    User findUserByPhoneNumber(String phoneNumber);
+
     List<User> findAllByInterestingEventType(EventType eventType);
+
+    User findByGoogleId(String googleId);
+
+    User findByVkId(String vkId);
 
     @Query(value = "SELECT * FROM users AS u " +
             "LEFT JOIN user_interests ui on u.id = ui.user_id WHERE ui.event_type_id = ?1", nativeQuery = true)

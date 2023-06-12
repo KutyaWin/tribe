@@ -5,7 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
@@ -15,23 +15,25 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "reset_codes")
-public class ResetCodes {
+@Table(name = "phone_verification_code")
+public class PhoneVerificationCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "reset_code", nullable = false, length = 4)
-    int resetCode;
+    @Column(name = "verification_code", nullable = false, length = 4)
+    int verificationCode;
 
-    @Column(name = "email", nullable = false, length = 100)
-    String email;
+    @Column(name = "phone_number", nullable = false, length = 20)
+    String phoneNumber;
 
     @Column(name = "request_time", nullable = false)
-    Instant requestTime;
+    @Builder.Default
+    OffsetDateTime requestTime = OffsetDateTime.now();
 
     @Column(name = "is_enable", nullable = false)
-    boolean isEnable;
+    @Builder.Default
+    boolean isEnable = true;
 
 }

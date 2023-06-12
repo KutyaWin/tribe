@@ -20,4 +20,7 @@ public class PathConfiguration {
     String avatar;
     String event;
     String user;
+    String animation;
+    String addEvents;
+    String onboard;
 }

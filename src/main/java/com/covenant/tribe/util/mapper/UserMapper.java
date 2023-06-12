@@ -13,9 +13,12 @@ import java.util.Set;
 
 public interface UserMapper {
 
-    User mapToUserFromUserForSignInUpDTO(UserForSignInUpDTO userForSignInUpDTO, String socialTypeFromHeader);
+    User mapToUserFromUserGoogleRegistration(
+            UserForSignInUpDTO userForSignInUpDTO,
+            String googleUserId
+    );
 
-    UserForSignInUpDTO mapToTESTUserForSignUpDTO(User user);
+    User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId);
 
     UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user);
 
@@ -27,8 +30,10 @@ public interface UserMapper {
 
     UserUnSubscriberDto mapToUserUnSubscriberDto(User user);
 
-    UserProfileGetDto mapToUserProfileGetDto(
+    UserGetDto mapToUserGetDto(
             User user, AuthMethodsDto authMethodsDto, List<ProfessionDto> professionDto,
             List<EventTypeInfoDto> eventTypeInfoDtoList
     );
+
+    ProfileDto mapToProfileDto(User user);
 }

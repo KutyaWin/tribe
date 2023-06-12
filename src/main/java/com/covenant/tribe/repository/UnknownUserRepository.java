@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UnknownUserRepository extends JpaRepository<UnknownUser, Long> {
-    UnknownUser findUnknownUserByBluetoothId(String bluetoothId);
+    UnknownUser findUnknownUserByFirebaseId(String firebaseId);
 }

@@ -2,9 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventStatus;
-import com.covenant.tribe.domain.event.QEvent;
+import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
@@ -16,7 +14,9 @@ import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.UserRelationsWithEventRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventService;
+import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
+import com.covenant.tribe.util.mapper.EventAvatarMapper;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
@@ -52,6 +52,7 @@ public class EventServiceImpl implements EventService {
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
+    EventAvatarMapper eventAvatarMapper;
 
     @Override
     public Event save(Event event) {
@@ -299,11 +300,12 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
         userRelationsWithEvent.setParticipant(true);
+        userRelationsWithEvent.setInvited(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
@@ -315,7 +317,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });
@@ -327,11 +329,11 @@ public class EventServiceImpl implements EventService {
     @Override
     public void declineToParticipantInEvent(Long eventId, String userId) {
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
-                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
-                            userId);
+                            userId, eventId);
                     log.error(message);
                     return new UserRelationsWithEventNotFoundException(message);
                 });

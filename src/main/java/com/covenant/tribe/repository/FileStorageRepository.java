@@ -18,4 +18,10 @@ public interface FileStorageRepository {
     public void deleteFileInDir(List<String> fileNames) throws IOException;
 
     ImageDto getUserAvatarByFileName(String fileName) throws FileNotFoundException;
+
+    String addUserAvatar(String fileNameForAdding) throws IOException;
+
+    String getRectangleAnimationJson(String fileName) throws IOException;
+
+    String getCircleAnimationJson(String fileName) throws IOException;
 }

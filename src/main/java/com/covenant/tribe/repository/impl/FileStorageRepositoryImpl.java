@@ -8,9 +8,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tika.Tika;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -75,11 +77,54 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
             String pathForDb = currentDate + "/" + fileName;
             String pathForFile = pathToNewFolder + "/" + fileName;
             paths.add(pathForDb);
-            Files.move(
+            Files.copy(
                     Path.of(pathToTmpDir + "/" + fileName),
                     Path.of(pathForFile));
         }
         return paths;
+    }
+
+    @Override
+    public String addUserAvatar(String fileNameForAdding) throws IOException {
+        String currentDate = LocalDate.now().toString();
+        String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getTmp()).toString();
+        String pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getImage()).append("/")
+                .append(pathConfiguration.getUser()).append("/")
+                .append(pathConfiguration.getAvatar()).append("/")
+                .append(currentDate).append("/")
+                .toString();
+        Files.createDirectories(Path.of(pathToNewFolder));
+        String pathForDb = currentDate + "/" + fileNameForAdding;
+        String pathForFile = pathToNewFolder + "/" + fileNameForAdding;
+        Files.copy(
+                Path.of(pathToTmpDir + "/" + fileNameForAdding),
+                Path.of(pathForFile));
+
+        return pathForDb;
+    }
+
+    @Override
+    public String getRectangleAnimationJson(String fileName) throws IOException {
+        String filePath = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getAnimation()).append("/")
+                .append(pathConfiguration.getAddEvents()).append("/")
+                .append(fileName).toString();
+        return Files.readString(Path.of(filePath));
+    }
+
+    @Override
+    public String getCircleAnimationJson(String fileName) throws IOException {
+        String filePath = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getAnimation()).append("/")
+                .append(pathConfiguration.getOnboard()).append("/")
+                .append(fileName).toString();
+        return Files.readString(Path.of(filePath));
     }
 
     @Override
@@ -124,8 +169,10 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
         try {
             Path pathToFile = Path.of(filePath);
             byte[] imageByteArray = Files.readAllBytes(pathToFile);
-            String imageContentType = Files.probeContentType(pathToFile);
-            return new ImageDto(imageContentType, imageByteArray);
+            File image = new File(filePath);
+            Tika tika = new Tika();
+            String mimeType = tika.detect(image);
+            return new ImageDto(mimeType, imageByteArray);
         } catch (IOException e) {
             String message = String.format("File with name: %s does not exist", avatarFileName);
             throw new FileNotFoundException(message);

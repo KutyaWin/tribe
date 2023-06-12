@@ -96,9 +96,31 @@ public class AuthExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(RegistrantNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleRegistrantNotFoundException(RegistrantNotFoundException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleBadCredentialsException(BadCredentialsException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(WhatsAppSendingCodeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleWhatsAppSendingCodeException(WhatsAppSendingCodeException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
