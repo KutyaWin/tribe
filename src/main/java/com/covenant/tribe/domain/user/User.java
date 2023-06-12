@@ -101,6 +101,11 @@ public class User {
     @Column(name = "vk_id", unique = true)
     String vkId;
 
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    UserStatus status = UserStatus.ENABLED;
+
     @OneToMany(
             mappedBy = "organizer",
             fetch = FetchType.LAZY
