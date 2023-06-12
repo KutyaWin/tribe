@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
@@ -15,8 +14,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "reset_codes")
-public class ResetCodes {
+@Table(name = "email_verification_code")
+public class EmailVerificationCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

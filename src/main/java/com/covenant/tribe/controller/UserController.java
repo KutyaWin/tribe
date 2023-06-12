@@ -273,6 +273,32 @@ public class UserController {
     }
 
     @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки профиля." +
+                    " Действие: Отправка кода подтверждения на email пользователя.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userEmailDto.getUserId().equals(authentication.getName())")
+    @PostMapping("/email/change/code")
+    public ResponseEntity<?> sendEmailConfirmationCode(
+        @RequestBody UserEmailDto userEmailDto
+    ) {
+        log.info("[CONTROLLER] start endpoint sendEmailConfirmationCode with param: {}", userEmailDto);
+
+        userService.sendConfirmationCodeToEmail(userEmailDto);
+
+        log.info("[CONTROLLER] end endpoint sendEmailConfirmationCode");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @Operation(
             description = "Категория: Вход/Регистрация. Экран: Любой, где необходима проверка." +
                     " Действие: Проверка существует ли пользователь с заданным username.",
             responses = {
