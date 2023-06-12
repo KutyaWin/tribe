@@ -162,7 +162,7 @@ public class EventServiceImpl implements EventService {
         });
 
         DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper
-                .mapToDetailedEventInSearchDTO(event, currentUser);
+                .mapToDetailedEvent(event, currentUser);
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;

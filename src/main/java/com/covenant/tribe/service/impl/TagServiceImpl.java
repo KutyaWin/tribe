@@ -39,7 +39,7 @@ public class TagServiceImpl implements TagService {
     }
 
     public boolean isExistTagByName(String tagName) {
-        return tagRepository.existsByTagName(tagName).isPresent();
+        return tagRepository.existsByTagName(tagName);
     }
 
     @Override

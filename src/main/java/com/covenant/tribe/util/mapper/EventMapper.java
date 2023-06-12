@@ -13,11 +13,11 @@ import java.util.List;
 
 public interface EventMapper {
 
-    Event mapDtoToEvent(RequestTemplateForCreatingEventDTO dto, User organizer, EventType eventType,
-                        @Nullable EventAddress eventAddress, @Nullable List<Tag> alreadyExistEventTags,
-                        @Nullable List<Tag> createdEventTagsByRequest, @Nullable List<User> invitedUserByRequest);
+    Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer, EventType eventType,
+                     @Nullable EventAddress eventAddress, @Nullable List<Tag> alreadyExistEventTags,
+                     @Nullable List<Tag> createdEventTagsByRequest, @Nullable List<User> invitedUserByRequest);
 
-    DetailedEventInSearchDTO mapToDetailedEventInSearchDTO(Event event, User currentUserWhoSendRequest);
+    DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest);
 
     EventInFavoriteDTO mapToEventInFavoriteDTO(Event event);
 

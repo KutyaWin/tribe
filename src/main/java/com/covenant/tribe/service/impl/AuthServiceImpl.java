@@ -29,6 +29,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -53,8 +54,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
-@AllArgsConstructor
-@NoArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthServiceImpl implements AuthService {
@@ -66,18 +66,18 @@ public class AuthServiceImpl implements AuthService {
     private final Integer MIN_VALUE_FOR_PASSWORD = 1000;
     private final Integer MAX_VALUE_FOR_PASSWORD = 9999;
 
-    RegistrantRepository registrantRepository;
-    PasswordEncoder encoder;
-    JavaMailSender mailSender;
-    VkClient vkClient;
-    GoogleIdTokenVerifier googleIdTokenVerifier;
-    JwtProvider jwtProvider;
-    UserRepository userRepository;
-    UserMapper userMapper;
-    UnknownUserRepository unknownUserRepository;
-    ResetCodeRepository resetCodeRepository;
-    EventTypeRepository eventTypeRepository;
-    RegistrantMapper registrantMapper;
+    final RegistrantRepository registrantRepository;
+    final PasswordEncoder encoder;
+    final JavaMailSender mailSender;
+    final VkClient vkClient;
+    final GoogleIdTokenVerifier googleIdTokenVerifier;
+    final JwtProvider jwtProvider;
+    final UserRepository userRepository;
+    final UserMapper userMapper;
+    final UnknownUserRepository unknownUserRepository;
+    final ResetCodeRepository resetCodeRepository;
+    final EventTypeRepository eventTypeRepository;
+    final RegistrantMapper registrantMapper;
 
 
     @Value(value = "${spring.cloud.openfeign.client.config.vk-client.client-id}")
