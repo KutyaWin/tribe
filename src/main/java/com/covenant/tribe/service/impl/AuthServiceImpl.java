@@ -10,10 +10,7 @@ import com.covenant.tribe.domain.auth.PhoneVerificationCode;
 import com.covenant.tribe.domain.auth.EmailVerificationCode;
 import com.covenant.tribe.domain.auth.SocialIdType;
 import com.covenant.tribe.domain.event.EventType;
-import com.covenant.tribe.domain.user.Registrant;
-import com.covenant.tribe.domain.user.RegistrantStatus;
-import com.covenant.tribe.domain.user.UnknownUser;
-import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.*;
 import com.covenant.tribe.dto.auth.*;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.exeption.auth.*;
@@ -287,7 +284,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void changePassword(ChangePasswordDTO changePasswordDTO) {
         User user = userRepository
-                .findById(changePasswordDTO.getUserId())
+                .findUserByIdAndStatus(changePasswordDTO.getUserId(), UserStatus.ENABLED)
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format("User with id: %s, does not exist", changePasswordDTO.getUserId())
                 ));

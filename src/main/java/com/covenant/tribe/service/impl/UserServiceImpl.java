@@ -2,10 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.auth.EmailVerificationCode;
 import com.covenant.tribe.domain.event.EventType;
-import com.covenant.tribe.domain.user.Friendship;
-import com.covenant.tribe.domain.user.Profession;
-import com.covenant.tribe.domain.user.RelationshipStatus;
-import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.*;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
@@ -96,8 +93,8 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<User> findAllById(Set<Long> usersId) {
-        return userRepository.findAllById(usersId);
+    public List<User> findAllById(List<Long> usersId) {
+        return userRepository.findAllByIdInAndStatus(usersId, UserStatus.ENABLED);
     }
 
     @Override
@@ -112,7 +109,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable) {
-        return userRepository.findAllByUsernameContains(partUsername, pageable)
+        return userRepository.findAllByUsernameContains(partUsername, UserStatus.ENABLED, pageable)
                 .map(userMapper::mapToUserToSendInvitationDTO);
     }
 
@@ -434,7 +431,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public User findUserById(Long userId) {
-        return userRepository.findUserById(userId)
+        return userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
@@ -444,6 +441,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public List<User> findAllByInterestingEventTypeContaining(Long eventTypeId) {
-        return userRepository.findAllByInterestingEventTypeContaining(eventTypeId);
+        return userRepository.findAllByInterestingEventTypeContainingAndStatus(
+                eventTypeId, UserStatus.ENABLED.toString()
+        );
     }
 }
