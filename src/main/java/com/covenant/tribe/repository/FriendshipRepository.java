@@ -4,6 +4,7 @@ import com.covenant.tribe.domain.user.Friendship;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,6 +20,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             User follower, User following
     );
 
+    @Modifying
     @Query(
             "UPDATE Friendship f SET f.relationshipStatus = :relationshipStatus, " +
                     "f.unsubscribeAt = :unsubscribeAt " +

@@ -497,7 +497,7 @@ public class UserController {
                     " Действие: Удаление аккаунта пользователя.",
             responses = {
                     @ApiResponse(
-                            responseCode = "200",
+                            responseCode = "200"
                     )
             },
             security = @SecurityRequirement(name = "BearerJWT")
