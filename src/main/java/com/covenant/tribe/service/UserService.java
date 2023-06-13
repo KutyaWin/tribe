@@ -53,4 +53,6 @@ public interface UserService {
     void confirmEmailChange(EmailChangeDto emailConfirmCodeDto);
 
     List<User> findAllByInterestingEventTypeContaining(Long eventTypeId);
+
+    void deleteUser(long userId);
 }

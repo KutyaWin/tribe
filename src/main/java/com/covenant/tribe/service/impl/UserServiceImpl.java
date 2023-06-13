@@ -37,10 +37,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -444,5 +446,27 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAllByInterestingEventTypeContainingAndStatus(
                 eventTypeId, UserStatus.ENABLED.toString()
         );
+    }
+
+    @Transactional
+    @Override
+    public void deleteUser(long userId) {
+        User user = userRepository
+                .findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    String message = String.format("User with id: %s not found", userId);
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
+        friendshipRepository.unsubscribeAll(
+                RelationshipStatus.UNSUBSCRIBE, user.getId(), OffsetDateTime.now()
+        );
+        String uuid = UUID.randomUUID().toString();
+
+        user.setUserEmail(user.getUserEmail() + uuid);
+        user.setPhoneNumber(user.getPhoneNumber() + uuid);
+        user.setUsername(user.getUsername() + uuid);
+        user.setGoogleId(user.getGoogleId() + uuid);
+        user.setVkId(user.getVkId() + uuid);
     }
 }
