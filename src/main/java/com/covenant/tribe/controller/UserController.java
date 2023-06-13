@@ -491,4 +491,30 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(profileDto);
     }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Настройки профиля. Кнопка: Удалить аккаунт" +
+                    " Действие: Удаление аккаунта пользователя.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @DeleteMapping("/delete/{user_id}")
+    public ResponseEntity<?> deleteUser(
+            @PathVariable(name = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint deleteUser with param: {}", userId);
+
+        userService.deleteUser(Long.parseLong(userId));
+
+        log.info("[CONTROLLER] end endpoint deleteUser");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
 }
