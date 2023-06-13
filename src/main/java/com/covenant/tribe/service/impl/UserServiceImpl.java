@@ -2,10 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.auth.EmailVerificationCode;
 import com.covenant.tribe.domain.event.EventType;
-import com.covenant.tribe.domain.user.Friendship;
-import com.covenant.tribe.domain.user.Profession;
-import com.covenant.tribe.domain.user.RelationshipStatus;
-import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.*;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
 import com.covenant.tribe.dto.event.EventTypeInfoDto;
@@ -40,10 +37,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -96,8 +95,8 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<User> findAllById(Set<Long> usersId) {
-        return userRepository.findAllById(usersId);
+    public List<User> findAllById(List<Long> usersId) {
+        return userRepository.findAllByIdInAndStatus(usersId, UserStatus.ENABLED);
     }
 
     @Override
@@ -112,7 +111,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable) {
-        return userRepository.findAllByUsernameContains(partUsername, pageable)
+        return userRepository.findAllByUsernameContains(partUsername, UserStatus.ENABLED, pageable)
                 .map(userMapper::mapToUserToSendInvitationDTO);
     }
 
@@ -434,7 +433,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public User findUserById(Long userId) {
-        return userRepository.findUserById(userId)
+        return userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
@@ -444,6 +443,33 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public List<User> findAllByInterestingEventTypeContaining(Long eventTypeId) {
-        return userRepository.findAllByInterestingEventTypeContaining(eventTypeId);
+        return userRepository.findAllByInterestingEventTypeContainingAndStatus(
+                eventTypeId, UserStatus.ENABLED.toString()
+        );
+    }
+
+    @Transactional
+    @Override
+    public void deleteUser(long userId) {
+        User user = userRepository
+                .findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    String message = String.format("User with id: %s not found", userId);
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
+        friendshipRepository.unsubscribeAll(
+                RelationshipStatus.UNSUBSCRIBE, user.getId(), OffsetDateTime.now()
+        );
+        String uuid = UUID.randomUUID().toString();
+
+        user.setUserEmail(user.getUserEmail() + uuid);
+        user.setPhoneNumber(user.getPhoneNumber() + uuid);
+        user.setUsername(user.getUsername() + uuid);
+        user.setGoogleId(user.getGoogleId() + uuid);
+        user.setVkId(user.getVkId() + uuid);
+        user.setStatus(UserStatus.DELETED);
+
+        userRepository.save(user);
     }
 }

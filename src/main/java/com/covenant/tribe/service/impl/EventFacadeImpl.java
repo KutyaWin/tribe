@@ -95,7 +95,9 @@ public class EventFacadeImpl implements EventFacade {
 
         List<User> invitedUserByRequest = null;
         if (requestTemplateForCreatingEvent.getInvitedUserIds() != null) {
-            invitedUserByRequest = userService.findAllById(requestTemplateForCreatingEvent.getInvitedUserIds());
+            invitedUserByRequest = userService.findAllById(
+                    requestTemplateForCreatingEvent.getInvitedUserIds().stream().toList()
+            );
         }
 
         return new CollectedDataForMappingToEvent(organizer, eventType, eventAddress, alreadyExistEventTags,
@@ -119,7 +121,7 @@ public class EventFacadeImpl implements EventFacade {
         }
         if (requestTemplateForCreatingEvent.getInvitedUserIds() != null) {
             List<User> usersWhoInvited = userService
-                    .findAllById(requestTemplateForCreatingEvent.getInvitedUserIds()).stream()
+                    .findAllById(requestTemplateForCreatingEvent.getInvitedUserIds().stream().toList()).stream()
                     .filter(u -> !u.getId().equals(requestTemplateForCreatingEvent.getOrganizerId()))
                     .toList();
 

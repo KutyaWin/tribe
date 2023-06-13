@@ -43,7 +43,7 @@ public class User {
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
     OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Column(name = "user_email", length = 50, unique = true)
+    @Column(name = "user_email", unique = true)
     String userEmail;
 
     @Column(length = 100)
@@ -100,6 +100,11 @@ public class User {
 
     @Column(name = "vk_id", unique = true)
     String vkId;
+
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    UserStatus status = UserStatus.ENABLED;
 
     @OneToMany(
             mappedBy = "organizer",
