@@ -4,6 +4,7 @@ import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserStatus;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.EventInUserProfileDTO;
 import com.covenant.tribe.dto.event.EventVerificationDTO;
@@ -133,7 +134,8 @@ public class EventServiceImpl implements EventService {
         Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
 
         if (currentUserId != null) {
-            List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserById(currentUserId)
+            List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
+                    currentUserId, UserStatus.ENABLED)
                     .orElseThrow(() -> {
                         String message = String.format(
                                 "[EXCEPTION] User with id %s, dont exist", currentUserId
@@ -154,7 +156,9 @@ public class EventServiceImpl implements EventService {
         Event event = getEventById(eventId);
         checkEventStatus(event);
 
-        User currentUser = userRepository.findById(userId).orElseThrow(() -> {
+        User currentUser = userRepository
+                .findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
                     String message = String.format(
                             "User with id %s didn't found", userId
                     );
@@ -446,7 +450,7 @@ public class EventServiceImpl implements EventService {
 
     private User getUser(String userId) {
         User user = userRepository
-                .findById(Long.parseLong(userId))
+                .findUserByIdAndStatus(Long.parseLong(userId), UserStatus.ENABLED)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] User with id %s, does not exist",
@@ -545,7 +549,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-        User currentUser = userRepository.findUserById(userId)
+        User currentUser = userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
                 .orElseThrow(() -> {
                     String message = "[EXCEPTION] User with id: " + userId + " not found.";
                     log.error(message);
@@ -579,7 +583,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private User findUserById(Long userId) {
-        return userRepository.findUserById(userId)
+        return userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
