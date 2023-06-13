@@ -468,5 +468,8 @@ public class UserServiceImpl implements UserService {
         user.setUsername(user.getUsername() + uuid);
         user.setGoogleId(user.getGoogleId() + uuid);
         user.setVkId(user.getVkId() + uuid);
+        user.setStatus(UserStatus.DELETED);
+
+        userRepository.save(user);
     }
 }

@@ -43,7 +43,7 @@ public class User {
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
     OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @Column(name = "user_email", length = 50, unique = true)
+    @Column(name = "user_email", unique = true)
     String userEmail;
 
     @Column(length = 100)
