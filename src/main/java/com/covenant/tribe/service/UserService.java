@@ -20,7 +20,7 @@ public interface UserService {
 
     User findUserByUsername(String username);
 
-    List<User> findAllById(Set<Long> usersId);
+    List<User> findAllById(List<Long> usersId);
 
     Page<UserToSendInvitationDTO> findUsersByContainsStringInUsernameForSendInvite(String partUsername, Pageable pageable);
     boolean isEmailExist(String email);

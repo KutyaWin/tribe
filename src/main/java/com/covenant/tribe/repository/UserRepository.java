@@ -3,6 +3,7 @@ package com.covenant.tribe.repository;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
@@ -20,10 +21,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select distinct u from User u left join fetch u.eventsWhereUserAsOrganizer where u.id = :userId")
     Optional<User> findUserByIdFetchEventsWhereUserAsOrganizer(@Param("userId") Long userId);
 
-    Optional<User> findUserById(Long id);
+    Optional<User> findUserByIdAndStatus(Long id, UserStatus status);
 
-    @Query("SELECT u FROM User u WHERE u.username LIKE %:partialUsername%")
-    Page<User> findAllByUsernameContains(@Param("partialUsername") String partialUsername, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.username LIKE %:partialUsername% AND u.status = :status")
+    Page<User> findAllByUsernameContains(
+           @Param("partialUsername") String partialUsername, @Param("status") UserStatus status, Pageable pageable
+    );
     @Query("SELECT f.userWhoMadeFollowing " +
             "FROM User u " +
             "JOIN u.followers f " +
@@ -89,15 +92,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findUserByPhoneNumber(String phoneNumber);
 
-    List<User> findAllByInterestingEventType(EventType eventType);
+    List<User> findAllByIdInAndStatus(List<Long> ids, UserStatus status);
 
     User findByGoogleId(String googleId);
 
     User findByVkId(String vkId);
 
     @Query(value = "SELECT * FROM users AS u " +
-            "LEFT JOIN user_interests ui on u.id = ui.user_id WHERE ui.event_type_id = ?1", nativeQuery = true)
-    List<User> findAllByInterestingEventTypeContaining(Long eventTypeId);
+            "LEFT JOIN user_interests ui on u.id = ui.user_id WHERE ui.event_type_id = ?1 AND u.status = ?2", nativeQuery = true)
+    List<User> findAllByInterestingEventTypeContainingAndStatus(Long eventTypeId, String userStatus);
 
     boolean existsUserByUserEmail(String email);
 
