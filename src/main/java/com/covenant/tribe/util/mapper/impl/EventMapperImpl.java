@@ -202,8 +202,7 @@ public class EventMapperImpl implements EventMapper {
                             EventType eventType, @Nullable EventAddress eventAddress,
                             @Nullable List<Tag> alreadyExistEventTags,
                             @Nullable List<Tag> createdEventTagsByRequest,
-                            @Nullable List<User> invitedUserByRequest)
-    {
+                            @Nullable List<User> invitedUserByRequest) {
         log.debug("map RequestTemplateForCreatingEventDTO to Event. Passed param: {},\n {},\n {},\n {},\n {},\n {},\n {}",
                 dto, organizer, eventType, eventAddress, alreadyExistEventTags, createdEventTagsByRequest, invitedUserByRequest);
 
@@ -271,11 +270,14 @@ public class EventMapperImpl implements EventMapper {
         List<String> eventAvatars = event.getEventAvatars().stream()
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
-        boolean isFavoriteEvent = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
-                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(event.getId()))
-                .findFirst()
-                .map(UserRelationsWithEvent::isFavorite)
-                .orElse(false);
+        boolean isFavoriteEvent = false;
+        if (currentUserWhoSendRequest != null) {
+            isFavoriteEvent = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(event.getId()))
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isFavorite)
+                    .orElse(false);
+        }
 
         if (event.isPrivate()) {
             return DetailedEventInSearchDTO.builder()
