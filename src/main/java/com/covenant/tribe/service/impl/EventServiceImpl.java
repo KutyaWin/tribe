@@ -156,18 +156,24 @@ public class EventServiceImpl implements EventService {
         Event event = getEventById(eventId);
         checkEventStatus(event);
 
-        User currentUser = userRepository
-                .findUserByIdAndStatus(userId, UserStatus.ENABLED)
-                .orElseThrow(() -> {
-                    String message = String.format(
-                            "User with id %s didn't found", userId
-                    );
-                    log.error(message);
-                    return new UserNotFoundException(message);
-        });
+        DetailedEventInSearchDTO detailedEventInSearchDTO = null;
 
-        DetailedEventInSearchDTO detailedEventInSearchDTO = eventMapper
-                .mapToDetailedEvent(event, currentUser);
+        if (userId != null) {
+            User currentUser = userRepository
+                    .findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "User with id %s didn't found", userId
+                        );
+                        log.error(message);
+                        return new UserNotFoundException(message);
+                    });
+            detailedEventInSearchDTO = eventMapper
+                    .mapToDetailedEvent(event, currentUser);
+        } else {
+            detailedEventInSearchDTO = eventMapper
+                    .mapToDetailedEvent(event, null);
+        }
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
         return detailedEventInSearchDTO;
