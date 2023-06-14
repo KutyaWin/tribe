@@ -6,6 +6,7 @@ target/
 
 ### Configuration ###
 .env
+.run
 /src/main/resources/keys
 
 
