@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -698,6 +699,24 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(event);
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Наполнение события. Действие: " +
+                    "Обновление информации о событии. Кнопка: Сохранить изменения",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = DetailedEventInSearchDTO.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#updateEventDto.organizerId.equals(authentication.getName())")
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateEvent(
+            @RequestBody @Valid UpdateEventDto updateEventDto
+    ) {
+        
     }
 
 }
