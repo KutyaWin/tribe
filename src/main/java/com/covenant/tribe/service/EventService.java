@@ -1,10 +1,7 @@
 package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInUserProfileDTO;
-import com.covenant.tribe.dto.event.EventVerificationDTO;
-import com.covenant.tribe.dto.event.SearchEventDTO;
+import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -60,4 +57,6 @@ public interface EventService {
     void removeEventFromFavorite(Long userId, Long eventId);
 
     boolean isFavoriteEventForUser(Long userId, Long eventId);
+
+    EventDto getEvent(Long eventId, Long organizerId);
 }

@@ -175,7 +175,7 @@ public class UserServiceImpl implements UserService {
                 .map(professionMapper::mapToProfessionDto)
                 .toList();
         List<EventTypeInfoDto> eventTypeInfoDtoList = user.getInterestingEventType().stream()
-                .map(eventTypeMapper::mapToEventTypeInfoDtoList)
+                .map(eventTypeMapper::mapToEventTypeInfoDto)
                 .toList();
         return userMapper.mapToUserGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
     }

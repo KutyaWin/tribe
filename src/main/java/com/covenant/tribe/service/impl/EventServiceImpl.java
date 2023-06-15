@@ -5,20 +5,16 @@ import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.UserStatus;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInUserProfileDTO;
-import com.covenant.tribe.dto.event.EventVerificationDTO;
-import com.covenant.tribe.dto.event.SearchEventDTO;
+import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.UserRelationsWithEventRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventService;
-import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
-import com.covenant.tribe.util.mapper.EventAvatarMapper;
-import com.covenant.tribe.util.mapper.EventMapper;
+import com.covenant.tribe.util.mapper.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
 import com.covenant.tribe.util.querydsl.QPredicates;
@@ -53,6 +49,10 @@ public class EventServiceImpl implements EventService {
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
+    EventTypeMapper eventTypeMapper;
+    EventTagMapper eventTagMapper;
+    UserMapper userMapper;
+    EventAddressMapper eventAddressMapper;
     EventAvatarMapper eventAvatarMapper;
 
     @Override
@@ -135,7 +135,7 @@ public class EventServiceImpl implements EventService {
 
         if (currentUserId != null) {
             List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
-                    currentUserId, UserStatus.ENABLED)
+                            currentUserId, UserStatus.ENABLED)
                     .orElseThrow(() -> {
                         String message = String.format(
                                 "[EXCEPTION] User with id %s, dont exist", currentUserId
@@ -518,6 +518,45 @@ public class EventServiceImpl implements EventService {
                 .findFirst()
                 .map(UserRelationsWithEvent::isFavorite)
                 .orElse(false);
+    }
+
+    @Override
+    public EventDto getEvent(Long eventId, Long organizerId) {
+        Event event = getEventById(eventId);
+        EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
+                .mapToEventTypeInfoDto(event.getEventType());
+        List<String> avatarUrlList = event.getEventAvatars().stream()
+                .map(EventAvatar::getAvatarUrl)
+                .toList();
+        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDTO(
+                event.getEventAddress()
+        );
+        List<EventTagDTO> eventTagDtoList = eventTagMapper.mapEventTagListToEventTagDtoList(
+                event.getTagList()
+        );
+
+        List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream()
+                .filter(UserRelationsWithEvent::isInvited)
+                .filter(UserRelationsWithEvent::isParticipant)
+                .map(UserRelationsWithEvent::getUserRelations)
+                .map(userMapper::mapToUserToSendInvitationDTO)
+                .toList();
+
+        return EventDto.builder()
+                .eventTypeInfoDto(eventTypeInfoDto)
+                .avatarUrls(avatarUrlList)
+                .name(event.getEventName())
+                .addressDTO(eventAddressDTO)
+                .startDateTime(event.getStartTime())
+                .endDateTime(event.getEndTime())
+                .tags(eventTagDtoList)
+                .description(event.getEventDescription())
+                .invitations(invitedAndParticipatedUserList)
+                .isPrivate(event.isPrivate())
+                .isShowInSearch(event.isShowEventInSearch())
+                .isSendByInterests(event.isSendToAllUsersByInterests())
+                .isEighteenYearLimit(event.isEighteenYearLimit())
+                .build();
     }
 
     @Transactional(readOnly = true)

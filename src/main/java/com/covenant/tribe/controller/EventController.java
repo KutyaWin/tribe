@@ -672,4 +672,32 @@ public class EventController {
                 .status(HttpStatus.OK)
                 .body(userFavorites);
     }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Наполнение события. Действие: " +
+                    "Получение информации о событии для обновления",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = EventDto.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @GetMapping("/update/{event_id}/{organizer_id}")
+    public ResponseEntity<?> getEventById(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "organizer_id") Long organizerId
+    ) {
+        log.info("[CONTROLLER] start endpoint getEventById with param: {}, {}", eventId, organizerId);
+
+        EventDto event = eventService.getEvent(eventId, organizerId);
+
+        log.info("[CONTROLLER] end endpoint getEventById with response: {}", event);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(event);
+    }
+
 }
