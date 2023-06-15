@@ -536,8 +536,9 @@ public class EventServiceImpl implements EventService {
         );
 
         List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream()
-                .filter(UserRelationsWithEvent::isInvited)
-                .filter(UserRelationsWithEvent::isParticipant)
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant();
+                })
                 .map(UserRelationsWithEvent::getUserRelations)
                 .map(userMapper::mapToUserToSendInvitationDTO)
                 .toList();

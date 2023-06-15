@@ -687,11 +687,11 @@ public class EventController {
     @GetMapping("/update/{event_id}/{organizer_id}")
     public ResponseEntity<?> getEventById(
             @PathVariable(value = "event_id") Long eventId,
-            @PathVariable(value = "organizer_id") Long organizerId
+            @PathVariable(value = "organizer_id") String organizerId
     ) {
         log.info("[CONTROLLER] start endpoint getEventById with param: {}, {}", eventId, organizerId);
 
-        EventDto event = eventService.getEvent(eventId, organizerId);
+        EventDto event = eventService.getEvent(eventId, Long.valueOf(organizerId));
 
         log.info("[CONTROLLER] end endpoint getEventById with response: {}", event);
 
