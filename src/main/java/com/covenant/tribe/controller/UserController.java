@@ -417,8 +417,7 @@ public class UserController {
                                     )
                             )
                     )
-            },
-            security = @SecurityRequirement(name = "BearerJWT")
+            }
     )
     @GetMapping("/avatar/{added_date}/{file_name}")
     public ResponseEntity<?> getUserAvatar(
