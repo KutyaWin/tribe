@@ -9,9 +9,7 @@ import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.repository.EventRepository;
-import com.covenant.tribe.repository.UserRelationsWithEventRepository;
-import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
 import com.covenant.tribe.util.mapper.*;
@@ -44,7 +42,9 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EventServiceImpl implements EventService {
 
+    EventTypeRepository eventTypeRepository;
     EventRepository eventRepository;
+    EventAvatarRepository eventAvatarRepository;
     UserRepository userRepository;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
@@ -560,6 +560,33 @@ public class EventServiceImpl implements EventService {
                 .build();
     }
 
+    @Transactional
+    @Override
+    public DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto) {
+        Event eventForUpdate = findEventById(updateEventDto.getEventId());
+
+        if (updateEventDto.getEventTypeId().longValue() != eventForUpdate.getEventType().getId()) {
+            EventType newEventType = eventTypeRepository
+                    .findById(updateEventDto.getEventTypeId())
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "EventType with id %s didn't found", updateEventDto.getEventTypeId()
+                        );
+                        log.error(message);
+                        return new EventTypeNotFoundException(message);
+                    });
+            eventForUpdate.setEventType(newEventType);
+        }
+
+        if (!updateEventDto.getAvatarsForDeleting().isEmpty()) {
+            eventAvatarRepository.deleteAllByAvatarUrlIn(updateEventDto.getAvatarsForDeleting());
+        }
+
+
+
+         //TODO после всех операций с бд не забыть удалить файлы с ненужными аватарами из временной и постоянной папок
+    }
+
     @Transactional(readOnly = true)
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
@@ -633,6 +660,17 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
+                });
+    }
+
+    private Event findEventById(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "Event with id %s didn't found", eventId
+                    );
+                    log.error(message);
+                    return new EventNotFoundException(message);
                 });
     }
 }

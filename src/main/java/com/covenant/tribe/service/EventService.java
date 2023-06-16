@@ -59,4 +59,6 @@ public interface EventService {
     boolean isFavoriteEventForUser(Long userId, Long eventId);
 
     EventDto getEvent(Long eventId, Long organizerId);
+
+    DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto);
 }
