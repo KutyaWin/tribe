@@ -716,7 +716,15 @@ public class EventController {
     public ResponseEntity<?> updateEvent(
             @RequestBody @Valid UpdateEventDto updateEventDto
     ) {
+        log.info("[CONTROLLER] start endpoint updateEvent with updateEventDto: {}", updateEventDto);
         
+        DetailedEventInSearchDTO detailedEventDto = eventService.updateEvent(updateEventDto);
+
+        log.info("[CONTROLLER] end endpoint updateEvent with response: {}", detailedEventDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(detailedEventDto);
     }
 
 }
