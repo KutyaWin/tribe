@@ -1,6 +1,7 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
+import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -46,6 +48,7 @@ public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     EventAvatarRepository eventAvatarRepository;
     UserRepository userRepository;
+    FileStorageRepository fileStorageRepository;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
@@ -562,8 +565,10 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto) {
+    public DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto) throws IOException {
         Event eventForUpdate = findEventById(updateEventDto.getEventId());
+        ArrayList<String> avatarsForDeletingFromTempDirectory = new ArrayList<>();
+        ArrayList<String> avatarsForDeletingFromDb = new ArrayList<>();
 
         if (updateEventDto.getEventTypeId().longValue() != eventForUpdate.getEventType().getId()) {
             EventType newEventType = eventTypeRepository
@@ -579,12 +584,75 @@ public class EventServiceImpl implements EventService {
         }
 
         if (!updateEventDto.getAvatarsForDeleting().isEmpty()) {
-            eventAvatarRepository.deleteAllByAvatarUrlIn(updateEventDto.getAvatarsForDeleting());
+            updateEventDto.getAvatarsForDeleting().forEach(avatarUrl -> {
+                        if (avatarUrl.contains("/")) {
+                            avatarsForDeletingFromDb.add(avatarUrl);
+                        } else {
+                            avatarsForDeletingFromTempDirectory.add(avatarUrl);
+                        }
+                    }
+            );
+            eventAvatarRepository.deleteAllByAvatarUrlIn(avatarsForDeletingFromDb);
         }
 
+        if (!updateEventDto.getAvatarsForAdding().isEmpty()) {
+            List<String> avatarsUrlsForDb = fileStorageRepository.addEventAvatars(
+                    updateEventDto.getAvatarsForAdding()
+            );
+            avatarsUrlsForDb.forEach(avatarUrl -> {
+                EventAvatar eventAvatar = EventAvatar.builder()
+                        .event(eventForUpdate)
+                        .avatarUrl(avatarUrl)
+                        .build();
+                eventForUpdate.addEventAvatar(eventAvatar);
+            });
+            avatarsForDeletingFromTempDirectory.addAll(updateEventDto.getAvatarsForAdding());
+        }
 
+        if (!updateEventDto.getName().equals(eventForUpdate.getEventName())) {
+            eventForUpdate.setEventName(updateEventDto.getName());
+        }
 
-         //TODO после всех операций с бд не забыть удалить файлы с ненужными аватарами из временной и постоянной папок
+        EventAddressDTO addressDto = updateEventDto.getAddressDTO();
+        EventAddress eventAddress = eventForUpdate.getEventAddress();
+
+        if (addressDto.getEventLongitude() != eventAddress.getEventLongitude()) {
+            eventAddress.setEventLongitude(addressDto.getEventLongitude());
+        }
+        if (addressDto.getEventLatitude() != eventAddress.getEventLatitude()) {
+            eventAddress.setEventLatitude(addressDto.getEventLatitude());
+        }
+        if (!addressDto.getCity().equals(eventAddress.getCity())) {
+            eventAddress.setCity(addressDto.getCity());
+        }
+        if (!addressDto.getRegion().equals(eventAddress.getRegion())) {
+            eventAddress.setRegion(addressDto.getRegion());
+        }
+        if (!addressDto.getStreet().equals(eventAddress.getStreet())) {
+            eventAddress.setStreet(addressDto.getStreet());
+        }
+        if (!addressDto.getDistrict().equals(eventAddress.getDistrict())) {
+            eventAddress.setDistrict(addressDto.getDistrict());
+        }
+        if (!addressDto.getBuilding().equals(eventAddress.getBuilding())) {
+            eventAddress.setBuilding(addressDto.getBuilding());
+        }
+        if (!addressDto.getHouseNumber().equals(eventAddress.getHouseNumber())) {
+            eventAddress.setHouseNumber(addressDto.getHouseNumber());
+        }
+        if (!addressDto.getFloor().equals(eventAddress.getFloor())) {
+            eventAddress.setFloor(addressDto.getFloor());
+        }
+
+        if (!updateEventDto.getStartDateTime().isEqual(eventForUpdate.getStartTime())) {
+            eventForUpdate.setStartTime(updateEventDto.getStartDateTime());
+        }
+
+        if (!updateEventDto.getEndDateTime().isEqual(eventForUpdate.getEndTime())) {
+            eventForUpdate.setEndTime(updateEventDto.getEndDateTime());
+        }
+
+        //TODO после всех операций с бд не забыть удалить файлы с ненужными аватарами из временной и постоянной папок
     }
 
     @Transactional(readOnly = true)
