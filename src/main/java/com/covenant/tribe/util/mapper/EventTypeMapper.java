@@ -15,5 +15,5 @@ public interface EventTypeMapper {
 
     EventTypeDTO mapToEventTypeDto(EventType eventType, String animationJson);
 
-    EventTypeInfoDto mapToEventTypeInfoDtoList(EventType eventType);
+    EventTypeInfoDto mapToEventTypeInfoDto(EventType eventType);
 }
