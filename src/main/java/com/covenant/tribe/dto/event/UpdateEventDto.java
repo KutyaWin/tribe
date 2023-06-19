@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -58,7 +59,7 @@ public class UpdateEventDto implements Serializable {
     List<Long> tagIdsForAdding;
 
     @JsonProperty("new_tags")
-    List<String> newTags;
+    Set<String> newTags;
 
     @NotEmpty(message = "description is required")
     String description;

@@ -12,6 +12,8 @@ import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
+import com.covenant.tribe.service.FirebaseService;
+import com.covenant.tribe.service.TagService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
 import com.covenant.tribe.util.mapper.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
@@ -46,9 +48,12 @@ public class EventServiceImpl implements EventService {
 
     EventTypeRepository eventTypeRepository;
     EventRepository eventRepository;
+    TagRepository tagRepository;
+    TagService tagService;
     EventAvatarRepository eventAvatarRepository;
     UserRepository userRepository;
     FileStorageRepository fileStorageRepository;
+    FirebaseService firebaseService;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
@@ -56,7 +61,6 @@ public class EventServiceImpl implements EventService {
     EventTagMapper eventTagMapper;
     UserMapper userMapper;
     EventAddressMapper eventAddressMapper;
-    EventAvatarMapper eventAvatarMapper;
 
     @Override
     public Event save(Event event) {
@@ -616,10 +620,10 @@ public class EventServiceImpl implements EventService {
         EventAddressDTO addressDto = updateEventDto.getAddressDTO();
         EventAddress eventAddress = eventForUpdate.getEventAddress();
 
-        if (addressDto.getEventLongitude() != eventAddress.getEventLongitude()) {
+        if (addressDto.getEventLongitude().compareTo(eventAddress.getEventLongitude()) != 0) {
             eventAddress.setEventLongitude(addressDto.getEventLongitude());
         }
-        if (addressDto.getEventLatitude() != eventAddress.getEventLatitude()) {
+        if (addressDto.getEventLatitude().compareTo(eventAddress.getEventLatitude()) != 0) {
             eventAddress.setEventLatitude(addressDto.getEventLatitude());
         }
         if (!addressDto.getCity().equals(eventAddress.getCity())) {
@@ -652,7 +656,115 @@ public class EventServiceImpl implements EventService {
             eventForUpdate.setEndTime(updateEventDto.getEndDateTime());
         }
 
-        //TODO после всех операций с бд не забыть удалить файлы с ненужными аватарами из временной и постоянной папок
+        if (!updateEventDto.getTagIdsForDeleting().isEmpty()) {
+            List<Tag> tagsForDeleting = tagRepository.findByIdIn(updateEventDto.getTagIdsForDeleting());
+            eventForUpdate.getTagList().removeAll(tagsForDeleting);
+        }
+
+        if (!updateEventDto.getTagIdsForAdding().isEmpty()) {
+            List<Tag> tagsForAdding = tagRepository.findByIdIn(updateEventDto.getTagIdsForAdding());
+            eventForUpdate.getTagList().addAll(tagsForAdding);
+        }
+
+        if (!updateEventDto.getNewTags().isEmpty()) {
+            List<Tag> newTags = tagService.saveAll(updateEventDto.getNewTags());
+            eventForUpdate.getTagList().addAll(newTags);
+            EventType eventType = eventForUpdate.getEventType();
+            eventType.addTags(newTags);
+            eventTypeRepository.save(eventType);
+        }
+
+        if (!updateEventDto.getDescription().equals(eventForUpdate.getEventDescription())) {
+            eventForUpdate.setEventDescription(updateEventDto.getDescription());
+        }
+
+        if (updateEventDto.isEighteenYearLimit() != eventForUpdate.isEighteenYearLimit()) {
+            eventForUpdate.setEighteenYearLimit(updateEventDto.isEighteenYearLimit());
+        }
+
+        if (!updateEventDto.getParticipantIdsForAdding().isEmpty()) {
+            List<User> usersWhoSendNotification = new ArrayList<>();
+            updateEventDto.getParticipantIdsForAdding().forEach(participantId -> {
+                User participant = findUserById(participantId);
+                UserRelationsWithEvent userRelationsWithEvent =
+                        userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(
+                                participantId, eventForUpdate.getId()
+                        ).orElseGet(() -> {
+                            return
+                                    UserRelationsWithEvent.builder()
+                                            .userRelations(participant)
+                                            .eventRelations(eventForUpdate)
+                                            .isInvited(true)
+                                            .isParticipant(false)
+                                            .isWantToGo(false)
+                                            .isFavorite(false)
+                                            .isViewed(false)
+                                            .build();
+                        });
+                userRelationsWithEventRepository.save(userRelationsWithEvent);
+                usersWhoSendNotification.add(participant);
+            });
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
+        }
+
+        if (!updateEventDto.getParticipantIdsForDeleting().isEmpty()) {
+            List<User> usersWhoSendNotification = new ArrayList<>();
+            updateEventDto.getParticipantIdsForDeleting().forEach(participantId -> {
+                User participant = findUserById(participantId);
+                UserRelationsWithEvent userRelationsWithEvent =
+                        userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(
+                                participantId, eventForUpdate.getId()
+                        ).orElseThrow(() -> {
+                            String message = String.format(
+                                    "User with id: %s don't know event with id: %s"
+                                    , participant.getId(), eventForUpdate.getId());
+                            log.error(message);
+                            return new UserRelationsWithEventNotFoundException(message);
+                        });
+                userRelationsWithEvent.setParticipant(false);
+                userRelationsWithEvent.setInvited(false);
+                userRelationsWithEvent.setWantToGo(false);
+                userRelationsWithEventRepository.save(userRelationsWithEvent);
+                usersWhoSendNotification.add(participant);
+            });
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст отказа нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
+        }
+
+        if (updateEventDto.isPrivate() != eventForUpdate.isPrivate()) {
+            eventForUpdate.setPrivate(updateEventDto.isPrivate());
+        }
+
+        if (updateEventDto.isShowInSearch() != eventForUpdate.isShowEventInSearch()) {
+            eventForUpdate.setShowEventInSearch(updateEventDto.isShowInSearch());
+        }
+
+        if (updateEventDto.isSendByInterests() && !eventForUpdate.isSendToAllUsersByInterests()) {
+            eventForUpdate.setSendToAllUsersByInterests(true);
+            List<User> usersWhoSendNotification =
+                    userRepository.findAllByInterestingEventTypeContainingAndStatus(
+                            eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString()
+                    );
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст оповещения нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
+        }
+
+        eventRepository.save(eventForUpdate);
+
+        fileStorageRepository.deleteFileInTmpDir(avatarsForDeletingFromTempDirectory);
+        fileStorageRepository.deleteEventAvatars(avatarsForDeletingFromDb);
+
+        return eventMapper.mapToDetailedEvent(eventForUpdate, null);
     }
 
     @Transactional(readOnly = true)
