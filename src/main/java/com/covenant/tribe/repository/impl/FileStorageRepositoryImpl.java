@@ -128,12 +128,26 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     }
 
     @Override
-    public void deleteFileInDir(List<String> fileNames) throws IOException {
+    public void deleteFileInTmpDir(List<String> fileNames) throws IOException {
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
                 .append(pathConfiguration.getMain()).append("/")
                 .append(pathConfiguration.getTmp()).toString();
         for (String fileName : fileNames) {
             Files.deleteIfExists(Path.of(pathToTmpDir + "/" + fileName));
+        }
+    }
+
+    @Override
+    public void deleteEventAvatars(List<String> fileNames) throws IOException {
+        for (String fileName : fileNames) {
+            String pathToEventAvatarsDir = new StringBuilder(pathConfiguration.getHome())
+                    .append(pathConfiguration.getMain()).append("/")
+                    .append(pathConfiguration.getImage()).append("/")
+                    .append(pathConfiguration.getEvent()).append("/")
+                    .append(pathConfiguration.getAvatar()).append("/")
+                    .append(fileName)
+                    .toString();
+            Files.deleteIfExists(Path.of(pathToEventAvatarsDir));
         }
     }
 

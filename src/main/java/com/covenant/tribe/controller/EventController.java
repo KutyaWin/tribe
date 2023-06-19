@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 @Tag(name = "Event")
@@ -672,4 +674,58 @@ public class EventController {
                 .status(HttpStatus.OK)
                 .body(userFavorites);
     }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Наполнение события. Действие: " +
+                    "Получение информации о событии для обновления",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = EventDto.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#organizerId.equals(authentication.getName())")
+    @GetMapping("/update/{event_id}/{organizer_id}")
+    public ResponseEntity<?> getEventById(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "organizer_id") String organizerId
+    ) {
+        log.info("[CONTROLLER] start endpoint getEventById with param: {}, {}", eventId, organizerId);
+
+        EventDto event = eventService.getEvent(eventId, Long.valueOf(organizerId));
+
+        log.info("[CONTROLLER] end endpoint getEventById with response: {}", event);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(event);
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Наполнение события. Действие: " +
+                    "Обновление информации о событии. Кнопка: Сохранить изменения",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = DetailedEventInSearchDTO.class)))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#updateEventDto.organizerId.equals(authentication.getName())")
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateEvent(
+            @RequestBody @Valid UpdateEventDto updateEventDto
+    ) throws IOException {
+        log.info("[CONTROLLER] start endpoint updateEvent with updateEventDto: {}", updateEventDto);
+        
+        DetailedEventInSearchDTO detailedEventDto = eventService.updateEvent(updateEventDto);
+
+        log.info("[CONTROLLER] end endpoint updateEvent with response: {}", detailedEventDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(detailedEventDto);
+    }
+
 }

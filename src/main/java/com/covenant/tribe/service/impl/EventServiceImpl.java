@@ -1,24 +1,21 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
+import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.UserStatus;
-import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
-import com.covenant.tribe.dto.event.EventInUserProfileDTO;
-import com.covenant.tribe.dto.event.EventVerificationDTO;
-import com.covenant.tribe.dto.event.SearchEventDTO;
+import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.repository.EventRepository;
-import com.covenant.tribe.repository.UserRelationsWithEventRepository;
-import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
+import com.covenant.tribe.service.TagService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
-import com.covenant.tribe.util.mapper.EventAvatarMapper;
-import com.covenant.tribe.util.mapper.EventMapper;
+import com.covenant.tribe.util.mapper.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
 import com.covenant.tribe.util.querydsl.QPredicates;
@@ -35,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -48,12 +46,21 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EventServiceImpl implements EventService {
 
+    EventTypeRepository eventTypeRepository;
     EventRepository eventRepository;
+    TagRepository tagRepository;
+    TagService tagService;
+    EventAvatarRepository eventAvatarRepository;
     UserRepository userRepository;
+    FileStorageRepository fileStorageRepository;
+    FirebaseService firebaseService;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     EventMapper eventMapper;
-    EventAvatarMapper eventAvatarMapper;
+    EventTypeMapper eventTypeMapper;
+    EventTagMapper eventTagMapper;
+    UserMapper userMapper;
+    EventAddressMapper eventAddressMapper;
 
     @Override
     public Event save(Event event) {
@@ -135,7 +142,7 @@ public class EventServiceImpl implements EventService {
 
         if (currentUserId != null) {
             List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
-                    currentUserId, UserStatus.ENABLED)
+                            currentUserId, UserStatus.ENABLED)
                     .orElseThrow(() -> {
                         String message = String.format(
                                 "[EXCEPTION] User with id %s, dont exist", currentUserId
@@ -520,6 +527,246 @@ public class EventServiceImpl implements EventService {
                 .orElse(false);
     }
 
+    @Override
+    public EventDto getEvent(Long eventId, Long organizerId) {
+        Event event = getEventById(eventId);
+        EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
+                .mapToEventTypeInfoDto(event.getEventType());
+        List<String> avatarUrlList = event.getEventAvatars().stream()
+                .map(EventAvatar::getAvatarUrl)
+                .toList();
+        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDTO(
+                event.getEventAddress()
+        );
+        List<EventTagDTO> eventTagDtoList = eventTagMapper.mapEventTagListToEventTagDtoList(
+                event.getTagList()
+        );
+
+        List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant();
+                })
+                .map(UserRelationsWithEvent::getUserRelations)
+                .map(userMapper::mapToUserToSendInvitationDTO)
+                .toList();
+
+        return EventDto.builder()
+                .eventTypeInfoDto(eventTypeInfoDto)
+                .avatarUrls(avatarUrlList)
+                .name(event.getEventName())
+                .addressDTO(eventAddressDTO)
+                .startDateTime(event.getStartTime())
+                .endDateTime(event.getEndTime())
+                .tags(eventTagDtoList)
+                .description(event.getEventDescription())
+                .invitations(invitedAndParticipatedUserList)
+                .isPrivate(event.isPrivate())
+                .isShowInSearch(event.isShowEventInSearch())
+                .isSendByInterests(event.isSendToAllUsersByInterests())
+                .isEighteenYearLimit(event.isEighteenYearLimit())
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto) throws IOException {
+        Event eventForUpdate = findEventById(updateEventDto.getEventId());
+        ArrayList<String> avatarsForDeletingFromTempDirectory = new ArrayList<>();
+        ArrayList<String> avatarsForDeletingFromDb = new ArrayList<>();
+
+        if (updateEventDto.getEventTypeId().longValue() != eventForUpdate.getEventType().getId()) {
+            EventType newEventType = eventTypeRepository
+                    .findById(updateEventDto.getEventTypeId())
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "EventType with id %s didn't found", updateEventDto.getEventTypeId()
+                        );
+                        log.error(message);
+                        return new EventTypeNotFoundException(message);
+                    });
+            eventForUpdate.setEventType(newEventType);
+        }
+
+        if (!updateEventDto.getAvatarsForDeleting().isEmpty()) {
+            updateEventDto.getAvatarsForDeleting().forEach(avatarUrl -> {
+                        if (avatarUrl.contains("/")) {
+                            avatarsForDeletingFromDb.add(avatarUrl);
+                        } else {
+                            avatarsForDeletingFromTempDirectory.add(avatarUrl);
+                        }
+                    }
+            );
+            eventAvatarRepository.deleteAllByAvatarUrlIn(avatarsForDeletingFromDb);
+        }
+
+        if (!updateEventDto.getAvatarsForAdding().isEmpty()) {
+            List<String> avatarsUrlsForDb = fileStorageRepository.addEventAvatars(
+                    updateEventDto.getAvatarsForAdding()
+            );
+            avatarsUrlsForDb.forEach(avatarUrl -> {
+                EventAvatar eventAvatar = EventAvatar.builder()
+                        .event(eventForUpdate)
+                        .avatarUrl(avatarUrl)
+                        .build();
+                eventForUpdate.addEventAvatar(eventAvatar);
+            });
+            avatarsForDeletingFromTempDirectory.addAll(updateEventDto.getAvatarsForAdding());
+        }
+
+        if (!updateEventDto.getName().equals(eventForUpdate.getEventName())) {
+            eventForUpdate.setEventName(updateEventDto.getName());
+        }
+
+        EventAddressDTO addressDto = updateEventDto.getAddressDTO();
+        EventAddress eventAddress = eventForUpdate.getEventAddress();
+
+        if (addressDto.getEventLongitude().compareTo(eventAddress.getEventLongitude()) != 0) {
+            eventAddress.setEventLongitude(addressDto.getEventLongitude());
+        }
+        if (addressDto.getEventLatitude().compareTo(eventAddress.getEventLatitude()) != 0) {
+            eventAddress.setEventLatitude(addressDto.getEventLatitude());
+        }
+        if (!addressDto.getCity().equals(eventAddress.getCity())) {
+            eventAddress.setCity(addressDto.getCity());
+        }
+        if (!addressDto.getRegion().equals(eventAddress.getRegion())) {
+            eventAddress.setRegion(addressDto.getRegion());
+        }
+        if (!addressDto.getStreet().equals(eventAddress.getStreet())) {
+            eventAddress.setStreet(addressDto.getStreet());
+        }
+        if (!addressDto.getDistrict().equals(eventAddress.getDistrict())) {
+            eventAddress.setDistrict(addressDto.getDistrict());
+        }
+        if (!addressDto.getBuilding().equals(eventAddress.getBuilding())) {
+            eventAddress.setBuilding(addressDto.getBuilding());
+        }
+        if (!addressDto.getHouseNumber().equals(eventAddress.getHouseNumber())) {
+            eventAddress.setHouseNumber(addressDto.getHouseNumber());
+        }
+        if (!addressDto.getFloor().equals(eventAddress.getFloor())) {
+            eventAddress.setFloor(addressDto.getFloor());
+        }
+
+        if (!updateEventDto.getStartDateTime().isEqual(eventForUpdate.getStartTime())) {
+            eventForUpdate.setStartTime(updateEventDto.getStartDateTime());
+        }
+
+        if (!updateEventDto.getEndDateTime().isEqual(eventForUpdate.getEndTime())) {
+            eventForUpdate.setEndTime(updateEventDto.getEndDateTime());
+        }
+
+        if (!updateEventDto.getTagIdsForDeleting().isEmpty()) {
+            List<Tag> tagsForDeleting = tagRepository.findByIdIn(updateEventDto.getTagIdsForDeleting());
+            eventForUpdate.getTagList().removeAll(tagsForDeleting);
+        }
+
+        if (!updateEventDto.getTagIdsForAdding().isEmpty()) {
+            List<Tag> tagsForAdding = tagRepository.findByIdIn(updateEventDto.getTagIdsForAdding());
+            eventForUpdate.getTagList().addAll(tagsForAdding);
+        }
+
+        if (!updateEventDto.getNewTags().isEmpty()) {
+            List<Tag> newTags = tagService.saveAll(updateEventDto.getNewTags());
+            eventForUpdate.getTagList().addAll(newTags);
+            EventType eventType = eventForUpdate.getEventType();
+            eventType.addTags(newTags);
+            eventTypeRepository.save(eventType);
+        }
+
+        if (!updateEventDto.getDescription().equals(eventForUpdate.getEventDescription())) {
+            eventForUpdate.setEventDescription(updateEventDto.getDescription());
+        }
+
+        if (updateEventDto.isEighteenYearLimit() != eventForUpdate.isEighteenYearLimit()) {
+            eventForUpdate.setEighteenYearLimit(updateEventDto.isEighteenYearLimit());
+        }
+
+        if (!updateEventDto.getParticipantIdsForAdding().isEmpty()) {
+            List<User> usersWhoSendNotification = new ArrayList<>();
+            updateEventDto.getParticipantIdsForAdding().forEach(participantId -> {
+                User participant = findUserById(participantId);
+                UserRelationsWithEvent userRelationsWithEvent =
+                        userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(
+                                participantId, eventForUpdate.getId()
+                        ).orElseGet(() -> {
+                            return
+                                    UserRelationsWithEvent.builder()
+                                            .userRelations(participant)
+                                            .eventRelations(eventForUpdate)
+                                            .isInvited(true)
+                                            .isParticipant(false)
+                                            .isWantToGo(false)
+                                            .isFavorite(false)
+                                            .isViewed(false)
+                                            .build();
+                        });
+                userRelationsWithEventRepository.save(userRelationsWithEvent);
+                usersWhoSendNotification.add(participant);
+            });
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
+        }
+
+        if (!updateEventDto.getParticipantIdsForDeleting().isEmpty()) {
+            List<User> usersWhoSendNotification = new ArrayList<>();
+            updateEventDto.getParticipantIdsForDeleting().forEach(participantId -> {
+                User participant = findUserById(participantId);
+                UserRelationsWithEvent userRelationsWithEvent =
+                        userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(
+                                participantId, eventForUpdate.getId()
+                        ).orElseThrow(() -> {
+                            String message = String.format(
+                                    "User with id: %s don't know event with id: %s"
+                                    , participant.getId(), eventForUpdate.getId());
+                            log.error(message);
+                            return new UserRelationsWithEventNotFoundException(message);
+                        });
+                userRelationsWithEvent.setParticipant(false);
+                userRelationsWithEvent.setInvited(false);
+                userRelationsWithEvent.setWantToGo(false);
+                userRelationsWithEventRepository.save(userRelationsWithEvent);
+                usersWhoSendNotification.add(participant);
+            });
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст отказа нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
+        }
+
+        if (updateEventDto.isPrivate() != eventForUpdate.isPrivate()) {
+            eventForUpdate.setPrivate(updateEventDto.isPrivate());
+        }
+
+        if (updateEventDto.isShowInSearch() != eventForUpdate.isShowEventInSearch()) {
+            eventForUpdate.setShowEventInSearch(updateEventDto.isShowInSearch());
+        }
+
+        if (updateEventDto.isSendByInterests() && !eventForUpdate.isSendToAllUsersByInterests()) {
+            eventForUpdate.setSendToAllUsersByInterests(true);
+            List<User> usersWhoSendNotification =
+                    userRepository.findAllByInterestingEventTypeContainingAndStatus(
+                            eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString()
+                    );
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст оповещения нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
+        }
+
+        eventRepository.save(eventForUpdate);
+
+        fileStorageRepository.deleteFileInTmpDir(avatarsForDeletingFromTempDirectory);
+        fileStorageRepository.deleteEventAvatars(avatarsForDeletingFromDb);
+
+        return eventMapper.mapToDetailedEvent(eventForUpdate, null);
+    }
+
     @Transactional(readOnly = true)
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
@@ -593,6 +840,17 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> {
                     log.error("[EXCEPTION] User with id: " + userId + " not found.");
                     return new UserNotFoundException("User with id: " + userId + " not found.");
+                });
+    }
+
+    private Event findEventById(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "Event with id %s didn't found", eventId
+                    );
+                    log.error(message);
+                    return new EventNotFoundException(message);
                 });
     }
 }

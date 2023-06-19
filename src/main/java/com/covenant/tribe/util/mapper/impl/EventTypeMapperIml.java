@@ -80,7 +80,7 @@ public class EventTypeMapperIml implements EventTypeMapper {
     }
 
     @Override
-    public EventTypeInfoDto mapToEventTypeInfoDtoList(EventType eventType) {
+    public EventTypeInfoDto mapToEventTypeInfoDto(EventType eventType) {
         log.debug("map EventType to EventTypeInfoDto. Passed eventType: {}", eventType);
         return EventTypeInfoDto.builder()
                 .id(eventType.getId())
