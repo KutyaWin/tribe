@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,7 +59,7 @@ public class EventTypeServiceImpl implements EventTypeService {
     public List<EventTypeInfoDto> getEventTypeInfo() {
         return eventTypeRepository.findAll()
                 .stream()
-                .map(eventTypeMapper::mapToEventTypeInfoDtoList)
+                .map(eventTypeMapper::mapToEventTypeInfoDto)
                 .collect(Collectors.toList());
     }
 

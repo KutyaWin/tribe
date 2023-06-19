@@ -6,6 +6,8 @@ import com.covenant.tribe.util.mapper.EventTagMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class EventTagMapperImpl implements EventTagMapper {
@@ -16,6 +18,13 @@ public class EventTagMapperImpl implements EventTagMapper {
                 .id(eventTag.getId())
                 .name(eventTag.getTagName())
                 .build();
+    }
+
+    @Override
+    public List<EventTagDTO> mapEventTagListToEventTagDtoList(List<Tag> eventTags) {
+        return eventTags.stream()
+                .map(this::mapEventTagToEventTagDTO)
+                .toList();
     }
 
 }

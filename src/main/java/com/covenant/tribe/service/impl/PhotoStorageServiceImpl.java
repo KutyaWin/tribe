@@ -37,7 +37,7 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
     @Override
     public void deletePhotosInTmpDir(List<String> fileNames) {
         try {
-            fileStorageRepository.deleteFileInDir(fileNames);
+            fileStorageRepository.deleteFileInTmpDir(fileNames);
         } catch (IOException e) {
             String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
             log.error(message, e);

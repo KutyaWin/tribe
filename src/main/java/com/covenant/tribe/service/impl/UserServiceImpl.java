@@ -175,7 +175,7 @@ public class UserServiceImpl implements UserService {
                 .map(professionMapper::mapToProfessionDto)
                 .toList();
         List<EventTypeInfoDto> eventTypeInfoDtoList = user.getInterestingEventType().stream()
-                .map(eventTypeMapper::mapToEventTypeInfoDtoList)
+                .map(eventTypeMapper::mapToEventTypeInfoDto)
                 .toList();
         return userMapper.mapToUserGetDto(user, authMethodsDto, professionDto, eventTypeInfoDtoList);
     }
@@ -260,7 +260,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         try {
-            fileStorageRepository.deleteFileInDir(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
+            fileStorageRepository.deleteFileInTmpDir(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
         } catch (IOException e) {
             String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
             log.error(message);
