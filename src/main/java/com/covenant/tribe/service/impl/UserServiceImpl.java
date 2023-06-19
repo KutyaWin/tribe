@@ -260,7 +260,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         try {
-            fileStorageRepository.deleteFileInDir(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
+            fileStorageRepository.deleteFileInTmpDir(userProfileUpdateDto.getAvatarsFilenamesForDeleting());
         } catch (IOException e) {
             String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
             log.error(message);

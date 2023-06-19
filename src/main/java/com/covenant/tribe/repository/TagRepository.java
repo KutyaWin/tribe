@@ -15,6 +15,8 @@ public interface TagRepository extends JpaRepository<Tag, Long>, CustomTagReposi
     @Query(value = "select t from Tag t where t.tagName = :tagName")
     Tag findByTagName(@Param("tagName") String tagName);
 
+    List<Tag> findByIdIn(List<Long> ids);
+
     Optional<Tag> findTagByTagName(String tagName);
 
     List<Tag> findAllByTagNameContainingIgnoreCase(String tagName);

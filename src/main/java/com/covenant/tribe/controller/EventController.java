@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 @Tag(name = "Event")
@@ -715,7 +716,7 @@ public class EventController {
     @PatchMapping("/update")
     public ResponseEntity<?> updateEvent(
             @RequestBody @Valid UpdateEventDto updateEventDto
-    ) {
+    ) throws IOException {
         log.info("[CONTROLLER] start endpoint updateEvent with updateEventDto: {}", updateEventDto);
         
         DetailedEventInSearchDTO detailedEventDto = eventService.updateEvent(updateEventDto);
