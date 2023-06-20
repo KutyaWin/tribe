@@ -448,6 +448,11 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    @Override
+    public List<User> findAllSubscribedToEvent(Long eventId) {
+        return null;
+    }
+
     @Transactional
     @Override
     public void deleteUser(long userId) {
