@@ -284,6 +284,7 @@ public class EventMapperImpl implements EventMapper {
                     .eventId(event.getId())
                     .eventPhoto(eventAvatars)
                     .favoriteEvent(isFavoriteEvent)
+                    .organizerPhoto(event.getOrganizer().getUserAvatar())
                     .eventName(event.getEventName())
                     .description(event.getEventDescription())
                     .isPrivate(event.isPrivate())
