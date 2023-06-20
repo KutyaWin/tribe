@@ -174,6 +174,10 @@
             <artifactId>tika-core</artifactId>
             <version>2.8.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -190,6 +194,11 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
             </plugin>
 
             <!--annotation processing plugin for querydsl-apt-->
@@ -216,5 +225,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>flyway</id>
+            <properties>
+                <!--common properties for database connection-->
+                <db.driver>org.postgresql.Driver</db.driver>
+                <db.url>jdbc:postgresql://localhost:5435/tribe</db.url>
+                <db.username>tribe</db.username>
+                <db.password>9PayYwwmHXZ22EomKzAmhsvQmHmE8d8Z</db.password>
+                <db.schema>public</db.schema>
+                <db.adm.user>tribe</db.adm.user>
+                <db.adm.pass>9PayYwwmHXZ22EomKzAmhsvQmHmE8d8Z</db.adm.pass>
+
+                <!-- Properties are prefixed with flyway. -->
+                <flyway.user>${db.adm.user}</flyway.user>
+                <flyway.password>${db.adm.pass}</flyway.password>
+                <flyway.schemas>${db.schema}</flyway.schemas>
+                <flyway.driver>${db.driver}</flyway.driver>
+                <flyway.url>${db.url}</flyway.url>
+                <flyway.locations>db/migration/</flyway.locations>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
