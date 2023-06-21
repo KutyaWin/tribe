@@ -161,6 +161,12 @@ public class User {
     @Builder.Default
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(name = "user_authority",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "authority_id"))
+    Set<Authority> authorities;
+
     public void addNewProfessions(Set<Profession> professions) {
         if (this.userProfessions == null) {
             this.userProfessions = professions;
