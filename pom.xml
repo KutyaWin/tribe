@@ -228,16 +228,23 @@
 
     <profiles>
         <profile>
+<!--            To launch flyway plugin build artifact with  Maven with parameters:
+                -P flyway \
+                -Ddb.adm.pass=youradminpass \
+                -Ddb.adm.user=youradmuser \
+                -Ddb.url=jdbc:postgresql://yorhost:5435/yourdbname \
+                -Ddb.username=yourusername \
+                -Ddb.password=yourpass-->
             <id>flyway</id>
             <properties>
                 <!--common properties for database connection-->
                 <db.driver>org.postgresql.Driver</db.driver>
-                <db.url>jdbc:postgresql://localhost:5435/tribe</db.url>
-                <db.username>tribe</db.username>
-                <db.password>9PayYwwmHXZ22EomKzAmhsvQmHmE8d8Z</db.password>
+                <db.url>yoururl</db.url>
+                <db.username>yourusername</db.username>
+                <db.password>yourpass</db.password>
                 <db.schema>public</db.schema>
-                <db.adm.user>tribe</db.adm.user>
-                <db.adm.pass>9PayYwwmHXZ22EomKzAmhsvQmHmE8d8Z</db.adm.pass>
+                <db.adm.user>youradmuser</db.adm.user>
+                <db.adm.pass>youradminpass</db.adm.pass>
 
                 <!-- Properties are prefixed with flyway. -->
                 <flyway.user>${db.adm.user}</flyway.user>
