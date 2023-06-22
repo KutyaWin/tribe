@@ -7,24 +7,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -45,16 +52,16 @@ public class ProjectSecurityConfig {
     }
 
     @Bean
+    @Order(0)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.oauth2ResourceServer(
                 j -> j.authenticationManagerResolver(
                         authenticationManagerResolver(accessJwtDecoder(), refreshJwtDecoder())
                 )
         );
-        http.csrf().disable();
-
-
-        http.authorizeHttpRequests()
+        http.csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
+        http.securityMatcher(new AntPathRequestMatcher("/api/**"))
+                .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
                 .requestMatchers("api/v1/auth/login/**").permitAll()
                 .requestMatchers("api/v1/auth/email/password/reset/**").permitAll()
@@ -66,8 +73,26 @@ public class ProjectSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "api/v1/user/username/check/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/avatar/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated();
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain swSecurityFilterChain(HttpSecurity http) throws Exception {
+
+        http.authorizeHttpRequests()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                .hasAuthority("swagger_read")
+                .anyRequest().authenticated()
+                .and()
+                .formLogin(form -> {
+                    form
+                            .loginPage("/sw-login")
+                            .loginProcessingUrl("/sw-login")
+                            .permitAll();
+                });
         return http.build();
     }
 
@@ -109,9 +134,16 @@ public class ProjectSecurityConfig {
                 new JwtAuthenticationProvider(refreshJwtDecoder)
         );
 
+        AuthenticationManager userPasswordAuth = new ProviderManager(
+                new DaoAuthenticationProvider()
+        );
+
+
         return (request) -> {
             if (String.valueOf(request.getRequestURL()).contains("refresh")) {
                 return refreshJwtAuth;
+            } else if (String.valueOf(request.getRequestURL()).contains("sw")) {
+                return userPasswordAuth;
             } else {
                 return accessJwtAuth;
             }
