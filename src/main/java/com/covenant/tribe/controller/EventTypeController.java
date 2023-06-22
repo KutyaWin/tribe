@@ -82,8 +82,7 @@ public class EventTypeController {
                                 )
                             )
                     )
-            },
-            security = @SecurityRequirement(name = "BearerJWT")
+            }
     )
     @GetMapping("/event/type/info")
     public ResponseEntity<?> getEventTypeInfo() {
