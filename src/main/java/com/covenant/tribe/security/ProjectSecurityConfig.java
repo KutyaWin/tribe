@@ -7,10 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +29,8 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -47,6 +51,7 @@ public class ProjectSecurityConfig {
     }
 
     @Bean
+    @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.oauth2ResourceServer(
                 j -> j.authenticationManagerResolver(
@@ -66,11 +71,27 @@ public class ProjectSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "api/v1/user/username/check/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/avatar/**").permitAll()
-                //.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .anyRequest().authenticated();
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(0)
+    public SecurityFilterChain swSecurityFilterChain(HttpSecurity http) throws Exception {
+
+        http.authorizeHttpRequests()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                .hasAuthority("swagger_read")
                 .anyRequest().authenticated()
                 .and()
-                .formLogin(Customizer.withDefaults())
-                .csrf(Customizer.withDefaults());
+                .formLogin(form -> {
+                    form
+                            .loginPage("/sw-login")
+                            .loginProcessingUrl("/sw-login")
+                            .permitAll();
+                })
+                .csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
         return http.build();
     }
 
@@ -112,16 +133,22 @@ public class ProjectSecurityConfig {
                 new JwtAuthenticationProvider(refreshJwtDecoder)
         );
 
+        AuthenticationManager userPasswordAuth = new ProviderManager(
+                new DaoAuthenticationProvider()
+        );
 
 
         return (request) -> {
             if (String.valueOf(request.getRequestURL()).contains("refresh")) {
                 return refreshJwtAuth;
+            } else if (String.valueOf(request.getRequestURL()).contains("sw")) {
+                return userPasswordAuth;
             } else {
                 return accessJwtAuth;
             }
         };
     }
+
     @Bean
     public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
