@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -51,15 +52,16 @@ public class ProjectSecurityConfig {
     }
 
     @Bean
-    @Order(1)
+    @Order(0)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.oauth2ResourceServer(
                 j -> j.authenticationManagerResolver(
                         authenticationManagerResolver(accessJwtDecoder(), refreshJwtDecoder())
                 )
         );
-
-        http.authorizeHttpRequests()
+        http.csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
+        http.securityMatcher(new AntPathRequestMatcher("/api/**"))
+                .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
                 .requestMatchers("api/v1/auth/login/**").permitAll()
                 .requestMatchers("api/v1/auth/email/password/reset/**").permitAll()
@@ -77,7 +79,7 @@ public class ProjectSecurityConfig {
     }
 
     @Bean
-    @Order(0)
+    @Order(1)
     public SecurityFilterChain swSecurityFilterChain(HttpSecurity http) throws Exception {
 
         http.authorizeHttpRequests()
@@ -90,8 +92,7 @@ public class ProjectSecurityConfig {
                             .loginPage("/sw-login")
                             .loginProcessingUrl("/sw-login")
                             .permitAll();
-                })
-                .csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
+                });
         return http.build();
     }
 
