@@ -60,7 +60,6 @@ spring:
 
 logging:
   level:
-    com.covenant.tribe.client.whatsapp: TRACE
     root: info
   file:
     path: ${SPRING_LOG_DIRECTORY}

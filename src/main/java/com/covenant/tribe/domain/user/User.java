@@ -161,6 +161,15 @@ public class User {
     @Builder.Default
     List<UserRelationsWithEvent> userRelationsWithEvents = new ArrayList<>();
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_authorities",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "authority_id")
+    )
+    Set<Authority> authorities;
+
+
     public void addNewProfessions(Set<Profession> professions) {
         if (this.userProfessions == null) {
             this.userProfessions = professions;
