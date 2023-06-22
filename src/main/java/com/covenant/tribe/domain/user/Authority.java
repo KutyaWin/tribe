@@ -4,6 +4,7 @@ package com.covenant.tribe.domain.user;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import java.util.Set;
 
 @Builder
@@ -18,9 +19,12 @@ public class Authority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "authority_id")
     Long id;
 
-    @ManyToMany(mappedBy = "authorities");
+    String name;
+
+    @ManyToMany(mappedBy = "authorities")
     Set<User> users;
 
 
