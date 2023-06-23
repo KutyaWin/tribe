@@ -33,7 +33,7 @@ services:
       SPRING_WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
       APP_PORT: ${APP_PORT}
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     volumes:
       - ~/tribe:/tribe
       - ~/tribe/logs:/tribe/logs
@@ -50,7 +50,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: tribe
     ports:
-      - "${EXTERNAL_DB_PORT}:5432"
+      - "127.0.0.1:${EXTERNAL_DB_PORT}:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d tribe" ]
       interval: 8s
