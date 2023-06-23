@@ -10,10 +10,15 @@ import java.util.List;
 
 public interface NotificationService {
     Notification create(Notification notification);
+
+    List<Notification> create(List<Notification> notification);
     Notification update(Notification notification);
-    List<Notification> getMessagesForBroadcast(BroadcastEntity broadcast);
 
-    List<Notification> getMessagesForBroadcastWithStatus(Broadcast broadcast, NotificationStatus status);
+    List<Notification> getMessagesForBroadcast(Broadcast broadcast);
 
-    List<Notification> createMessagesForBroadcast(BroadcastEntity broadcast);
+    List<Notification> getMessagesForBroadcastEntity(BroadcastEntity broadcast);
+
+    List<Notification> getMessagesForBroadcastWithStatus(BroadcastEntity broadcast, NotificationStatus status);
+
+    List<Notification> createNotificationsForBroadcast(BroadcastEntity broadcast);
 }

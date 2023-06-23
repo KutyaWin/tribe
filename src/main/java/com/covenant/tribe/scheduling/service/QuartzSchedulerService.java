@@ -2,6 +2,7 @@ package com.covenant.tribe.scheduling.service;
 
 import com.covenant.tribe.scheduling.TimerUtil;
 import com.covenant.tribe.scheduling.model.Broadcast;
+import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDetail;
@@ -20,12 +21,14 @@ public class QuartzSchedulerService implements SchedulerService{
 
     private final BroadcastService broadcastService;
     @Override
-    public boolean schedule(Broadcast broadcast) throws SchedulerException {
-        broadcastService.create(broadcast);
+    public Broadcast schedule(Broadcast broadcast) throws SchedulerException {
+        BroadcastEntity broadcastEntity = broadcastService.create(broadcast);
+        broadcast.setBroadcastEntityId(broadcastEntity.getId());
         JobDetail jobDetail = TimerUtil.buildJobDetail(broadcast);
         Trigger trigger = TimerUtil.buildTrigger(broadcast)
                 .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
         scheduler.scheduleJob(jobDetail,trigger);
-        return true;
+
+        return broadcast;
     }
 }

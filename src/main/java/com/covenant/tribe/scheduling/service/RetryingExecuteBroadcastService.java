@@ -1,6 +1,8 @@
 package com.covenant.tribe.scheduling.service;
 
 import com.covenant.tribe.scheduling.BroadcastStatuses;
+import com.covenant.tribe.scheduling.message.MessageStrategy;
+import com.covenant.tribe.scheduling.message.MessageStrategyFactory;
 import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import com.covenant.tribe.scheduling.notifications.NotificationStatus;
 import com.covenant.tribe.scheduling.model.Broadcast;
@@ -17,49 +19,49 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "scheduler.enabled", havingValue = "false")
+@ConditionalOnProperty(name = "scheduler.mode", havingValue = "retrying")
 public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
 
     private final NotificationService notificationService;
 
     private final BroadcastService broadcastService;
+
+    private final MessageStrategyFactory messageStrategyFactory;
     private final Integer repeatRate = 1;
     @Override
     @Transactional
     public void executeBroadcast(Broadcast broadcast) throws SchedulerException {
         BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
+
         BroadcastStatuses status = byId.getStatus();
         if (!status.equals(BroadcastStatuses.COMPLETE_SUCCESSFULLY)) {
             if (status.equals(BroadcastStatuses.NEW)) {
-                execForNew(broadcast);
+                execForNew(byId);
             } else if (status.equals(BroadcastStatuses.IN_PROGRESS)) {
-                execForInProgress(broadcast);
+                execForInProgress(byId);
             }
             broadcast.setRepeatDate(OffsetDateTime.now().plus(repeatRate, ChronoUnit.SECONDS));
         }
     }
 
-    private void execForNew(Broadcast broadcast) {
-        BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
-        List<Notification> messagesForBroadcast = notificationService.getMessagesForBroadcast(byId);
-
-        byId.setStatus(BroadcastStatuses.IN_PROGRESS);
-        executeForMessages(messagesForBroadcast);
+    private void execForNew(BroadcastEntity broadcast) {
+        List<Notification> messagesForBroadcast = notificationService.createNotificationsForBroadcast(broadcast);
+        broadcast.setStatus(BroadcastStatuses.IN_PROGRESS);
+        executeForMessages(messagesForBroadcast, broadcast);
     }
 
-    private void execForInProgress(Broadcast broadcast) {
-        BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
+    private void execForInProgress(BroadcastEntity broadcast) {
         List<Notification> messagesForBroadcast = notificationService
                 .getMessagesForBroadcastWithStatus(broadcast, NotificationStatus.NEW);
         if (messagesForBroadcast.size()==0) {
-            byId.setStatus(BroadcastStatuses.COMPLETE_SUCCESSFULLY);
+            broadcast.setStatus(BroadcastStatuses.COMPLETE_SUCCESSFULLY);
         } else {
-            executeForMessages(messagesForBroadcast);
+            executeForMessages(messagesForBroadcast, broadcast);
         }
     }
 
-    private void executeForMessages(List<Notification> messagesForBroadcast) {
-        for (Notification message:messagesForBroadcast) {
-        }
+    private void executeForMessages(List<Notification> messagesForBroadcast, BroadcastEntity broadcast) {
+        MessageStrategy messageStrategy = messageStrategyFactory.find(broadcast.getMessageStrategyName());
+        messageStrategy.sendNotifications(messagesForBroadcast);
     }
 }

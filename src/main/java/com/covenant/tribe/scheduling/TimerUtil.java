@@ -27,7 +27,7 @@ public class TimerUtil {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime repeatDate = broadcast.getRepeatDate();
         OffsetDateTime startTime = repeatDate.isAfter(now) ? repeatDate : now;
-        Date offsetStartTime = Date.from(Instant.from(startTime.plus(2, ChronoUnit.SECONDS)));
+        Date offsetStartTime = Date.from(Instant.from(startTime.plus(50, ChronoUnit.MILLIS)));
         Date endTime = Date.from(broadcast.getEndDate().toInstant());
         if (!endTime.after(offsetStartTime)) return Optional.empty();
         String s = String.valueOf(UUID.randomUUID());

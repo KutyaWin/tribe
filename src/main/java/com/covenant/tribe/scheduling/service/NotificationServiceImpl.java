@@ -26,9 +26,20 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public Notification create(Notification notification) {
+        checkIdNull(notification);
+        return notificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional
+    public List<Notification> create(List<Notification> notification) {
+        notification.forEach(this::checkIdNull);
+        return notificationRepository.saveAll(notification);
+    }
+
+    private void checkIdNull(Notification notification) {
         Preconditions.checkState(notification.getId() == null,
                 "New notification has not null id");
-        return notificationRepository.save(notification);
     }
 
     @Override
@@ -41,27 +52,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Notification> getMessagesForBroadcast(BroadcastEntity broadcastEntity) {
-        List<Notification> notificationsById = new ArrayList<>();
-        if (broadcastEntity.getNotificationsCreated()) {
-            notificationRepository.findAllByBroadcastEntity(broadcastEntity);
-        }
-        return notificationsById;
+    @Transactional
+    public List<Notification> getMessagesForBroadcast(Broadcast broadcast) {
+        BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
+        return notificationRepository.findAllByBroadcastEntity(byId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Notification> getMessagesForBroadcastWithStatus(Broadcast broadcast, NotificationStatus status) {
+    public List<Notification> getMessagesForBroadcastEntity(BroadcastEntity broadcastEntity) {
+        return notificationRepository.findAllByBroadcastEntity(broadcastEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Notification> getMessagesForBroadcastWithStatus(BroadcastEntity broadcast, NotificationStatus status) {
         return null;
     }
 
-
     @Override
     @Transactional
-    public List<Notification> createMessagesForBroadcast(BroadcastEntity broadcast) {
+    public List<Notification> createNotificationsForBroadcast(BroadcastEntity broadcast) {
         NotificationStrategy notificationStrategy = notificationsStrategyFactory.find(broadcast.getNotificationStrategyName());
-        return notificationStrategy.getNotifications(broadcast.getId());
+        List<Notification> notifications = notificationStrategy.getNotifications(broadcast);
+        Preconditions.checkState(!notifications.isEmpty(),
+                String.format("Cannot create any notification for broadcastEntity: %s", broadcast.getId()));
+        return create(notifications);
     }
 
     private Notification findById(Long id) {

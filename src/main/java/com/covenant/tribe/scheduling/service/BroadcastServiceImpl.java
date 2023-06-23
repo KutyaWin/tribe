@@ -19,7 +19,7 @@ public class BroadcastServiceImpl implements BroadcastService {
     @Override
     public BroadcastEntity findById(Long id) {
         return broadcastRepository.findById(id).orElseThrow(()-> new EntityNotFoundException(String.format(
-                "Broadcast with id %s didn't found", id)));
+                "Broadcast with id %s was not found", id)));
     }
 
     @Override
@@ -30,9 +30,11 @@ public class BroadcastServiceImpl implements BroadcastService {
         BroadcastEntity build = BroadcastEntity.builder().status(BroadcastStatuses.NEW)
                 .startTime(broadcast.getRepeatDate())
                 .repeatTime(broadcast.getRepeatDate())
+                .subjectId(broadcast.getSubjectId())
                 .endTime(broadcast.getEndDate())
                 .notificationsCreated(false)
                 .notificationStrategyName(broadcast.getNotificationStrategyName())
+                .messageStrategyName(broadcast.getMessageStrategyName())
                 .build();
         return broadcastRepository.save(build);
     }

@@ -21,7 +21,6 @@ public class BroadcastJob implements Job {
     @SneakyThrows
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-
         Broadcast broadcast = (Broadcast) jobExecutionContext
                 .getJobDetail()
                 .getJobDataMap()
