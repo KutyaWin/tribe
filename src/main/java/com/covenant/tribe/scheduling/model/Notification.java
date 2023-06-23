@@ -29,7 +29,7 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    NotificationStatus status;
+    NotificationStatus status = NotificationStatus.NEW;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
@@ -38,4 +38,11 @@ public class Notification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "broadcast_id", referencedColumnName = "id")
     BroadcastEntity broadcastEntity;
+
+    public Notification(String text, User userById, BroadcastEntity broadcastEntity) {
+        this.text = text;
+        this.userById = userById;
+        this.broadcastEntity = broadcastEntity;
+    }
+
 }

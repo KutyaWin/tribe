@@ -57,4 +57,6 @@ public interface UserService {
     List<User> findAllSubscribedToEvent(Long eventId);
 
     void deleteUser(long userId);
+
+    List<User> findAll();
 }

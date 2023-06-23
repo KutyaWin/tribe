@@ -14,19 +14,16 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class ConsoleMessageStrategy implements MessageStrategy {
 
-    private final NotificationService notificationService;
-
     @Override
     public void sendNotifications(List<Notification> notifications) {
         notifications.forEach(n-> {
             System.out.println("sending notification to console: " + n.getText());
             n.setStatus(NotificationStatus.SUCCESSFULLY_SENT);
-
         });
     }
 
     @Override
     public MessageStrategyName getStrategyName() {
-        return null;
+        return MessageStrategyName.CONSOLE;
     }
 }

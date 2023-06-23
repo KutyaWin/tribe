@@ -5,6 +5,7 @@ import com.covenant.tribe.scheduling.message.MessageStrategyName;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
 import jakarta.persistence.*;
 import lombok.*;
+import org.checkerframework.checker.units.qual.C;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -21,6 +22,9 @@ public class BroadcastEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
+    @Column(name = "subject_id", nullable = false)
+    Long subjectId;
 
     @Column(name = "start_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     OffsetDateTime startTime;
