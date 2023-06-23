@@ -20,6 +20,10 @@ public class QuartzSchedulerService implements SchedulerService{
     private final Scheduler scheduler;
 
     private final BroadcastService broadcastService;
+
+    /**
+     * @Transactional not recommended on this method
+     */
     @Override
     public Broadcast schedule(Broadcast broadcast) throws SchedulerException {
         BroadcastEntity broadcastEntity = broadcastService.create(broadcast);
@@ -28,7 +32,6 @@ public class QuartzSchedulerService implements SchedulerService{
         Trigger trigger = TimerUtil.buildTrigger(broadcast)
                 .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
         scheduler.scheduleJob(jobDetail,trigger);
-
         return broadcast;
     }
 }

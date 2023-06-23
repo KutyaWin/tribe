@@ -27,5 +27,6 @@ public class BroadcastJob implements Job {
                 .get(BroadcastJob.class
                         .getSimpleName());
         executeBroadcastService.executeBroadcast(broadcast);
+//        TODO::dynamic rescheduling
     }
 }

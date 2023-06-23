@@ -20,20 +20,16 @@ public class Broadcast implements Serializable {
 
     Long broadcastEntityId;
 
-    @NotNull
     Long subjectId;
 
     BroadcastStatuses status = BroadcastStatuses.NEW;
 
-    @NotNull
     OffsetDateTime repeatDate;
 
-    @NotNull
     OffsetDateTime endDate;
 
     Integer retryRateSeconds = 2;
 
-    @NotNull
     NotificationStrategyName notificationStrategyName;
 
     MessageStrategyName messageStrategyName = MessageStrategyName.CONSOLE;
