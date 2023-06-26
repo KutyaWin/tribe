@@ -8,6 +8,7 @@ import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
 import javax.sql.DataSource;
 import java.util.Properties;
+import java.util.UUID;
 
 @Configuration
 public class QuartzConfig {
@@ -30,8 +31,8 @@ public class QuartzConfig {
     public SchedulerFactoryBean scheduler() {
         SchedulerFactoryBean schedulerFactory = new SchedulerFactoryBean();
         Properties properties = new Properties();
-        properties.setProperty("org.quartz.scheduler.instanceName", "MyInstanceName");
-        properties.setProperty("org.quartz.scheduler.instanceId", "Instance1");
+        properties.setProperty("org.quartz.scheduler.instanceName", "Tribe");
+        properties.setProperty("org.quartz.scheduler.instanceId", UUID.randomUUID().toString());
         properties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate");
         schedulerFactory.setOverwriteExistingJobs(true);
         schedulerFactory.setAutoStartup(true);
