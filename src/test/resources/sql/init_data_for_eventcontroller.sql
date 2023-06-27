@@ -22,7 +22,7 @@ VALUES (1000, now(), now(), now(), 'eventname1', 'VERIFICATION_PENDING', false, 
 
 insert into event_avatars(id, avatar_url, event_id)
 VALUES (1000, '2023-06-21/c1b00948-d59a-4fef-8c99-d6f59e611545.jpg', 1000),
-        (1001, '2023-06-22/c1b00948-d59a-4fef-8c99-d6f59e611545.jpg', 1001);
+       (1001, '2023-06-22/c1b00948-d59a-4fef-8c99-d6f59e611545.jpg', 1001);
 
 insert into users_relations_with_events(id, is_favorite, is_invited, is_participant, is_viewed, is_want_to_go,
                                         event_relations_id, user_relations_id)

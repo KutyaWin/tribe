@@ -8,6 +8,7 @@ target/
 .env
 .run
 /src/main/resources/keys
+/${SPRING_PARENT_DIRECTORY}tribe
 
 
 ### STS ###
