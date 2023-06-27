@@ -33,7 +33,8 @@ public abstract class AbstractTestcontainers {
 
     @Container
     protected static final PostgreSQLContainer<?> postgreSQLContainer =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis").asCompatibleSubstituteFor("postgres"))
+            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis")
+                    .asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("tribe-dao-unit-test")
                     .withUsername("tribe")
                     .withPassword("qwerty");
