@@ -1,6 +1,7 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.AbstractTestcontainers;
+import com.covenant.tribe.configuration.PathConfiguration;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.covenant.tribe.dto.event.EventAddressDTO;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -34,6 +36,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -66,6 +70,9 @@ public class EventControllerIT extends AbstractTestcontainers {
 
     private static Faker FAKER = new Faker();
 
+    @Autowired
+    private PathConfiguration pathConfiguration;
+
     @BeforeEach
     void init() {
         this.objectMapper = new ObjectMapper();
@@ -76,7 +83,7 @@ public class EventControllerIT extends AbstractTestcontainers {
     @Test
     void getAllEventByFilter_shouldReturnEventWithRequiredEventTypeId() throws Exception {
         //given
-        var requestBuilder = get("/api/v1/events/search?eventTypeId=1000");
+        var requestBuilder = get("/api/v1/events/search?eventTypeId=1001");
 
         //when
         this.mockMvc.perform(requestBuilder)
@@ -84,7 +91,7 @@ public class EventControllerIT extends AbstractTestcontainers {
                 .andExpectAll(
                         status().isOk(),
                         content().contentType(MediaType.APPLICATION_JSON),
-                        jsonPath("$.content[*].eventId", hasItem(1000))
+                        jsonPath("$.content[*].eventId", hasItem(1001))
                 );
     }
 
@@ -131,12 +138,12 @@ public class EventControllerIT extends AbstractTestcontainers {
 
     @Test
     void getEventById() throws Exception {
-        var requestBuilder = get("/api/v1/events/{event_id}", 1000);
+        var requestBuilder = get("/api/v1/events/{event_id}", 1001);
 
         this.mockMvc.perform(requestBuilder).andExpectAll(
                 status().isOk(),
                 content().contentType(MediaType.APPLICATION_JSON),
-                jsonPath("$.event_name", equalTo("eventname1"))
+                jsonPath("$.event_name", equalTo("eventname2"))
         );
     }
 
@@ -250,12 +257,31 @@ public class EventControllerIT extends AbstractTestcontainers {
     @Test
     void getEventAvatar() throws Exception{
 
+        StringBuilder pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
+                .append(pathConfiguration.getMain()).append("/")
+                .append(pathConfiguration.getImage()).append("/")
+                .append(pathConfiguration.getEvent()).append("/")
+                .append(pathConfiguration.getAvatar()).append("/")
+                .append("2023-06-21").append("/");
+
+        Files.createDirectories(Path.of(pathToNewFolder.toString()));
+
+        byte[] image = FAKER.avatar().image().getBytes();
+
+        String filePath = pathToNewFolder
+                .append("/")
+                .append("c1b00948-d59a-4fef-8c99-d6f59e611545.jpg").toString();
+
+        Files.write(Path.of(filePath), image);
+
         var requestBuilder = get("/api/v1/events/avatars/{added_date}/{avatar_file_name}",
                 "2023-06-21", "c1b00948-d59a-4fef-8c99-d6f59e611545.jpg");
 
             this.mockMvc.perform(requestBuilder).andExpect(
                     status().isOk()
             );
+
+          Files.deleteIfExists(Path.of(filePath));
     }
 
 
