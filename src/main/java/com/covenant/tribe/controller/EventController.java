@@ -35,6 +35,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
@@ -556,7 +557,7 @@ public class EventController {
             @PathVariable(value = "added_date") String addedDate,
             @PathVariable(value = "avatar_file_name") String avatarFileName
     ) throws FileNotFoundException {
-        ImageDto imageDTO = storageService.getEventAvatar(addedDate + "/" + avatarFileName);
+        ImageDto imageDTO = storageService.getEventAvatar(addedDate + File.separator + avatarFileName);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .contentType(MediaType.parseMediaType(imageDTO.getContentType()))

@@ -36,6 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -258,18 +259,19 @@ public class EventControllerIT extends AbstractTestcontainers {
     void getEventAvatar() throws Exception{
 
         StringBuilder pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
-                .append(pathConfiguration.getMain()).append("/")
-                .append(pathConfiguration.getImage()).append("/")
-                .append(pathConfiguration.getEvent()).append("/")
-                .append(pathConfiguration.getAvatar()).append("/")
-                .append("2023-06-21").append("/");
+                .append(File.separator)
+                .append(pathConfiguration.getMain()).append(File.separator)
+                .append(pathConfiguration.getImage()).append(File.separator)
+                .append(pathConfiguration.getEvent()).append(File.separator)
+                .append(pathConfiguration.getAvatar()).append(File.separator)
+                .append("2023-06-21").append(File.separator);
 
         Files.createDirectories(Path.of(pathToNewFolder.toString()));
 
         byte[] image = FAKER.avatar().image().getBytes();
 
         String filePath = pathToNewFolder
-                .append("/")
+                .append(File.separator)
                 .append("c1b00948-d59a-4fef-8c99-d6f59e611545.jpg").toString();
 
         Files.write(Path.of(filePath), image);
@@ -281,7 +283,8 @@ public class EventControllerIT extends AbstractTestcontainers {
                     status().isOk()
             );
 
-          Files.deleteIfExists(Path.of(filePath));
+        Files.deleteIfExists(Path.of(filePath));
+
     }
 
 
