@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.JpaSort;
@@ -63,6 +64,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @SpringBootTest
 public class EventControllerIT extends AbstractTestcontainers {
+
+    // write в env SPRING_PARENT_DIRECTORY = домашняя директория
 
     @Autowired
     private MockMvc mockMvc;
