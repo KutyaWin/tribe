@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public interface EventService {
 
-    Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable);
+    Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Integer page, Integer size);
 
     Event saveNewEvent(Event event);
 
