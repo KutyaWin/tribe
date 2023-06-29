@@ -126,4 +126,14 @@ public class EventExceptionHandler {
                 .errorMessage(List.of(userAlreadySendRequestException.getMessage()))
                 .build();
     }
+
+    @ExceptionHandler(EventSortingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleBadSortingRequest(EventSortingException notPublicEventException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(notPublicEventException.getMessage()))
+                .build();
+    }
 }

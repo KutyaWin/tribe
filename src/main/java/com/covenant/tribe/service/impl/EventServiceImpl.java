@@ -20,8 +20,7 @@ import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
 import com.covenant.tribe.util.querydsl.QPredicates;
 import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.JPAExpressions;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.querydsl.QPageRequest;
+import org.springframework.data.querydsl.QSort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,21 +69,72 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Pageable pageable) {
+    public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Integer page, Integer pageSize) {
+
         QPredicates qPredicates = QPredicates.builder();
-
-
+        QSort orders = new QSort();
         qPredicates.add(Boolean.TRUE, QEvent.event.showEventInSearch.isTrue());
         qPredicates.add(EventStatus.PUBLISHED, QEvent.event.eventStatus.eq(EventStatus.PUBLISHED));
-        if (filter.getDistanceInMeters() != null && filter.getLongitude() != null &&
-                filter.getLatitude() != null) {
+        boolean filterPresent = filter.getSort() != null;
+        boolean distanceFilter = filterPresent && filter.getSort().equals(EventSort.DISTANCE);
+        orders = handleDistance(filter, qPredicates, orders, distanceFilter);
+        orders = handleTime(filter, qPredicates, orders, filterPresent);
+        orders = handleAlco(filter, qPredicates, orders, filterPresent);
+        qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
+        qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
+        handleText(filter, qPredicates);
+        Pageable pageable =  QPageRequest.of(page, pageSize, orders);
+        Predicate predicate = qPredicates.build();
+        Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
+        if (currentUserId != null) {
+            List<UserRelationsWithEvent> eventsCurrentUser = getUserRelationsWithEvents(currentUserId);
+            return filteredEvents.map(event -> eventMapper.mapToSearchEventDTO(event, eventsCurrentUser));
+        }
+        return filteredEvents.map(eventMapper::mapToSearchEventDTO);
+    }
 
+    private void handleText(EventFilter filter, QPredicates qPredicates) {
+        qPredicates.add(filter.getText(), (t)->
+                QEvent.event.eventName.containsIgnoreCase(t)
+                .or(QEvent.event.eventDescription.containsIgnoreCase(t))
+                        .or(QEvent.event.tagList.any().tagName.contains(t)));
+    }
+
+    private List<UserRelationsWithEvent> getUserRelationsWithEvents(Long currentUserId) {
+        List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
+                        currentUserId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s, dont exist", currentUserId
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                }).getUserRelationsWithEvents();
+        return eventsCurrentUser;
+    }
+
+    private QSort handleDistance(EventFilter filter, QPredicates qPredicates, QSort orders, boolean distanceFilter) {
+        if (filter.getLongitude() != null && filter.getLatitude() != null) {
             NumberExpression<Double> distance = Expressions.numberTemplate(
                     Double.class,
                     "ST_Distance(" + QEvent.event.eventAddress.eventPosition +
                             ", ST_MakePoint(" + filter.getLongitude() + ", " + filter.getLatitude() + "))");
 
             qPredicates.add(filter.getDistanceInMeters(), distance::lt);
+
+            if (distanceFilter) {
+                orders = getOrder(filter, distance);
+            }
+        } else if (distanceFilter) {
+            throw new EventSortingException("Position is not specified for sorting by distance");
+        }
+        return orders;
+    }
+
+    private QSort handleTime(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {
+        DateTimePath<OffsetDateTime> startTime = QEvent.event.startTime;
+        if (filterPresent && filter.getSort().equals(EventSort.DATE)) {
+            orders = getOrder(filter, startTime);
         }
         if (filter.getEventTypeId() != null) {
             qPredicates.add(filter.getEventTypeId(), QEvent.event.eventType.id::in);
@@ -91,7 +143,7 @@ public class EventServiceImpl implements EventService {
             OffsetDateTime startDateTime = filter.getStartDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
             OffsetDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
 
-            qPredicates.add(startDateTime, QEvent.event.startTime::after);
+            qPredicates.add(startDateTime, startTime::after);
             qPredicates.add(endDateTime, QEvent.event.endTime::before);
         }
         if (filter.getNumberOfParticipantsMin() != null && filter.getNumberOfParticipantsMax() != null) {
@@ -115,46 +167,42 @@ public class EventServiceImpl implements EventService {
 
             qPredicates.add(
                     filter.getPartsOfDay(),
-                    QEvent.event.startTime.hour().goe(Integer.valueOf(partsOfDayFromClient.getHour()))
+                    startTime.hour().goe(Integer.valueOf(partsOfDayFromClient.getHour()))
                             .and(QEvent.event.endTime.hour().loe(Integer.valueOf(PartsOfDay.getNextEnumValue(partsOfDayFromClient).getHour()))));
         }
         if (filter.getDurationEventInHoursMin() != null && filter.getDurationEventInHoursMax() != null) {
             Predicate eventDurationInHours =
-                    QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).goe(filter.getDurationEventInHoursMin())
+                    QEvent.event.endTime.hour().subtract(startTime.hour()).goe(filter.getDurationEventInHoursMin())
                             .and(
-                                    QEvent.event.endTime.hour().subtract(QEvent.event.startTime.hour()).loe(filter.getDurationEventInHoursMax())
+                                    QEvent.event.endTime.hour().subtract(startTime.hour()).loe(filter.getDurationEventInHoursMax())
                             );
 
             qPredicates.add(filter.getDurationEventInHoursMin(), eventDurationInHours);
         }
-        if (filter.getIsPresenceOfAlcohol() != null) {
-            qPredicates.add(filter.getIsPresenceOfAlcohol(), QEvent.event.isPresenceOfAlcohol::eq);
-        }
-        if (filter.getIsFree() != null) {
-            qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
-        }
-        if (filter.getIsEighteenYearLimit() != null) {
-            qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
-        }
-        Predicate predicate = qPredicates.build();
-
-        Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
-
-        if (currentUserId != null) {
-            List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
-                            currentUserId, UserStatus.ENABLED)
-                    .orElseThrow(() -> {
-                        String message = String.format(
-                                "[EXCEPTION] User with id %s, dont exist", currentUserId
-                        );
-                        log.error(message);
-                        return new UserNotFoundException(message);
-                    }).getUserRelationsWithEvents();
-
-            return filteredEvents.map(event -> eventMapper.mapToSearchEventDTO(event, eventsCurrentUser));
-        }
-        return filteredEvents.map(eventMapper::mapToSearchEventDTO);
+        return orders;
     }
+
+    private QSort handleAlco(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {
+        BooleanPath isPresenceOfAlcohol = QEvent.event.isPresenceOfAlcohol;
+        if (filter.getIsPresenceOfAlcohol() != null) {
+            qPredicates.add(filter.getIsPresenceOfAlcohol(), isPresenceOfAlcohol::eq);
+
+        }
+        if (filterPresent && filter.getSort().equals(EventSort.ALCOHOL)) {
+            orders = getOrder(filter, isPresenceOfAlcohol);
+        }
+        return orders;
+    }
+
+
+    private  QSort getOrder(EventFilter filter ,ComparableExpressionBase expression) {
+        if (filter.getOrder() == null || filter.getOrder().equals(SortOrder.ASC)) {
+            return new QSort(expression.asc());
+        }
+        return new QSort(expression.desc());
+    }
+
+
 
     @Transactional(readOnly = true)
     public DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId) {
