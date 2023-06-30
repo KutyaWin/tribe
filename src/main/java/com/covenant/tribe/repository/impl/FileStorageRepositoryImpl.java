@@ -68,8 +68,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 .append(pathConfiguration.getImage()).append(File.separator)
                 .append(pathConfiguration.getEvent()).append(File.separator)
                 .append(pathConfiguration.getAvatar()).append(File.separator)
-                .append(currentDate).append(File.separator)
-                .toString();
+                .append(currentDate).toString();
         System.out.println("Path to new folder is " + pathToNewFolder);
         Files.createDirectories(Path.of(pathToNewFolder));
 
@@ -95,8 +94,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 .append(pathConfiguration.getImage()).append(File.separator)
                 .append(pathConfiguration.getUser()).append(File.separator)
                 .append(pathConfiguration.getAvatar()).append(File.separator)
-                .append(currentDate).append(File.separator)
-                .toString();
+                .append(currentDate).toString();
         Files.createDirectories(Path.of(pathToNewFolder));
         String pathForDb = currentDate + File.separator + fileNameForAdding;
         String pathForFile = pathToNewFolder + File.separator + fileNameForAdding;
@@ -145,8 +143,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                     .append(pathConfiguration.getImage()).append(File.separator)
                     .append(pathConfiguration.getEvent()).append(File.separator)
                     .append(pathConfiguration.getAvatar()).append(File.separator)
-                    .append(fileName)
-                    .toString();
+                    .append(fileName).toString();
             Files.deleteIfExists(Path.of(pathToEventAvatarsDir));
         }
     }
