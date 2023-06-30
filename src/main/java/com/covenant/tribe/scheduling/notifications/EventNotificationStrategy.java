@@ -22,7 +22,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventNotificationStrategy implements NotificationStrategy {
 
-    UserService userService;
     EventService eventService;
     UserRelationsWithEventService userRelationsWithEventService;
 
