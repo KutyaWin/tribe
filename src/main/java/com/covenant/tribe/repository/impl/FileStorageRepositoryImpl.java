@@ -42,6 +42,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
         try {
             Files.createDirectories(Path.of(pathToTmpDirBuilder.toString()));
             String filePath = pathToTmpDirBuilder
+                    .append(File.separator)
                     .append(fileName)
                     .append(".")
                     .append(fileExtension)
