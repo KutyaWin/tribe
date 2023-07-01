@@ -35,6 +35,11 @@ public class TimerUtil {
                 .newTrigger()
                 .withIdentity(s)
                 .startAt(offsetStartTime)
+                .withSchedule(
+                        SimpleScheduleBuilder.simpleSchedule()
+                                .withIntervalInMinutes(1)
+                                .repeatForever()
+                )
                 .endAt(endTime)
                 .build());
     }

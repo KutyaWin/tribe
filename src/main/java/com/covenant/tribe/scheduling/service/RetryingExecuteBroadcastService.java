@@ -46,8 +46,9 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
 
     private void execForNew(BroadcastEntity broadcast) {
         List<Notification> messagesForBroadcast = notificationService.createNotificationsForBroadcast(broadcast);
-        broadcast.setStatus(BroadcastStatuses.IN_PROGRESS);
+        broadcast.setStatus(BroadcastStatuses.IN_PROGRESS); //TODO Почему in_progress нигде не меняется на successfully
         executeForMessages(messagesForBroadcast, broadcast);
+        broadcast.setStatus(BroadcastStatuses.COMPLETE_SUCCESSFULLY);
     }
 
     private void execForInProgress(BroadcastEntity broadcast) {

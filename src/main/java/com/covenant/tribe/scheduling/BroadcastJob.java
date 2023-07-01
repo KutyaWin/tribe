@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +27,11 @@ public class BroadcastJob implements Job {
                 .getJobDataMap()
                 .get(BroadcastJob.class
                         .getSimpleName());
-        executeBroadcastService.executeBroadcast(broadcast);
-//        TODO::dynamic rescheduling
+        if (!broadcast.getStatus().equals(BroadcastStatuses.COMPLETE_SUCCESSFULLY)) {
+            executeBroadcastService.executeBroadcast(broadcast);
+        } else {
+            TriggerKey triggerKey = jobExecutionContext.getTrigger().getKey();
+            schedulerService.unschedule(triggerKey);
+        }
     }
 }
