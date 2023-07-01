@@ -262,12 +262,11 @@ public class EventControllerIT extends AbstractTestcontainers {
     void getEventAvatar() throws Exception{
 
         StringBuilder pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getImage()).append(File.separator)
                 .append(pathConfiguration.getEvent()).append(File.separator)
                 .append(pathConfiguration.getAvatar()).append(File.separator)
-                .append("2023-06-21").append(File.separator);
+                .append("2023-06-21");
 
         Files.createDirectories(Path.of(pathToNewFolder.toString()));
 
