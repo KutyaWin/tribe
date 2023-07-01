@@ -1,5 +1,7 @@
 package com.covenant.tribe.util.querydsl;
 
+import com.covenant.tribe.service.impl.EventSort;
+import com.covenant.tribe.service.impl.SortOrder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -13,6 +15,8 @@ import java.util.List;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventFilter implements Serializable {
+
+    String text;
 
     List<Long> eventTypeId;
 
@@ -42,4 +46,10 @@ public class EventFilter implements Serializable {
     Boolean isFree;
 
     Boolean isEighteenYearLimit;
+
+    @Schema(description = "Available: DISTANCE, DATE, ALCOHOL")
+    EventSort sort;
+
+    @Schema(description = "Can be: ASC, DSC")
+    SortOrder order;
 }
