@@ -578,13 +578,11 @@ public class EventController {
     public ResponseEntity<?> getAllEventByFilter(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "100") Integer size,
-            EventFilter eventFilter,
+            @RequestBody EventFilter eventFilter,
             HttpServletRequest token
     ) {
         log.info("[CONTROLLER] start endpoint getAllEventByFilter");
         log.debug("With data: {}", eventFilter);
-
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
 
         Long currentUserId = null;
         if (token.getHeader(HttpHeaders.AUTHORIZATION) != null) {
@@ -592,7 +590,7 @@ public class EventController {
         }
 
         PageResponse<SearchEventDTO> response = PageResponse.of(
-                eventService.getEventsByFilter(eventFilter, currentUserId, pageable));
+                eventService.getEventsByFilter(eventFilter, currentUserId, page, size));
 
         log.info("[CONTROLLER] end endpoint getAllEventByFilter");
         log.debug("With response: {}", response);

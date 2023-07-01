@@ -35,4 +35,6 @@ public class SearchEventDTO implements Serializable {
     LocalDateTime startTime;
 
     Boolean isPrivate;
+
+    Boolean isPresenceOfAlcohol = false;
 }

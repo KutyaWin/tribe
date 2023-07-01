@@ -65,6 +65,7 @@ public class EventMapperImpl implements EventMapper {
                     .favoriteEvent(relationsWithEventCurrentUserId.stream()
                             .filter(UserRelationsWithEvent::isFavorite)
                             .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                    .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                     .isPrivate(true)
                     .build();
         }
@@ -84,6 +85,7 @@ public class EventMapperImpl implements EventMapper {
                         .filter(UserRelationsWithEvent::isViewed)
                         .anyMatch(relations -> relations.getEventRelations().equals(event)))
                 .isPrivate(event.isPrivate())
+                .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                 .build();
     }
 
@@ -100,6 +102,7 @@ public class EventMapperImpl implements EventMapper {
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
                     .eventType(event.getEventType().getTypeName())
+                    .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                     .isPrivate(true)
                     .build();
         }
@@ -113,6 +116,7 @@ public class EventMapperImpl implements EventMapper {
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
                 .isPrivate(event.isPrivate())
+                .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                 .build();
         if (event.getEventAddress() != null) {
             eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
