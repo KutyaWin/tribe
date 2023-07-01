@@ -33,8 +33,7 @@ public class EventNotificationStrategy implements NotificationStrategy {
         List<Notification> notifications = new ArrayList<>();
         Event eventById = eventService.getEventById(broadcast.getSubjectId());
         String eventName = eventById.getEventName();
-        for (int i = 0; i < 2; i++) {
-            User user = eventParticipants.get(i);
+        for (User user: eventParticipants) {
             Notification notification =
                     new Notification("notification for event name: " +
                             eventName, user, broadcast);

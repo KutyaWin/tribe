@@ -11,6 +11,7 @@ import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
+import com.covenant.tribe.scheduling.BroadcastStatuses;
 import com.covenant.tribe.scheduling.message.MessageStrategyName;
 import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
@@ -273,6 +274,7 @@ public class EventServiceImpl implements EventService {
                 .repeatDate(hourNotificationSendTime)
                 .endDate(event.getEndTime())
                 .notificationStrategyName(NotificationStrategyName.EVENT)
+                .status(BroadcastStatuses.NEW)
                 .messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
                 .build();
         try {
