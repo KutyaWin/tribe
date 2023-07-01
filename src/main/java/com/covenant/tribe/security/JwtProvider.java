@@ -50,8 +50,8 @@ public class JwtProvider {
     @Value("${keys.refresh-private}")
     private String refreshPrivateKeyPath;
 
-    private final Integer ACCESS_TOKEN_EXPIRATION_MINS = 30;
-    private final Integer REFRESH_TOKEN_EXPIRATION_DAYS = 2;
+    private final Integer ACCESS_TOKEN_EXPIRATION_MINS = 300;
+    private final Integer REFRESH_TOKEN_EXPIRATION_DAYS = 365;
 
     @Autowired
     public JwtProvider(KeysReader keysReader) {
