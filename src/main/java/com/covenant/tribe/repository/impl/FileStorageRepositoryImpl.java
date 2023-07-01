@@ -34,7 +34,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
         String fileName = UUID.randomUUID().toString();
         String fileExtension = contentType.split("/")[1];
         StringBuilder pathToTmpDirBuilder = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain())
                 .append(File.separator)
                 .append(pathConfiguration.getTmp());
@@ -62,7 +61,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
         String currentDate = LocalDate.now().toString();
         ArrayList<String> paths = new ArrayList<>();
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getTmp()).toString();
         String pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
@@ -70,8 +68,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 .append(pathConfiguration.getImage()).append(File.separator)
                 .append(pathConfiguration.getEvent()).append(File.separator)
                 .append(pathConfiguration.getAvatar()).append(File.separator)
-                .append(currentDate).append(File.separator)
-                .toString();
+                .append(currentDate).toString();
         System.out.println("Path to new folder is " + pathToNewFolder);
         Files.createDirectories(Path.of(pathToNewFolder));
 
@@ -90,7 +87,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     public String addUserAvatar(String fileNameForAdding) throws IOException {
         String currentDate = LocalDate.now().toString();
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getTmp()).toString();
         String pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
@@ -98,8 +94,7 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 .append(pathConfiguration.getImage()).append(File.separator)
                 .append(pathConfiguration.getUser()).append(File.separator)
                 .append(pathConfiguration.getAvatar()).append(File.separator)
-                .append(currentDate).append(File.separator)
-                .toString();
+                .append(currentDate).toString();
         Files.createDirectories(Path.of(pathToNewFolder));
         String pathForDb = currentDate + File.separator + fileNameForAdding;
         String pathForFile = pathToNewFolder + File.separator + fileNameForAdding;
@@ -113,7 +108,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     @Override
     public String getRectangleAnimationJson(String fileName) throws IOException {
         String filePath = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getAnimation()).append(File.separator)
                 .append(pathConfiguration.getAddEvents()).append(File.separator)
@@ -124,7 +118,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     @Override
     public String getCircleAnimationJson(String fileName) throws IOException {
         String filePath = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getAnimation()).append(File.separator)
                 .append(pathConfiguration.getOnboard()).append(File.separator)
@@ -135,7 +128,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     @Override
     public void deleteFileInTmpDir(List<String> fileNames) throws IOException {
         String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getTmp()).toString();
         for (String fileName : fileNames) {
@@ -147,13 +139,11 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     public void deleteEventAvatars(List<String> fileNames) throws IOException {
         for (String fileName : fileNames) {
             String pathToEventAvatarsDir = new StringBuilder(pathConfiguration.getHome())
-                    .append(File.separator)
                     .append(pathConfiguration.getMain()).append(File.separator)
                     .append(pathConfiguration.getImage()).append(File.separator)
                     .append(pathConfiguration.getEvent()).append(File.separator)
                     .append(pathConfiguration.getAvatar()).append(File.separator)
-                    .append(fileName)
-                    .toString();
+                    .append(fileName).toString();
             Files.deleteIfExists(Path.of(pathToEventAvatarsDir));
         }
     }
@@ -161,7 +151,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     @Override
     public ImageDto getUserAvatarByFileName(String fileName) throws FileNotFoundException {
         String filePath = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain()).append(File.separator)
                 .append(pathConfiguration.getImage()).append(File.separator)
                 .append(pathConfiguration.getUser()).append(File.separator)
@@ -173,7 +162,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     @Override
     public ImageDto getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException {
         String filePath = new StringBuilder(pathConfiguration.getHome())
-                .append(File.separator)
                 .append(pathConfiguration.getMain())
                 .append(File.separator)
                 .append(pathConfiguration.getImage())
