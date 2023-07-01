@@ -11,6 +11,10 @@ import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
+import com.covenant.tribe.scheduling.message.MessageStrategyName;
+import com.covenant.tribe.scheduling.model.Broadcast;
+import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
+import com.covenant.tribe.scheduling.service.SchedulerService;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.service.TagService;
@@ -27,6 +31,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,6 +55,7 @@ public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     TagRepository tagRepository;
     TagService tagService;
+    SchedulerService schedulerService;
     EventAvatarRepository eventAvatarRepository;
     UserRepository userRepository;
     FileStorageRepository fileStorageRepository;
@@ -260,6 +266,24 @@ public class EventServiceImpl implements EventService {
         }
         event.setEventStatus(EventStatus.PUBLISHED);
         eventRepository.save(event);
+
+        OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
+        Broadcast broadcast = Broadcast.builder()
+                .subjectId(event.getId())
+                .repeatDate(hourNotificationSendTime)
+                .endDate(event.getEndTime())
+                .notificationStrategyName(NotificationStrategyName.EVENT)
+                .messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
+                .build();
+        try {
+            schedulerService.schedule(broadcast);
+        } catch (SchedulerException e) {
+            String message = String.format(
+                    "Cannot schedule broadcast: %s for event with id %s",
+                    broadcast.toString(), event.getId()
+            );
+            log.error(message);
+        }
     }
 
     @Transactional

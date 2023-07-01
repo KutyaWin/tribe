@@ -5,10 +5,7 @@ import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobDetail;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
+import org.quartz.*;
 import org.springframework.stereotype.Component;
 
 import java.time.DateTimeException;
@@ -33,5 +30,18 @@ public class QuartzSchedulerService implements SchedulerService{
                 .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
         scheduler.scheduleJob(jobDetail,trigger);
         return broadcast;
+    }
+
+    @Override
+    public void unschedule(TriggerKey triggerKey) {
+        try {
+            scheduler.unscheduleJob(triggerKey);
+        } catch (SchedulerException e) {
+            String message = String.format(
+                    "Cannot unschedule trigger %s, with exception: %s",
+                    triggerKey, e.getMessage()
+            );
+            log.error(message);
+        }
     }
 }

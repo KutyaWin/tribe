@@ -12,10 +12,11 @@ import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 @RequiredArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
-
+@Builder
 public class Broadcast implements Serializable {
 
     Long broadcastEntityId;
