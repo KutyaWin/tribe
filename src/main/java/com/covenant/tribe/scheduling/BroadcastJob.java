@@ -1,6 +1,8 @@
 package com.covenant.tribe.scheduling;
 
 import com.covenant.tribe.scheduling.model.Broadcast;
+import com.covenant.tribe.scheduling.model.BroadcastEntity;
+import com.covenant.tribe.scheduling.service.BroadcastService;
 import com.covenant.tribe.scheduling.service.ExecuteBroadcastService;
 import com.covenant.tribe.scheduling.service.SchedulerService;
 import lombok.SneakyThrows;
@@ -17,6 +19,9 @@ public class BroadcastJob implements Job {
     private ExecuteBroadcastService executeBroadcastService;
 
     @Autowired
+    private BroadcastService broadcastService;
+
+    @Autowired
     private SchedulerService schedulerService;
 
     @SneakyThrows
@@ -27,7 +32,9 @@ public class BroadcastJob implements Job {
                 .getJobDataMap()
                 .get(BroadcastJob.class
                         .getSimpleName());
-        if (!broadcast.getStatus().equals(BroadcastStatuses.COMPLETE_SUCCESSFULLY)) {
+
+        BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
+        if (!byId.getStatus().equals(BroadcastStatuses.COMPLETE_SUCCESSFULLY)) {
             executeBroadcastService.executeBroadcast(broadcast);
         } else {
             TriggerKey triggerKey = jobExecutionContext.getTrigger().getKey();
