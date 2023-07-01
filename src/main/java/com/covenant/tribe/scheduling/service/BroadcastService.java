@@ -7,4 +7,6 @@ public interface BroadcastService {
     BroadcastEntity findById(Long id);
     BroadcastEntity create(Broadcast broadcast);
 
+    BroadcastEntity update(BroadcastEntity broadcast);
+
 }
