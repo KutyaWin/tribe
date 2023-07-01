@@ -213,7 +213,6 @@
                             <outputDirectory>target/generated-sources/java</outputDirectory>
                             <processor>
                                 org.springframework.data.jpa.repository.support.JpaRepositoryProcessor
-                                com.querydsl.apt.jpa.JPAAnnotationProcessor
                             </processor>
                         </configuration>
                     </execution>
