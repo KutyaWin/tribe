@@ -49,6 +49,10 @@ public class BroadcastEntity {
     @Enumerated(EnumType.STRING)
     MessageStrategyName messageStrategyName;
 
+    @Column(name = "fire_count")
+    @Builder.Default
+    Integer fireCount = 0;
+
     @OneToMany(mappedBy = "broadcastEntity", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<Notification> notifications;
 

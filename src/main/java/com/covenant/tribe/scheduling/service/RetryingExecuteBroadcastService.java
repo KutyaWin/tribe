@@ -34,14 +34,20 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
         BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
 
         BroadcastStatuses status = byId.getStatus();
-        if (!status.equals(BroadcastStatuses.COMPLETE_SUCCESSFULLY)) {
+        try {
+            byId.setFireCount(byId.getFireCount() + 1);
             if (status.equals(BroadcastStatuses.NEW)) {
                 execForNew(byId);
             } else if (status.equals(BroadcastStatuses.IN_PROGRESS)) {
                 execForInProgress(byId);
             }
-            broadcast.setRepeatDate(OffsetDateTime.now().plus(repeatRate, ChronoUnit.SECONDS));
+        } catch (RuntimeException e) {
+            byId.setStatus(BroadcastStatuses.ENDED_WITH_ERROR);
+            broadcastService.update(byId);
+            throw new SchedulerException("Broadcast ended with error");
         }
+        broadcast.setRepeatDate(OffsetDateTime.now().plus(repeatRate, ChronoUnit.SECONDS));
+
     }
 
     private void execForNew(BroadcastEntity broadcast) {

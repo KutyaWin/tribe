@@ -44,4 +44,9 @@ public class QuartzSchedulerService implements SchedulerService{
             log.error(message);
         }
     }
+
+    @Override
+    public Trigger getTrigger(TriggerKey triggerKey) throws SchedulerException {
+        return scheduler.getTrigger(triggerKey);
+    }
 }

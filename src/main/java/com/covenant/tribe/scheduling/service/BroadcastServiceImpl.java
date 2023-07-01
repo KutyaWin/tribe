@@ -38,4 +38,9 @@ public class BroadcastServiceImpl implements BroadcastService {
                 .build();
         return broadcastRepository.save(build);
     }
+
+    @Override
+    public BroadcastEntity update(BroadcastEntity broadcast) {
+        return broadcastRepository.save(broadcast);
+    }
 }
