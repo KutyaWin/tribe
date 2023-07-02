@@ -18,6 +18,7 @@ import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import com.covenant.tribe.scheduling.notifications.BroadcastRepository;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
+import com.covenant.tribe.scheduling.service.BroadcastService;
 import com.covenant.tribe.scheduling.service.SchedulerService;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
@@ -73,6 +74,7 @@ public class EventServiceImpl implements EventService {
     EventTagMapper eventTagMapper;
     UserMapper userMapper;
     EventAddressMapper eventAddressMapper;
+    BroadcastService broadcastService;
 
     @Override
     public Event save(Event event) {
@@ -272,7 +274,6 @@ public class EventServiceImpl implements EventService {
         }
         event.setEventStatus(EventStatus.PUBLISHED);
         eventRepository.save(event);
-
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
         Broadcast broadcast = Broadcast.builder()
                 .subjectId(event.getId())
@@ -283,9 +284,12 @@ public class EventServiceImpl implements EventService {
                 .messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
                 .build();
         try {
-            if(isUpdated && !event.getStartTime().isEqual(broadcast.getRepeatDate())) {
-                schedulerService.updateTriggerTime(broadcast);
-            } else if (!isUpdated) {
+            if (isUpdated) {
+                BroadcastEntity broadcastE = broadcastService.findBySubjectId(eventId);
+                if(!event.getStartTime().isEqual(broadcastE.getStartTime())) {
+                    schedulerService.updateTriggerTime(broadcast);
+                }
+            } else {
                 schedulerService.schedule(broadcast);
             }
         } catch (SchedulerException e) {
