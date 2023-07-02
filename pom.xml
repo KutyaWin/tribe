@@ -178,6 +178,22 @@
             <artifactId>tika-core</artifactId>
             <version>2.8.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>5.3.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.mashape.unirest</groupId>
+            <artifactId>unirest-java</artifactId>
+            <version>1.4.9</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -194,6 +210,11 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
             </plugin>
 
             <!--annotation processing plugin for querydsl-apt-->
@@ -220,5 +241,36 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+<!--            To launch flyway plugin build artifact with  Maven with parameters:
+                -P flyway \
+                -Ddb.adm.pass=youradminpass \
+                -Ddb.adm.user=youradmuser \
+                -Ddb.url=jdbc:postgresql://yorhost:5435/yourdbname \
+                -Ddb.username=yourusername \
+                -Ddb.password=yourpass-->
+            <id>flyway</id>
+            <properties>
+                <!--common properties for database connection-->
+                <db.driver>org.postgresql.Driver</db.driver>
+                <db.url>yoururl</db.url>
+                <db.username>yourusername</db.username>
+                <db.password>yourpass</db.password>
+                <db.schema>public</db.schema>
+                <db.adm.user>youradmuser</db.adm.user>
+                <db.adm.pass>youradminpass</db.adm.pass>
+
+                <!-- Properties are prefixed with flyway. -->
+                <flyway.user>${db.adm.user}</flyway.user>
+                <flyway.password>${db.adm.pass}</flyway.password>
+                <flyway.schemas>${db.schema}</flyway.schemas>
+                <flyway.driver>${db.driver}</flyway.driver>
+                <flyway.url>${db.url}</flyway.url>
+                <flyway.locations>db/migration/</flyway.locations>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

@@ -17,4 +17,5 @@ public interface UserRelationsWithEventRepository extends JpaRepository<UserRela
     Optional<UserRelationsWithEvent> findByUserRelationsIdAndEventRelationsIdAndIsWantToGoTrue(Long userId, Long eventId);
     List<UserRelationsWithEvent> findByEventRelationsIdAndIsWantToGo(Long eventId, boolean wantToGo);
     List<UserRelationsWithEvent> findAllByUserRelations(User user);
+    List<UserRelationsWithEvent> findByEventRelationsId(Long eventId);
 }

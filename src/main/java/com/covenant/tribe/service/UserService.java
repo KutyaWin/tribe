@@ -54,5 +54,9 @@ public interface UserService {
 
     List<User> findAllByInterestingEventTypeContaining(Long eventTypeId);
 
+    List<User> findAllSubscribedToEvent(Long eventId);
+
     void deleteUser(long userId);
+
+    List<User> findAll();
 }
