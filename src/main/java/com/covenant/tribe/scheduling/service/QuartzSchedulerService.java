@@ -30,6 +30,8 @@ public class QuartzSchedulerService implements SchedulerService{
         JobDetail jobDetail = TimerUtil.buildJobDetail(broadcast);
         Trigger trigger = TimerUtil.buildTrigger(broadcast)
                 .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
+        broadcastEntity.setTriggerKey(trigger.getKey().getName());
+        broadcastService.update(broadcastEntity);
         scheduler.scheduleJob(jobDetail,trigger);
         return broadcast;
     }

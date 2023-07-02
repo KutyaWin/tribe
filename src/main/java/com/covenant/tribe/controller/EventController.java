@@ -229,7 +229,7 @@ public class EventController {
     @PatchMapping("/verification/confirm/{event_id}")
     public ResponseEntity<?> updateEventStatusToPublished(
             @PathVariable(value = "event_id") Long eventId,
-            @RequestParam(value = "is_updated") Boolean isUpdated
+            @RequestParam(value = "is_updated", defaultValue = "true") Boolean isUpdated
     ) {
         log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
 
