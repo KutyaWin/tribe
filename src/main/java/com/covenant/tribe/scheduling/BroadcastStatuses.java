@@ -9,7 +9,8 @@ public enum BroadcastStatuses {
     COMPLETE_SUCCESSFULLY("complete_successfully"),
     PARTIALLY_COMPLETED("partially_completed"),
     ENDED_WITH_ERROR("ended_with_error"),
-    FAILED_TO_COMPLETE("filed_to_complete")
+    FAILED_TO_COMPLETE("filed_to_complete"),
+    CANCELLED("cancelled")
     ;
     private String text;
 
