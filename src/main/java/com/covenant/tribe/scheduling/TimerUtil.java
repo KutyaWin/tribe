@@ -37,7 +37,7 @@ public class TimerUtil {
                 .startAt(offsetStartTime)
                 .withSchedule(
                         SimpleScheduleBuilder.simpleSchedule()
-                                .withIntervalInMinutes(1)
+                                .withIntervalInMinutes(10)
                                 .repeatForever()
                 )
                 .endAt(endTime)

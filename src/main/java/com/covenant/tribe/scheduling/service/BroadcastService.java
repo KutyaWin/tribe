@@ -7,6 +7,8 @@ public interface BroadcastService {
     BroadcastEntity findById(Long id);
     BroadcastEntity create(Broadcast broadcast);
 
+    BroadcastEntity findBySubjectId(Long eventId);
+
     BroadcastEntity update(BroadcastEntity broadcast);
 
 }

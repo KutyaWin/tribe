@@ -258,7 +258,7 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public void updateEventStatusToPublished(Long eventId) {
+    public void updateEventStatusToPublished(Long eventId, Boolean isUpdated) {
         Event event = getEventById(eventId);
         if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
             String message = String.format("[EXCEPTION] Event with id %s is already verified", eventId);
@@ -278,7 +278,11 @@ public class EventServiceImpl implements EventService {
                 .messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
                 .build();
         try {
-            schedulerService.schedule(broadcast);
+            if(isUpdated && !event.getStartTime().isEqual(broadcast.getRepeatDate())) {
+                schedulerService.updateTriggerTime(broadcast);
+            } else if (!isUpdated) {
+                schedulerService.schedule(broadcast);
+            }
         } catch (SchedulerException e) {
             String message = String.format(
                     "Cannot schedule broadcast: %s for event with id %s",

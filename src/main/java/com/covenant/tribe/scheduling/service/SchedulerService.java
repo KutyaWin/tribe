@@ -10,5 +10,7 @@ public interface SchedulerService {
 
     void unschedule(TriggerKey triggerKey);
 
+    void updateTriggerTime(Broadcast broadcast);
+
     Trigger getTrigger(TriggerKey triggerKey) throws SchedulerException;
 }

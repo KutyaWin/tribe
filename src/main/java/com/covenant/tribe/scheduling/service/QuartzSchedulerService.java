@@ -1,5 +1,7 @@
 package com.covenant.tribe.scheduling.service;
 
+import com.covenant.tribe.exeption.scheduling.TriggerNotUpdatedException;
+import com.covenant.tribe.scheduling.BroadcastStatuses;
 import com.covenant.tribe.scheduling.TimerUtil;
 import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.BroadcastEntity;
@@ -43,6 +45,30 @@ public class QuartzSchedulerService implements SchedulerService{
             );
             log.error(message);
         }
+    }
+
+    @Override
+    public void updateTriggerTime(Broadcast broadcast) {
+        BroadcastEntity broadcastEntity = broadcastService.findBySubjectId(broadcast.getSubjectId());
+        broadcast.setBroadcastEntityId(broadcastEntity.getId());
+        try {
+            Trigger newTrigger = TimerUtil.buildTrigger(broadcast)
+                    .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
+            Trigger oldTrigger = scheduler.getTrigger(new TriggerKey(broadcastEntity.getTriggerKey()));
+            scheduler.rescheduleJob(oldTrigger.getKey(), newTrigger);
+            broadcastEntity.setStartTime(broadcast.getRepeatDate());
+            broadcastEntity.setEndTime(broadcast.getEndDate());
+            broadcastEntity.setTriggerKey(newTrigger.getKey().getName());
+            broadcastEntity.setStatus(BroadcastStatuses.NEW);
+            broadcastService.update(broadcastEntity);
+        } catch(SchedulerException e) {
+            String message = String.format(
+                    "Trigger didn't update because: %s'", e.getMessage()
+            );
+            log.error(message);
+            throw new TriggerNotUpdatedException(message);
+        }
+
     }
 
     @Override

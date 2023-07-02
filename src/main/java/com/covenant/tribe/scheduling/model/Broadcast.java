@@ -23,6 +23,8 @@ public class Broadcast implements Serializable {
 
     Long subjectId;
 
+    String triggerKey;
+
     BroadcastStatuses status = BroadcastStatuses.NEW;
 
     OffsetDateTime repeatDate;

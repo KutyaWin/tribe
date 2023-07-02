@@ -29,7 +29,7 @@ public interface EventService {
 
     List<EventVerificationDTO> getEventWithVerificationPendingStatus();
 
-    void updateEventStatusToPublished(Long eventId);
+    void updateEventStatusToPublished(Long eventId, Boolean isUpdated);
 
     void updateEventStatusToSendToRework(Long eventId);
 
