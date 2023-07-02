@@ -9,11 +9,14 @@ import com.covenant.tribe.domain.user.UserStatus;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
+import com.covenant.tribe.exeption.scheduling.BroadcastNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.scheduling.BroadcastStatuses;
 import com.covenant.tribe.scheduling.message.MessageStrategyName;
 import com.covenant.tribe.scheduling.model.Broadcast;
+import com.covenant.tribe.scheduling.model.BroadcastEntity;
+import com.covenant.tribe.scheduling.notifications.BroadcastRepository;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
 import com.covenant.tribe.scheduling.service.SchedulerService;
 import com.covenant.tribe.service.EventService;
@@ -33,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
+import org.quartz.TriggerKey;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,6 +59,7 @@ public class EventServiceImpl implements EventService {
     EventTypeRepository eventTypeRepository;
     EventRepository eventRepository;
     TagRepository tagRepository;
+    BroadcastRepository broadcastRepository;
     TagService tagService;
     SchedulerService schedulerService;
     EventAvatarRepository eventAvatarRepository;
@@ -402,6 +407,19 @@ public class EventServiceImpl implements EventService {
                 });
         event.setEventStatus(EventStatus.DELETED);
         eventRepository.save(event);
+
+        BroadcastEntity broadcastEntity = broadcastRepository
+                .findBySubjectId(eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] Broadcast with event id %s does not exist", eventId);
+                    log.error(message);
+                    return new BroadcastNotFoundException(message);
+                });
+        broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
+        TriggerKey triggerKey = new TriggerKey(broadcastEntity.getTriggerKey());
+        schedulerService.unschedule(triggerKey);
+        broadcastRepository.save(broadcastEntity);
     }
 
     @Override
