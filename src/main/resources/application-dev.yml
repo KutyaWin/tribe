@@ -96,3 +96,5 @@ verification:
       min: 1000
       max: 9999
 
+scheduler:
+  enabled: false

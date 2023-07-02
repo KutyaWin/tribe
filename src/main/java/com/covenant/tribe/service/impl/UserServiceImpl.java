@@ -448,6 +448,11 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    @Override
+    public List<User> findAllSubscribedToEvent(Long eventId) {
+        return null;
+    }
+
     @Transactional
     @Override
     public void deleteUser(long userId) {
@@ -471,5 +476,11 @@ public class UserServiceImpl implements UserService {
         user.setStatus(UserStatus.DELETED);
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 }
