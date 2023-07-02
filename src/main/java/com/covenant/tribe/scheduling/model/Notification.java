@@ -24,7 +24,7 @@ public class Notification {
     @Column(name = "sent_date")
     Date sentDate;
 
-    @Column(name = "message_text")
+    @Column(name = "message_text", nullable = false)
     String text;
 
     @Enumerated(EnumType.STRING)
@@ -32,11 +32,11 @@ public class Notification {
     NotificationStatus status = NotificationStatus.NEW;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     User userById;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "broadcast_id", referencedColumnName = "id")
+    @JoinColumn(name = "broadcast_id", referencedColumnName = "id", nullable = false)
     BroadcastEntity broadcastEntity;
 
     public Notification(String text, User userById, BroadcastEntity broadcastEntity) {

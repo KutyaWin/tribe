@@ -36,22 +36,26 @@ public class BroadcastEntity {
     OffsetDateTime endTime;
 
     @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
     BroadcastStatuses status;
 
     @Column(name = "notifications_created", nullable = false)
     Boolean notificationsCreated;
 
-    @Column(name = "notification_strategy_name")
+    @Column(name = "notification_strategy_name", nullable = false)
     @Enumerated(EnumType.STRING)
     NotificationStrategyName notificationStrategyName;
 
-    @Column(name = "message_strategy_name")
+    @Column(name = "message_strategy_name", nullable = false)
     @Enumerated(EnumType.STRING)
     MessageStrategyName messageStrategyName;
 
     @Column(name = "fire_count")
     @Builder.Default
     Integer fireCount = 0;
+
+    @Column(name = "triger_key")
+    String triggerKey;
 
     @OneToMany(mappedBy = "broadcastEntity", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<Notification> notifications;

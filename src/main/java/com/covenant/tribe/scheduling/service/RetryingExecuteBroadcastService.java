@@ -8,6 +8,7 @@ import com.covenant.tribe.scheduling.notifications.NotificationStatus;
 import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.Notification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "scheduler.mode", havingValue = "retrying")
 public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
@@ -30,7 +32,7 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
     private final Integer repeatRate = 1;
     @Override
     @Transactional
-    public void executeBroadcast(Broadcast broadcast) throws SchedulerException {
+    public void executeBroadcast(Broadcast broadcast)  {
         BroadcastEntity byId = broadcastService.findById(broadcast.getBroadcastEntityId());
 
         BroadcastStatuses status = byId.getStatus();
@@ -44,7 +46,10 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
         } catch (RuntimeException e) {
             byId.setStatus(BroadcastStatuses.ENDED_WITH_ERROR);
             broadcastService.update(byId);
-            throw new SchedulerException("Broadcast ended with error");
+            String message = String.format(
+                    "Broadcast ended with error: %s", e.getMessage()
+            );
+            log.error(message);
         }
         broadcast.setRepeatDate(OffsetDateTime.now().plus(repeatRate, ChronoUnit.SECONDS));
 
@@ -52,7 +57,7 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
 
     private void execForNew(BroadcastEntity broadcast) {
         List<Notification> messagesForBroadcast = notificationService.createNotificationsForBroadcast(broadcast);
-        broadcast.setStatus(BroadcastStatuses.IN_PROGRESS); //TODO Почему in_progress нигде не меняется на successfully
+        broadcast.setStatus(BroadcastStatuses.IN_PROGRESS);
         executeForMessages(messagesForBroadcast, broadcast);
         broadcast.setStatus(BroadcastStatuses.COMPLETE_SUCCESSFULLY);
     }
