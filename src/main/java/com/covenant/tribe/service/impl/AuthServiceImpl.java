@@ -269,12 +269,19 @@ public class AuthServiceImpl implements AuthService {
                         "Ваш код для подтверждения сброса пароля: %s",
                         resetConfirmationCode
                 );
-        EmailVerificationCode emailVerificationCode = EmailVerificationCode.builder()
-                .resetCode(resetConfirmationCode)
-                .email(resetPasswordDTO.getEmail())
-                .requestTime(Instant.now())
-                .isEnable(true)
-                .build();
+        EmailVerificationCode emailVerificationCode = emailVerificationRepository.
+                findByEmailAndIsEnable(resetPasswordDTO.getEmail(), true);
+        if (emailVerificationCode == null) {
+            emailVerificationCode = EmailVerificationCode.builder()
+                    .resetCode(resetConfirmationCode)
+                    .email(resetPasswordDTO.getEmail())
+                    .requestTime(Instant.now())
+                    .isEnable(true)
+                    .build();
+        } else {
+            emailVerificationCode.setResetCode(resetConfirmationCode);
+            emailVerificationCode.setRequestTime(Instant.now());
+        }
         emailVerificationRepository.save(emailVerificationCode);
         mailService.sendEmail(title, message, resetPasswordDTO.getEmail());
         user.setPassword(encoder.encode(String.valueOf(resetConfirmationCode)));
@@ -397,7 +404,7 @@ public class AuthServiceImpl implements AuthService {
         ResponseEntity<?> whatsappVerificationResponse = whatsAppClient.sendVerificationCode(
                 whatsAppAccessToken, whatsAppApiVersion, whatsAppPhoneNumberId, message
         );
-        if  (whatsappVerificationResponse.getStatusCode() != HttpStatus.OK) {
+        if (whatsappVerificationResponse.getStatusCode() != HttpStatus.OK) {
 
         }
     }
@@ -459,7 +466,7 @@ public class AuthServiceImpl implements AuthService {
                 log.error(message);
                 throw new WrongCodeException(message);
             }
-           if (now.isAfter(registrant.getCreatedAt().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES))) {
+            if (now.isAfter(registrant.getCreatedAt().plus(CODE_EXPIRATION_TIME_IN_MIN, ChronoUnit.MINUTES))) {
                 String message = String.format(
                         "Verification code is expired for registrant with phone number %s", phoneConfirmCodeDto.getPhoneNumber()
                 );
@@ -535,6 +542,7 @@ public class AuthServiceImpl implements AuthService {
             }
         }
     }
+
     private TokensDTO getTokensForGoogleUser(String token, UserForSignInUpDTO userForSignInUpDTO) {
         try {
             GoogleIdToken idToken = googleIdTokenVerifier.verify(token);
