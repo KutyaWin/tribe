@@ -579,7 +579,7 @@ public class EventController {
     public ResponseEntity<?> getAllEventByFilter(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "100") Integer size,
-            @RequestBody EventFilter eventFilter,
+            EventFilter eventFilter,
             HttpServletRequest token
     ) {
         log.info("[CONTROLLER] start endpoint getAllEventByFilter");
