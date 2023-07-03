@@ -157,7 +157,7 @@ public class ProjectSecurityConfig {
         return (request) -> {
             if (String.valueOf(request.getRequestURL()).contains("refresh")) {
                 return refreshJwtAuth;
-            } else if (String.valueOf(request.getRequestURL()).contains("sw")) {
+            } else if (String.valueOf(request.getRequestURL()).contains("swagger")) {
                 return userPasswordAuth;
             } else {
                 return accessJwtAuth;
