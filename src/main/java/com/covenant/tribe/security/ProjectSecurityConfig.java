@@ -1,6 +1,7 @@
 package com.covenant.tribe.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,19 +42,12 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 @EnableMethodSecurity
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ProjectSecurityConfig {
 
-    private KeysReader keysReader;
-    @Value("${keys.access-public}")
-    private String accessPublicKeyPath;
-    @Value("${keys.refresh-public}")
-    private String refreshPublicKeyPath;
-
     @Autowired
-    public ProjectSecurityConfig(KeysReader keysReader) {
-        this.keysReader = keysReader;
-    }
+    JwtProvider jwtProvider;
 
     @Bean
     @Order(0)
@@ -105,7 +99,7 @@ public class ProjectSecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("https://tribual.ru", "http://localhost"));
-        configuration.setAllowedMethods(Arrays.asList("GET","POST", "DELETE", "PUT", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -114,11 +108,7 @@ public class ProjectSecurityConfig {
     @Bean
     public JwtDecoder accessJwtDecoder() {
         RSAPublicKey publicKey = null;
-        try {
-            publicKey = keysReader.getPublicKey(accessPublicKeyPath);
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new NullPointerException(e.getMessage());
-        }
+        publicKey = jwtProvider.getAccessPublicKey();
         return NimbusJwtDecoder
                 .withPublicKey(publicKey)
                 .build();
@@ -126,12 +116,7 @@ public class ProjectSecurityConfig {
 
     @Bean
     public JwtDecoder refreshJwtDecoder() {
-        RSAPublicKey publicKey = null;
-        try {
-            publicKey = keysReader.getPublicKey(refreshPublicKeyPath);
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new NullPointerException(e.getMessage());
-        }
+        RSAPublicKey publicKey = jwtProvider.getRefreshPublicKey();
         return NimbusJwtDecoder
                 .withPublicKey(publicKey)
                 .build();
