@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 
 @Slf4j
@@ -426,7 +427,7 @@ public class UserController {
     ) throws FileNotFoundException {
         log.info("[CONTROLLER] start endpoint getAvatar with param: {}", fileName);
 
-        ImageDto imageDto = storageService.getUserAvatar(addedDate + "/" + fileName);
+        ImageDto imageDto = storageService.getUserAvatar(addedDate + File.separator + fileName);
 
         log.info("[CONTROLLER] end endpoint getAvatar");
 
