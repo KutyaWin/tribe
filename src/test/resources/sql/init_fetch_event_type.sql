@@ -1,5 +1,5 @@
-insert into users(id, created_at, enable_geolocation, firebase_id, password, user_email)
-VALUES (1000, now(), true, 'test1', 'test1', 'test1');
+insert into users(id, created_at, enable_geolocation, firebase_id, password, user_email, status)
+VALUES (1000, now(), true, 'test1', 'test1', 'test1', 'ENABLED');
 
 insert into event_types(id, type_name, type_name_en)
 VALUES (1000, 'test_ru1000', 'test_en1000'),
