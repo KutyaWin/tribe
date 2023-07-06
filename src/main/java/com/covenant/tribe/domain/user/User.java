@@ -106,6 +106,11 @@ public class User {
     @Builder.Default
     UserStatus status = UserStatus.ENABLED;
 
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    UserRole userRole = UserRole.USER;
+
     @OneToMany(
             mappedBy = "organizer",
             fetch = FetchType.LAZY

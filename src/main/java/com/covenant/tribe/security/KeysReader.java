@@ -1,6 +1,7 @@
 package com.covenant.tribe.security;
 
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.Getter;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 @Component
+@Getter
 public class KeysReader {
 
     public PrivateKey getPrivateKey(String pathToKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
