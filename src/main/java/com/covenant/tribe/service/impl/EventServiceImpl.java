@@ -24,6 +24,7 @@ import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
 import com.covenant.tribe.service.TagService;
 import com.covenant.tribe.service.UserRelationsWithEventService;
+import com.covenant.tribe.service.UserService;
 import com.covenant.tribe.util.mapper.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
@@ -70,6 +71,7 @@ public class EventServiceImpl implements EventService {
     FirebaseService firebaseService;
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
+    UserService userService;
     EventMapper eventMapper;
     EventTypeMapper eventTypeMapper;
     EventTagMapper eventTagMapper;
@@ -97,7 +99,7 @@ public class EventServiceImpl implements EventService {
         qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
         qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
         handleText(filter, qPredicates);
-        Pageable pageable =  QPageRequest.of(page, pageSize, orders);
+        Pageable pageable = QPageRequest.of(page, pageSize, orders);
         Predicate predicate = qPredicates.build();
         Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
         if (currentUserId != null) {
@@ -108,9 +110,9 @@ public class EventServiceImpl implements EventService {
     }
 
     private void handleText(EventFilter filter, QPredicates qPredicates) {
-        qPredicates.add(filter.getText(), (t)->
+        qPredicates.add(filter.getText(), (t) ->
                 QEvent.event.eventName.containsIgnoreCase(t)
-                .or(QEvent.event.eventDescription.containsIgnoreCase(t))
+                        .or(QEvent.event.eventDescription.containsIgnoreCase(t))
                         .or(QEvent.event.tagList.any().tagName.contains(t)));
     }
 
@@ -209,13 +211,12 @@ public class EventServiceImpl implements EventService {
     }
 
 
-    private  QSort getOrder(EventFilter filter ,ComparableExpressionBase expression) {
+    private QSort getOrder(EventFilter filter, ComparableExpressionBase expression) {
         if (filter.getOrder() == null || filter.getOrder().equals(SortOrder.ASC)) {
             return new QSort(expression.asc());
         }
         return new QSort(expression.desc());
     }
-
 
 
     @Transactional(readOnly = true)
@@ -313,7 +314,7 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public void updateEventStatusToPublished(Long eventId, Boolean isUpdated) {
+    public void updateEventStatusToPublished(Long eventId) {
         Event event = getEventById(eventId);
         if (event.getEventStatus() != EventStatus.VERIFICATION_PENDING) {
             String message = String.format("[EXCEPTION] Event with id %s is already verified", eventId);
@@ -322,6 +323,7 @@ public class EventServiceImpl implements EventService {
         }
         event.setEventStatus(EventStatus.PUBLISHED);
         eventRepository.save(event);
+        sendNecessaryNotification(event);
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
         Broadcast broadcast = Broadcast.builder()
                 .subjectId(event.getId())
@@ -329,14 +331,13 @@ public class EventServiceImpl implements EventService {
                 .endDate(event.getEndTime())
                 .notificationStrategyName(NotificationStrategyName.EVENT)
                 .status(BroadcastStatuses.NEW)
-                .messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
+                .messageStrategyName(MessageStrategyName.FIREBASE)
                 .build();
         try {
-            if (isUpdated) {
-                BroadcastEntity broadcastE = broadcastService.findBySubjectId(eventId);
-                if(!event.getStartTime().isEqual(broadcastE.getStartTime())) {
-                    schedulerService.updateTriggerTime(broadcast);
-                }
+            if (event.isStartTimeUpdated()) {
+                schedulerService.updateTriggerTime(broadcast);
+                event.setStartTimeUpdated(false);
+                eventRepository.save(event);
             } else {
                 schedulerService.schedule(broadcast);
             }
@@ -346,6 +347,38 @@ public class EventServiceImpl implements EventService {
                     broadcast.toString(), event.getId()
             );
             log.error(message);
+        }
+    }
+
+    private void sendNecessaryNotification(Event event) {
+
+        if (event.isSendToAllUsersByInterests()) {
+            List<User> allUsersIdWhoInterestingEventType = userService
+                    .findAllByInterestingEventTypeContaining(event.getEventType().getId()).stream()
+                    .filter(u -> !u.getId().equals(event.getOrganizer().getId()))
+                    .toList();
+
+            firebaseService.sendNotificationsToUsers(allUsersIdWhoInterestingEventType,
+                    event.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    event.getId());
+        }
+        List<Long> invitedUserIds = event.getEventRelationsWithUser().stream()
+                .filter(u -> u.isInvited())
+                .map(u -> u.getUserRelations().getId())
+                .toList();
+        if (!invitedUserIds.isEmpty()) {
+            List<User> usersWhoInvited = userService
+                    .findAllById(invitedUserIds.stream().toList()).stream()
+                    .filter(u -> !u.getId().equals(event.getOrganizer().getId()))
+                    .toList();
+
+            firebaseService.sendNotificationsToUsers(usersWhoInvited,
+                    event.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    event.getId());
         }
     }
 
@@ -749,6 +782,7 @@ public class EventServiceImpl implements EventService {
         }
 
         if (!updateEventDto.getStartDateTime().isEqual(eventForUpdate.getStartTime())) {
+            eventForUpdate.setStartTimeUpdated(true);
             eventForUpdate.setStartTime(updateEventDto.getStartDateTime());
         }
 
@@ -804,11 +838,6 @@ public class EventServiceImpl implements EventService {
                 userRelationsWithEventRepository.save(userRelationsWithEvent);
                 usersWhoSendNotification.add(participant);
             });
-            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
-                    eventForUpdate.isEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
-                    eventForUpdate.getId());
         }
 
         if (!updateEventDto.getParticipantIdsForDeleting().isEmpty()) {
@@ -852,13 +881,8 @@ public class EventServiceImpl implements EventService {
                     userRepository.findAllByInterestingEventTypeContainingAndStatus(
                             eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString()
                     );
-            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
-                    eventForUpdate.isEighteenYearLimit(),
-                    "Some title",
-                    "Текст оповещения нужно придумать, id мероприятия лежит в поле data",
-                    eventForUpdate.getId());
         }
-
+        eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
 
         fileStorageRepository.deleteFileInTmpDir(avatarsForDeletingFromTempDirectory);

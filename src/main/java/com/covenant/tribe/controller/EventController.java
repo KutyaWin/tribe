@@ -234,7 +234,7 @@ public class EventController {
     ) {
         log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
 
-        eventService.updateEventStatusToPublished(eventId, isUpdated);
+        eventService.updateEventStatusToPublished(eventId);
 
         log.info("[CONTROLLER] end endpoint updateEventStatusToPublished");
         return ResponseEntity
