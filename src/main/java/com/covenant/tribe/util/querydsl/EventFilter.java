@@ -4,6 +4,7 @@ import com.covenant.tribe.service.impl.EventSort;
 import com.covenant.tribe.service.impl.SortOrder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class EventFilter implements Serializable {
 
     String text;
