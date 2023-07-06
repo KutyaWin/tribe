@@ -205,6 +205,7 @@ public class EventController {
                                     array = @ArraySchema(schema = @Schema(implementation = EventVerificationDTO.class))))},
             security = @SecurityRequirement(name = "BearerJWT")
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/verification")
     public ResponseEntity<?> getEventWithVerificationPendingStatus() {
         log.info("[CONTROLLER] start endpoint getEventWithVerificationPendingStatus");
