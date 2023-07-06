@@ -1,22 +1,147 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
 <head>
-    <title>Please Log In</title>
+    <title>Пожалуйста, войдите в систему</title>
+    <meta charset="UTF-8">
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+
+        .body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            background-color: #FFFBFF;
+        }
+
+        .dialog {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 32px 40px;
+            width: 470px;
+            background-color: #FFFBFF;
+            border-radius: 25px;
+            border: 1px solid #5837F3;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            margin: 0 auto;
+        }
+
+        .title {
+            margin: 0;
+            font-family: Roboto, sans-serif;
+            font-size: 22px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 28px;
+            color: #1C1B1F;
+        }
+
+        .info {
+            font-family: Roboto, sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            color: #1C1B1F;
+        }
+
+        .info--danger {
+            color: #FF5449;
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form__input {
+            padding: 8px 16px;
+            width: 100%;
+            font-family: Roboto, sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 20px;
+            border-radius: 16px;
+            border: 1px solid #E5E0EC;
+            background-color: #E5E0EC;
+            box-sizing: border-box;
+            transition: all 200ms;
+        }
+
+        .form__input::placeholder {
+            color: #1C1B1F;
+            opacity: 0.5;
+        }
+
+        .form__input:focus {
+            background-color: #FFFBFF;
+            outline: none;
+            border-color: #5837F3;
+        }
+
+        .button {
+            padding: 8px 16px;
+            width: 150px;
+            font-family: Roboto, sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 20px;
+            color: #E4DFFF;
+            background-color: #5837F3;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .button:hover {
+            background-color: #6b4df5;
+        }
+
+        .button:focus {
+            background-color: #6b4df5;
+            outline: none;
+        }
+
+        .button:active {
+            background-color: #4821f2;
+        }
+    </style>
 </head>
-<body>
-<h1>Please Log In</h1>
-<div th:if="${param.error}">
-    Invalid username and password.</div>
-<div th:if="${param.logout}">
-    You have been logged out.</div>
-<form th:action="@{/sw-login}" method="post">
-    <div>
-        <input type="text" name="username" placeholder="Username"/>
+<body class="body">
+
+<div class="dialog">
+    <img src="data:image/png;base64,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"
+         class="logo"
+         height="36"
+         width="92"
+    >
+    <h1 class="title">Вход</h1>
+    <div class="info info--danger" th:if="${param.error}">
+        Неверное имя пользователя или пароль
     </div>
-    <div>
-        <input type="password" name="password" placeholder="Password"/>
+    <div class="info" th:if="${param.logout}">
+        Вы вышли из системы
     </div>
-    <input type="submit" value="Log in" />
-</form>
+    <form class="form" th:action="@{/sw-login}" method="post">
+        <label class="form__label">
+            <input class="form__input" type="text" name="username" placeholder="Почта" autofocus/>
+        </label>
+        <label class="form__label">
+            <input class="form__input" type="password" name="password" placeholder="Пароль"/>
+        </label>
+        <input class="button" type="submit" value="Вход"/>
+    </form>
+</div>
+
 </body>
 </html>
