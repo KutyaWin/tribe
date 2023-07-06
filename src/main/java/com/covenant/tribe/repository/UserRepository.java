@@ -31,11 +31,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "FROM User u " +
             "JOIN u.followers f " +
             "WHERE f.userWhoGetFollower.id = :userId " +
-            "AND f.userWhoMadeFollowing.username LIKE %:username% " +
+            "AND f.userWhoMadeFollowing.username LIKE %:partialUsername% " +
             "AND f.relationshipStatus = :relationshipStatus")
     Page<User> findAllSubscribersByPartialUsername
             (@Param("userId") Long userId,
-             @Param("username") String username,
+             @Param("partialUsername") String partialUsername,
              @Param("relationshipStatus") RelationshipStatus relationshipStatus,
              Pageable pageable);
 
