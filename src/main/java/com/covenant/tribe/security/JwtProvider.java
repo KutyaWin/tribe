@@ -1,6 +1,7 @@
 package com.covenant.tribe.security;
 
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserRole;
 import com.covenant.tribe.exeption.auth.JwtDecoderException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -26,8 +27,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @AllArgsConstructor
@@ -78,17 +78,21 @@ public class JwtProvider {
         }
     }
 
-    public String generateAccessToken(@NonNull Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public String generateAccessToken(@NonNull Long userId, UserRole userRole) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         SignatureAlgorithm algorithm = SignatureAlgorithm.RS256;
         final LocalDateTime now = LocalDateTime.now();
         final Instant accessExpirationInstant = now
                 .plusMinutes(ACCESS_TOKEN_EXPIRATION_MINS)
                 .atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpiration = Date.from(accessExpirationInstant);
+        String role = userRole.toString();
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .setExpiration(accessExpiration)
                 .signWith(this.accessPrivateKey, algorithm)
+                .addClaims(claims)
                 .compact();
     }
 

@@ -23,7 +23,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -53,9 +55,11 @@ public class ProjectSecurityConfig {
     @Order(0)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.oauth2ResourceServer(
-                j -> j.authenticationManagerResolver(
-                        authenticationManagerResolver(accessJwtDecoder(), refreshJwtDecoder())
-                )
+                jwt -> jwt
+                        .authenticationManagerResolver(
+                                authenticationManagerResolver(accessJwtDecoder(), refreshJwtDecoder())
+                        )
+
         );
         http.csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
         http.securityMatcher(new AntPathRequestMatcher("/api/**"))
@@ -123,11 +127,24 @@ public class ProjectSecurityConfig {
     }
 
     @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("role");
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
+    }
+
+    @Bean
     public AuthenticationManagerResolver<HttpServletRequest> authenticationManagerResolver(
             JwtDecoder accessJwtDecoder, JwtDecoder refreshJwtDecoder
     ) {
+        JwtAuthenticationProvider accessJwtAuthenticationProvider = new JwtAuthenticationProvider(accessJwtDecoder);
+        accessJwtAuthenticationProvider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
         AuthenticationManager accessJwtAuth = new ProviderManager(
-                new JwtAuthenticationProvider(accessJwtDecoder)
+                accessJwtAuthenticationProvider
         );
 
         AuthenticationManager refreshJwtAuth = new ProviderManager(
