@@ -1,2 +1,5 @@
-delete from users where username='a';
-delete from users where username='b';
+
+delete from user_interests;
+delete from friends;
+delete from users;
+
