@@ -43,9 +43,9 @@ public class BroadcastServiceImpl implements BroadcastService {
     }
 
     @Override
-    public BroadcastEntity findBySubjectId(Long eventId) {
+    public BroadcastEntity findBySubjectIdAndStatusNot(Long eventId, BroadcastStatuses broadcastStatuses) {
         return broadcastRepository
-                .findBySubjectId(eventId)
+                .findBySubjectIdAndStatusNot(eventId, broadcastStatuses)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "Broadcast with eventId %s doesn't exist'", eventId
