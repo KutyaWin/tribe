@@ -51,7 +51,8 @@ public class QuartzSchedulerService implements SchedulerService{
 
     @Override
     public void updateTriggerTime(Broadcast broadcast) {
-        BroadcastEntity broadcastEntity = broadcastService.findBySubjectId(broadcast.getSubjectId());
+        BroadcastEntity broadcastEntity = broadcastService
+                .findBySubjectIdAndStatusNot(broadcast.getSubjectId(), BroadcastStatuses.COMPLETE_SUCCESSFULLY);
         broadcast.setBroadcastEntityId(broadcastEntity.getId());
         try {
             Trigger newTrigger = TimerUtil.buildTrigger(broadcast)

@@ -18,7 +18,6 @@ import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import com.covenant.tribe.scheduling.notifications.BroadcastRepository;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
-import com.covenant.tribe.scheduling.service.BroadcastService;
 import com.covenant.tribe.scheduling.service.SchedulerService;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.FirebaseService;
@@ -38,6 +37,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.QPageRequest;
@@ -51,6 +51,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -77,7 +78,7 @@ public class EventServiceImpl implements EventService {
     EventTagMapper eventTagMapper;
     UserMapper userMapper;
     EventAddressMapper eventAddressMapper;
-    BroadcastService broadcastService;
+    Environment environment;
 
     @Override
     public Event save(Event event) {
@@ -325,13 +326,19 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
         sendNecessaryNotification(event);
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
+        MessageStrategyName messageStrategyName = null;
+        if (Objects.equals(environment.getProperty("spring.profiles.active"), "dev")) {
+            messageStrategyName = MessageStrategyName.CONSOLE;
+        } else {
+            messageStrategyName = MessageStrategyName.FIREBASE;
+        }
         Broadcast broadcast = Broadcast.builder()
                 .subjectId(event.getId())
                 .repeatDate(hourNotificationSendTime)
                 .endDate(event.getEndTime())
                 .notificationStrategyName(NotificationStrategyName.EVENT)
                 .status(BroadcastStatuses.NEW)
-                .messageStrategyName(MessageStrategyName.FIREBASE)
+                .messageStrategyName(messageStrategyName)
                 .build();
         try {
             if (event.isStartTimeUpdated()) {
@@ -339,7 +346,7 @@ public class EventServiceImpl implements EventService {
                 event.setStartTimeUpdated(false);
                 eventRepository.save(event);
             } else {
-                schedulerService.schedule(broadcast);
+                schedulerService.schedule(broadcast); //TODO Обработать DateTimeException
             }
         } catch (SchedulerException e) {
             String message = String.format(
@@ -494,7 +501,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
 
         BroadcastEntity broadcastEntity = broadcastRepository
-                .findBySubjectId(eventId)
+                .findBySubjectIdAndStatusNot(eventId, BroadcastStatuses.COMPLETE_SUCCESSFULLY)
                 .orElseThrow(() -> {
                     String message = String.format(
                             "[EXCEPTION] Broadcast with event id %s does not exist", eventId);
