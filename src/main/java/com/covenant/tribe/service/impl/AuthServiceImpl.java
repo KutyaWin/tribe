@@ -147,9 +147,19 @@ public class AuthServiceImpl implements AuthService {
     public TokensDTO refreshTokens(String token) {
         try {
             Long userId = Long.parseLong(jwtProvider.getRefreshTokenClaims(token).getSubject());
+            UserRole userRole = userRepository
+                    .findById(userId)
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "User with id %s, not found", userId
+                        );
+                        log.error(message);
+                        return new UserNotFoundException(message);
+                    })
+                    .getUserRole();
             TokensDTO tokensDTO = new TokensDTO();
             tokensDTO.setUserId(userId);
-            tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId));
+            tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId, userRole));
             tokensDTO.setRefreshToken(jwtProvider.generateRefreshToken(userId));
             return tokensDTO;
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -229,7 +239,7 @@ public class AuthServiceImpl implements AuthService {
         registrant.setStatus(RegistrantStatus.CONFIRMED);
 
         try {
-            TokensDTO tokensDTO = getTokenDTO(savedUser.getId());
+            TokensDTO tokensDTO = getTokenDTO(savedUser.getId(), savedUser.getUserRole());
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
             return tokensDTO;
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -249,7 +259,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Credentials is wrong");
         }
         try {
-            return getTokenDTO(user.getId());
+            return getTokenDTO(user.getId(), user.getUserRole());
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new MakeTokenException(e.getMessage());
         }
@@ -333,7 +343,7 @@ public class AuthServiceImpl implements AuthService {
                     );
                 });
         try {
-            TokensDTO tokens = getTokenDTO(user.getId());
+            TokensDTO tokens = getTokenDTO(user.getId(), user.getUserRole());
             emailVerificationCode.setEnable(false);
             emailVerificationRepository.save(emailVerificationCode);
             return tokens;
@@ -487,7 +497,7 @@ public class AuthServiceImpl implements AuthService {
                 userRepository.save(newUser);
                 registrant.setStatus(RegistrantStatus.CONFIRMED);
                 registrantRepository.save(registrant);
-                return getTokenDTO(newUser.getId());
+                return getTokenDTO(newUser.getId(), newUser.getUserRole());
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 String message = String.format(
                         "Failed to generate token for registrant with phone number %s, error: %s",
@@ -530,7 +540,7 @@ public class AuthServiceImpl implements AuthService {
             try {
                 phoneVerificationCode.setEnable(false);
                 phoneVerificationRepository.save(phoneVerificationCode);
-                return getTokenDTO(user.getId());
+                return getTokenDTO(user.getId(), user.getUserRole());
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 String message = String.format(
                         "Failed to generate token for user with phone number %s, error: %s",
@@ -591,12 +601,12 @@ public class AuthServiceImpl implements AuthService {
             }
             if (user != null) {
                 user.setFirebaseId(userForSignInUpDTO.getFirebaseId());
-                TokensDTO tokensDTO = getTokenDTO(user.getId());
+                TokensDTO tokensDTO = getTokenDTO(user.getId(), user.getUserRole());
                 tokensDTO.setUserId(user.getId());
                 return tokensDTO;
             } else {
                 Long userId = registerNewUser(userForSignInUpDTO, socialId, socialIdType);
-                TokensDTO tokensDTO = getTokenDTO(userId);
+                TokensDTO tokensDTO = getTokenDTO(userId, user.getUserRole());
                 tokensDTO.setUserId(userId);
                 return tokensDTO;
             }
@@ -645,10 +655,10 @@ public class AuthServiceImpl implements AuthService {
         return userToSave.getId();
     }
 
-    private TokensDTO getTokenDTO(Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    private TokensDTO getTokenDTO(Long userId, UserRole userRole) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         TokensDTO tokensDTO = new TokensDTO();
         tokensDTO.setUserId(userId);
-        tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId));
+        tokensDTO.setAccessToken(jwtProvider.generateAccessToken(userId, userRole));
         tokensDTO.setRefreshToken(jwtProvider.generateRefreshToken(userId));
         return tokensDTO;
     }

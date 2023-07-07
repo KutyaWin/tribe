@@ -1,12 +1,14 @@
 package com.covenant.tribe.security;
 
 import com.covenant.tribe.domain.user.User;
+import com.covenant.tribe.domain.user.UserRole;
+import com.covenant.tribe.exeption.auth.JwtDecoderException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import jakarta.annotation.PostConstruct;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,30 +27,36 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Component
 public class JwtProvider {
 
-    private AuthenticationManager authenticationManager;
+    AuthenticationManager authenticationManager;
 
-    private KeysReader keysReader;
+    KeysReader keysReader;
 
     @Value("${keys.access-private}")
-    private String accessPrivateKeyPath;
+    String accessPrivateKeyPath;
 
     @Value("${keys.access-public}")
-    private String accessPublicKeyPath;
+    String accessPublicKeyPath;
 
     @Value("${keys.refresh-public}")
-    private String refreshPublicKeyPath;
+    String refreshPublicKeyPath;
 
     @Value("${keys.refresh-private}")
-    private String refreshPrivateKeyPath;
+    String refreshPrivateKeyPath;
+
+    PrivateKey accessPrivateKey;
+    PrivateKey refreshPrivateKey;
+    RSAPublicKey accessPublicKey;
+    RSAPublicKey refreshPublicKey;
 
     private final Integer ACCESS_TOKEN_EXPIRATION_MINS = 300;
     private final Integer REFRESH_TOKEN_EXPIRATION_DAYS = 365;
@@ -58,24 +66,38 @@ public class JwtProvider {
         this.keysReader = keysReader;
     }
 
-    public String generateAccessToken(@NonNull Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        PrivateKey privateKey = keysReader.getPrivateKey(accessPrivateKeyPath);
+    @PostConstruct
+    public void readKeys() {
+        try {
+            this.accessPrivateKey = keysReader.getPrivateKey(accessPrivateKeyPath);
+            this.refreshPrivateKey = keysReader.getPrivateKey(refreshPrivateKeyPath);
+            this.accessPublicKey = keysReader.getPublicKey(accessPublicKeyPath);
+            this.refreshPublicKey = keysReader.getPublicKey(refreshPublicKeyPath);
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new JwtDecoderException(e.getMessage());
+        }
+    }
+
+    public String generateAccessToken(@NonNull Long userId, UserRole userRole) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         SignatureAlgorithm algorithm = SignatureAlgorithm.RS256;
         final LocalDateTime now = LocalDateTime.now();
         final Instant accessExpirationInstant = now
                 .plusMinutes(ACCESS_TOKEN_EXPIRATION_MINS)
                 .atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpiration = Date.from(accessExpirationInstant);
+        String role = userRole.toString();
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .setExpiration(accessExpiration)
-                .signWith(privateKey, algorithm)
+                .signWith(this.accessPrivateKey, algorithm)
+                .addClaims(claims)
                 .compact();
     }
 
     public String generateRefreshToken(@NonNull Long userId) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         SignatureAlgorithm algorithm = SignatureAlgorithm.RS256;
-        PrivateKey privateKey = keysReader.getPrivateKey(refreshPrivateKeyPath);
         final LocalDateTime now = LocalDateTime.now();
         final Instant refreshExpirationInstant = now
                 .plusDays(REFRESH_TOKEN_EXPIRATION_DAYS)
@@ -84,15 +106,14 @@ public class JwtProvider {
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .setExpiration(refreshExpiration)
-                .signWith(privateKey, algorithm)
+                .signWith(this.refreshPrivateKey, algorithm)
                 .compact();
     }
 
     public Claims getAccessTokenClaims(@NonNull String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        RSAPublicKey publicKey = keysReader.getPublicKey(accessPublicKeyPath);
         String tokenWithoutBearerStr = token.substring(7);
         return Jwts.parserBuilder()
-                .setSigningKey(publicKey)
+                .setSigningKey(this.accessPublicKey)
                 .build()
                 .parseClaimsJws(tokenWithoutBearerStr)
                 .getBody();
@@ -100,9 +121,8 @@ public class JwtProvider {
 
     public Claims getRefreshTokenClaims(@NonNull String token) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         String tokenWithoutBearerStr = token.substring(7);
-        RSAPublicKey publicKey = keysReader.getPublicKey(refreshPublicKeyPath);
         return Jwts.parserBuilder()
-                .setSigningKey(publicKey)
+                .setSigningKey(this.refreshPublicKey)
                 .build()
                 .parseClaimsJws(tokenWithoutBearerStr)
                 .getBody();
