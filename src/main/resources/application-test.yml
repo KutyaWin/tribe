@@ -17,6 +17,9 @@ spring:
             api-version: 777
             access-token: mock
             phone-number-id: 777
+          kudago-client:
+            url: "https://kudago.com/public-api/v1.4"
+            logger-level: full
   jpa:
     database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
     show_sql: true
