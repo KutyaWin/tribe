@@ -32,9 +32,9 @@ public class EventRequestQueryMap {
 
     String location;
 
-    String actual_since;
+    Long actual_since;
 
-    String actual_until;
+    Long actual_until;
 
     String place_id;
 

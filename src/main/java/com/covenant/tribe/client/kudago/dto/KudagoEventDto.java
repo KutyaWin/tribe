@@ -27,15 +27,15 @@ public class KudagoEventDto {
     String description;
     @JsonProperty("body_text")
     String bodyText;
-//    String location;
-//    String categories;
+    KudagoLocationDto location;
+    List<String> categories;
     String tagline;
     @JsonProperty("age_restriction")
     String ageRestriction;
     String price;
     @JsonProperty("is_free")
     Boolean isFree;
-    String images;
+    List<KudagoImageDto> images;
     @JsonProperty("favourites_count")
     Long favouritesCount;
     @JsonProperty("comments_count")
