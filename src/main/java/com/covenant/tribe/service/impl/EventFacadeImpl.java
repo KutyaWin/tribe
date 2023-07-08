@@ -56,8 +56,6 @@ public class EventFacadeImpl implements EventFacade {
 
         newEvent = eventService.saveNewEvent(newEvent);
 
-        sendNecessaryNotification(requestTemplateForCreatingEvent, newEvent.getId());
-
         processNecessaryPhotos(requestTemplateForCreatingEvent, newEvent);
 
         DetailedEventInSearchDTO responseEventDto = eventMapper
@@ -102,35 +100,6 @@ public class EventFacadeImpl implements EventFacade {
 
         return new CollectedDataForMappingToEvent(organizer, eventType, eventAddress, alreadyExistEventTags,
                 createdEventTagsByRequest, invitedUserByRequest);
-    }
-
-    private void sendNecessaryNotification(RequestTemplateForCreatingEventDTO requestTemplateForCreatingEvent,
-                                           Long newEventId) {
-
-        if (requestTemplateForCreatingEvent.getSendToAllUsersByInterests()) {
-            List<User> allUsersIdWhoInterestingEventType = userService
-                    .findAllByInterestingEventTypeContaining(requestTemplateForCreatingEvent.getEventTypeId()).stream()
-                    .filter(u -> !u.getId().equals(requestTemplateForCreatingEvent.getOrganizerId()))
-                    .toList();
-
-            firebaseService.sendNotificationsToUsers(allUsersIdWhoInterestingEventType,
-                    requestTemplateForCreatingEvent.getIsEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
-                    newEventId);
-        }
-        if (requestTemplateForCreatingEvent.getInvitedUserIds() != null) {
-            List<User> usersWhoInvited = userService
-                    .findAllById(requestTemplateForCreatingEvent.getInvitedUserIds().stream().toList()).stream()
-                    .filter(u -> !u.getId().equals(requestTemplateForCreatingEvent.getOrganizerId()))
-                    .toList();
-
-            firebaseService.sendNotificationsToUsers(usersWhoInvited,
-                    requestTemplateForCreatingEvent.getIsEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
-                    newEventId);
-        }
     }
 
     private void processNecessaryPhotos(RequestTemplateForCreatingEventDTO requestTemplateForCreatingEvent,
