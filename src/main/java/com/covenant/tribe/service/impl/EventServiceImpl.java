@@ -327,7 +327,8 @@ public class EventServiceImpl implements EventService {
         sendNecessaryNotification(event);
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
         MessageStrategyName messageStrategyName = null;
-        if (Objects.equals(environment.getProperty("spring.profiles.active"), "dev")) {
+        if (Objects.equals(environment.getProperty("spring.profiles.active"), "dev")
+                || Objects.equals(environment.getProperty("spring.profiles.active"), "test")) {
             messageStrategyName = MessageStrategyName.CONSOLE;
         } else {
             messageStrategyName = MessageStrategyName.FIREBASE;
