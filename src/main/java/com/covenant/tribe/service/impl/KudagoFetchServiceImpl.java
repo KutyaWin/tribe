@@ -2,55 +2,72 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.kudago.EventRequestQueryMap;
 import com.covenant.tribe.client.kudago.KudagoClient;
+import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.client.kudago.dto.KudagoEventsResponseDto;
 import com.covenant.tribe.service.KudagoFetchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class KudagoFetchServiceImpl implements KudagoFetchService {
     final KudagoClient kudaGoClient;
-
-    List<String> fieldsToRetrieve;
-
-    List<String> detailedFields;
+    String fields;
+    String expand;
 
     @PostConstruct
     public void init() {
-        fieldsToRetrieve = List.of(new String[]{
-                "id",
-                "place",
-                "location",
-                "dates",
-                "title",
-                "slug",
-                "age_restriction",
-                "price"});
-        detailedFields = List.of(new String[]{
-                "place",
-                "dates"});
+        List<String> fieldsToRetrieve = List.of("id", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images");
+        List<String> detailedFields = List.of("place", "dates", "location", "categories", "images");
+
+        fields = String.join(",", fieldsToRetrieve);
+        expand = String.join(",", detailedFields);
     }
 
     @Override
-    public KudagoEventsResponseDto fetchPosts() throws JsonProcessingException {
-        String fields = String.join(",", fieldsToRetrieve);
-        EventRequestQueryMap build = EventRequestQueryMap.builder().
-                fields(fields)
-                .page(1)
-                .page_size(100)
-                .build();
-        ObjectMapper objectMapper = new ObjectMapper();
-        ResponseEntity<KudagoEventsResponseDto> events = kudaGoClient.getEvents(build);
-        return events.getBody();
+    public List<KudagoEventDto> fetchPosts(KudagoClientParams kudagoClientParams) throws JsonProcessingException {
+        List<KudagoEventDto> events = new ArrayList<>();
+        Integer page = 0;
+        Integer pageSize = 1000;
+        List<KudagoEventDto> currentPage;
+        while (true) {
+            page++;
+            currentPage = fetchPosts(page, pageSize, kudagoClientParams);
+            if (currentPage.isEmpty()){
+                break;
+            } else {
+                events.addAll(currentPage);
+            }
+        }
+        return events;
+    }
+
+    @Override
+    public List<KudagoEventDto> fetchPosts(Integer page, Integer pageSize, KudagoClientParams kudagoClientParams) throws JsonProcessingException {
+        log.debug("request for page {}", page);
+        EventRequestQueryMap.EventRequestQueryMapBuilder builder = EventRequestQueryMap.builder()
+                .fields(fields)
+                .expand(expand)
+                .page(page)
+                .page_size(pageSize);
+        if (kudagoClientParams.getActual_since()!=null) {
+            builder.actual_since(kudagoClientParams.getActual_since());
+        }
+        EventRequestQueryMap request = builder.build();
+        ResponseEntity<KudagoEventsResponseDto> events;
+        events = kudaGoClient.getEvents(request);
+        return events.getBody().getResults();
     }
 }

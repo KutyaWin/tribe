@@ -20,20 +20,9 @@ public class KudagoPlace {
     Boolean isStub;
     @JsonProperty("site_url")
     String siteUrl;
-    Coords coords;
+    KudagoCoordsDto coords;
     String subway;
     @JsonProperty("is_closed")
     Boolean isClosed;
     String location;
-
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    static class Coords{
-        Double lat;
-        Double lon;
-    }
-
 }
