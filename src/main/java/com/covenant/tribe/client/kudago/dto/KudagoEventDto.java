@@ -42,6 +42,6 @@ public class KudagoEventDto {
     Long commentsCount;
     @JsonProperty("site_url")
     String siteUrl;
-//    String tags;
+    String[] tags;
 //    String participants;
 }
