@@ -7,6 +7,7 @@ import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.client.kudago.dto.KudagoEventsResponseDto;
 import com.covenant.tribe.service.KudagoFetchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import feign.FeignException;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
 
     @PostConstruct
     public void init() {
-        List<String> fieldsToRetrieve = List.of("id", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images");
+        List<String> fieldsToRetrieve = List.of("id","publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images");
         List<String> detailedFields = List.of("place", "dates", "location", "categories", "images");
 
         fields = String.join(",", fieldsToRetrieve);
@@ -40,12 +41,12 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
     public List<KudagoEventDto> fetchPosts(KudagoClientParams kudagoClientParams) throws JsonProcessingException {
         List<KudagoEventDto> events = new ArrayList<>();
         Integer page = 0;
-        Integer pageSize = 1000;
+        Integer pageSize = 100;
         List<KudagoEventDto> currentPage;
         while (true) {
             page++;
             currentPage = fetchPosts(page, pageSize, kudagoClientParams);
-            if (currentPage.isEmpty()){
+            if (currentPage == null || currentPage.isEmpty()){
                 break;
             } else {
                 events.addAll(currentPage);
@@ -67,7 +68,12 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
         }
         EventRequestQueryMap request = builder.build();
         ResponseEntity<KudagoEventsResponseDto> events;
-        events = kudaGoClient.getEvents(request);
-        return events.getBody().getResults();
+        try {
+            events = kudaGoClient.getEvents(request);
+            return events.getBody().getResults();
+        } catch (FeignException.NotFound e) {
+          log.info("Page {} not found", page);
+          return null;
+        }
     }
 }
