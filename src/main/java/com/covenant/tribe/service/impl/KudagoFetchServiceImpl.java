@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
 
     @PostConstruct
     public void init() {
-        List<String> fieldsToRetrieve = List.of("id","publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images");
+        List<String> fieldsToRetrieve = List.of("id","publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images", "tags");
         List<String> detailedFields = List.of("place", "dates", "location", "categories", "images");
 
         fields = String.join(",", fieldsToRetrieve);
@@ -38,7 +40,7 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
     }
 
     @Override
-    public List<KudagoEventDto> fetchPosts(KudagoClientParams kudagoClientParams) throws JsonProcessingException {
+    public Map<Long, KudagoEventDto> fetchPosts(KudagoClientParams kudagoClientParams) throws JsonProcessingException {
         List<KudagoEventDto> events = new ArrayList<>();
         Integer page = 0;
         Integer pageSize = 100;
@@ -52,7 +54,8 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
                 events.addAll(currentPage);
             }
         }
-        return events;
+        Map<Long, KudagoEventDto> map = events.stream().collect(Collectors.toMap(KudagoEventDto::getId, e -> e));
+        return map;
     }
 
     @Override
