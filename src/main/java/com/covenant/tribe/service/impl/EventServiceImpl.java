@@ -147,6 +147,7 @@ public class EventServiceImpl implements EventService {
 
     private QSort handleTime(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {
         DateTimePath<OffsetDateTime> startTime = QEvent.event.startTime;
+        DateTimePath<OffsetDateTime> endTime = QEvent.event.endTime;
         if (filterPresent && filter.getSort().equals(EventSort.DATE)) {
             orders = getOrder(filter, startTime);
         }
@@ -158,7 +159,7 @@ public class EventServiceImpl implements EventService {
             OffsetDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
 
             qPredicates.add(startDateTime, startTime::after);
-            qPredicates.add(endDateTime, QEvent.event.endTime::before);
+            qPredicates.add(endDateTime, endTime::before);
         }
         if (filter.getNumberOfParticipantsMin() != null && filter.getNumberOfParticipantsMax() != null) {
             QUserRelationsWithEvent qUserRelationsWithEvent = QUserRelationsWithEvent.userRelationsWithEvent;
@@ -176,19 +177,36 @@ public class EventServiceImpl implements EventService {
                             .where(qUserRelationsWithEvent.isParticipant.isTrue())
             ));
         }
-        if (filter.getPartsOfDay() != null) {
-            PartsOfDay partsOfDayFromClient = PartsOfDay.valueOf(filter.getPartsOfDay());
+        String partsOfDay = filter.getPartsOfDay();
 
-            qPredicates.add(
-                    filter.getPartsOfDay(),
-                    startTime.hour().goe(Integer.valueOf(partsOfDayFromClient.getHour()))
-                            .and(QEvent.event.endTime.hour().loe(Integer.valueOf(PartsOfDay.getNextEnumValue(partsOfDayFromClient).getHour()))));
-        }
+        qPredicates.add(partsOfDay, (p)->{
+            QPredicates nested = QPredicates.builder();
+            String[] partsOfDaySplit = partsOfDay.split(",");
+            for (String partOfDay : partsOfDaySplit) {
+                PartsOfDay partsOfDayFromClient = PartsOfDay.valueOf(partOfDay);
+                Integer lower = Integer.valueOf(partsOfDayFromClient.getHour());
+                Integer upper = Integer.valueOf(PartsOfDay.getNextEnumValue(partsOfDayFromClient).getHour());
+                Integer altMidnight = 24;
+                Integer altUpper = upper;
+                // 00 needs to be changed to 24 in case of end time between 18 and 00
+                if (upper < lower) {
+                    altUpper = altMidnight;
+                }
+                BooleanExpression ifEndIsOnSameDay = endTime.hour().goe(startTime.hour()).and(endTime.hour().loe(altUpper)); //when end time between 18 - 24
+                BooleanExpression ifEndIsOnNextDay = endTime.hour().lt(startTime.hour()).and(endTime.hour().loe(upper)); //when end time after 00
+                ifEndIsOnSameDay = ifEndIsOnSameDay.or(ifEndIsOnNextDay);
+                nested.add(
+                        partOfDay,
+                        startTime.hour().goe(lower)
+                                .and(ifEndIsOnSameDay));
+            }
+            return nested.buildOr();
+        });
         if (filter.getDurationEventInHoursMin() != null && filter.getDurationEventInHoursMax() != null) {
             Predicate eventDurationInHours =
-                    QEvent.event.endTime.hour().subtract(startTime.hour()).goe(filter.getDurationEventInHoursMin())
+                    endTime.hour().subtract(startTime.hour()).goe(filter.getDurationEventInHoursMin())
                             .and(
-                                    QEvent.event.endTime.hour().subtract(startTime.hour()).loe(filter.getDurationEventInHoursMax())
+                                    endTime.hour().subtract(startTime.hour()).loe(filter.getDurationEventInHoursMax())
                             );
 
             qPredicates.add(filter.getDurationEventInHoursMin(), eventDurationInHours);
