@@ -36,7 +36,7 @@ public class EventFilter implements Serializable {
 
     Integer numberOfParticipantsMax;
 
-    @Schema(example = "MORNING")
+    @Schema(example = "MORNING,EVENING,NIGHT")
     String partsOfDay;
 
     Integer durationEventInHoursMin;
