@@ -560,6 +560,7 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
+    @Transactional
     @Override
     public void sendRequestToParticipationInPublicEvent(Long eventId, String userId) {
         Event event = getEventById(eventId);
