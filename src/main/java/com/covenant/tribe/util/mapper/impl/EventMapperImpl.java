@@ -220,6 +220,7 @@ public class EventMapperImpl implements EventMapper {
                 .sendToAllUsersByInterests(dto.getSendToAllUsersByInterests())
                 .isEighteenYearLimit(dto.getIsEighteenYearLimit())
                 .isPrivate(dto.getIsPrivate())
+                .isPresenceOfAlcohol(dto.getHasAlcohol())
                 .eventType(eventType)
                 .build();
 
