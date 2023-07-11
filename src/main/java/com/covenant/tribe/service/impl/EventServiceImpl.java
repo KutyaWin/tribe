@@ -560,6 +560,7 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
+    @Transactional
     @Override
     public void sendRequestToParticipationInPublicEvent(Long eventId, String userId) {
         Event event = getEventById(eventId);
@@ -890,6 +891,11 @@ public class EventServiceImpl implements EventService {
                             eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString()
                     );
         }
+
+        if (updateEventDto.isHasAlcohol() != eventForUpdate.isPresenceOfAlcohol()) {
+            eventForUpdate.setPresenceOfAlcohol(updateEventDto.isHasAlcohol());
+        }
+
         eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
 
