@@ -1,5 +1,16 @@
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
+  cloud:
+    openfeign:
+      client:
+        config:
+          kudago-client:
+            connectTimeout: 100000
+            readTimeout: 100000
+            error-decoder: com.covenant.tribe.client.kudago.decoder.KudagoDecoder
+            retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
+
+
 scheduler:
   mode: "retrying"
