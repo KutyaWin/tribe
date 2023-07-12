@@ -1,4 +1,10 @@
 spring:
+  properties:
+    hibernate:
+      dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+  jpa:
+#    database-platform: com.covenant.tribe.configuration.CustomPostgreSQLDialect
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
 scheduler:
