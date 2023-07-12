@@ -132,7 +132,7 @@ public class EventController {
     @PostMapping
     @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.getName())")
     public ResponseEntity<?> createEvent(
-            @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
+           @Valid @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
     ) {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 

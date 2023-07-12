@@ -71,6 +71,10 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @NotNull(message = "is_private should not be null")
     Boolean isPrivate;
 
+    @JsonProperty(value = "has_alcohol")
+    @NotNull(message = "has_alcohol should not be null")
+    Boolean hasAlcohol;
+
     @JsonProperty(value = "send_to_all_users_by_interests")
     @NotNull(message = "send_to_all_users_by_interests should not be null.")
     Boolean sendToAllUsersByInterests;
