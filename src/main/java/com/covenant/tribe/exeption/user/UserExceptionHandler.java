@@ -22,12 +22,12 @@ public class UserExceptionHandler {
         log.error("[EXCEPTION] message: " + userNotFoundException.getMessage());
 
         return ResponseErrorDTO.builder()
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.NOT_FOUND)
                 .errorMessage(List.of(userNotFoundException.getMessage()))
                 .build();
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(UserAlreadyExistException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseErrorDTO handleUserExistException(UserAlreadyExistException e) {
         log.error("[EXCEPTION] message: " + e.getMessage());
