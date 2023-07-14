@@ -348,7 +348,7 @@ public class EventServiceImpl implements EventService {
                 event.setStartTimeUpdated(false);
                 eventRepository.save(event);
             } else {
-                schedulerService.schedule(broadcast); //TODO Обработать DateTimeException
+                schedulerService.schedule(broadcast);
             }
         } catch (SchedulerException e) {
             String message = String.format(
