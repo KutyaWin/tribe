@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.DateTimeException;
 import java.util.List;
 
 @RestControllerAdvice
@@ -24,6 +25,16 @@ public class SchedulingExceptionHandler {
     @ExceptionHandler(TriggerNotUpdatedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleTriggerNotUpdatedException(TriggerNotUpdatedException e) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(DateTimeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleDateTimeException(DateTimeException e) {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
