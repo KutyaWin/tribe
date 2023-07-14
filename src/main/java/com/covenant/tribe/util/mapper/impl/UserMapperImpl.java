@@ -71,6 +71,7 @@ public class UserMapperImpl implements UserMapper {
     public UserSubscriberDto mapToUserSubscriberDto(User subscriber, Set<Long> userIds) {
         log.debug("map User to UserSubscriberDto. User: {}", subscriber);
         return UserSubscriberDto.builder()
+                .username(subscriber.getUsername())
                 .userId(subscriber.getId())
                 .userAvatar(subscriber.getUserAvatar())
                 .isUserSubscribeToSubscriber(userIds.contains(subscriber.getId()))
