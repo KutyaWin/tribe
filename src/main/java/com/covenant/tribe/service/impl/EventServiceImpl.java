@@ -52,6 +52,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -501,18 +502,17 @@ public class EventServiceImpl implements EventService {
         event.setEventStatus(EventStatus.DELETED);
         eventRepository.save(event);
 
-        BroadcastEntity broadcastEntity = broadcastRepository
-                .findBySubjectIdAndStatusNot(eventId, BroadcastStatuses.COMPLETE_SUCCESSFULLY)
-                .orElseThrow(() -> {
-                    String message = String.format(
-                            "[EXCEPTION] Broadcast with event id %s does not exist", eventId);
-                    log.error(message);
-                    return new BroadcastNotFoundException(message);
-                });
-        broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
-        TriggerKey triggerKey = new TriggerKey(broadcastEntity.getTriggerKey());
-        schedulerService.unschedule(triggerKey);
-        broadcastRepository.save(broadcastEntity);
+        Optional<BroadcastEntity> broadcastEntityOpt = broadcastRepository
+                .findBySubjectIdAndStatusNot(eventId, BroadcastStatuses.COMPLETE_SUCCESSFULLY);
+
+        if (broadcastEntityOpt.isPresent()) {
+            BroadcastEntity broadcastEntity = broadcastEntityOpt.get();
+            broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
+            TriggerKey triggerKey = new TriggerKey(broadcastEntity.getTriggerKey());
+            schedulerService.unschedule(triggerKey);
+            broadcastRepository.save(broadcastEntity);
+        }
+
     }
 
     @Override
