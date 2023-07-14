@@ -228,10 +228,9 @@ public class EventController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PatchMapping("/verification/confirm/{event_id}")
+    @PatchMapping("/verification/confirm/{event_id}")//TODO для продакшн сборки сделать PreAuthorize(ADMIN)
     public ResponseEntity<?> updateEventStatusToPublished(
-            @PathVariable(value = "event_id") Long eventId,
-            @RequestParam(value = "is_updated", defaultValue = "true") Boolean isUpdated
+            @PathVariable(value = "event_id") Long eventId
     ) {
         log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
 
