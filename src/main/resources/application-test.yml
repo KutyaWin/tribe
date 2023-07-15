@@ -17,6 +17,8 @@ spring:
             api-version: 777
             access-token: mock
             phone-number-id: 777
+          kudago-client:
+            url: "https://kudago.com/public-api/v1.4"
   jpa:
     show_sql: true
     open-in-view: false #lock auto start transactional anywhere
@@ -73,7 +75,11 @@ google:
 logging:
   level:
     root: info
-
+    com:
+      covenant:
+        tribe:
+          service:
+            impl: debug
 verification:
   code:
     email:

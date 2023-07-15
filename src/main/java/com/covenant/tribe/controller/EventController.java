@@ -132,7 +132,7 @@ public class EventController {
     @PostMapping
     @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.getName())")
     public ResponseEntity<?> createEvent(
-            @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
+           @Valid @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
     ) {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 
@@ -228,14 +228,13 @@ public class EventController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PatchMapping("/verification/confirm/{event_id}")
+    @PatchMapping("/verification/confirm/{event_id}")//TODO для продакшн сборки сделать PreAuthorize(ADMIN)
     public ResponseEntity<?> updateEventStatusToPublished(
-            @PathVariable(value = "event_id") Long eventId,
-            @RequestParam(value = "is_updated", defaultValue = "true") Boolean isUpdated
+            @PathVariable(value = "event_id") Long eventId
     ) {
         log.info("[CONTROLLER] start endpoint updateEventStatusToPublished with param: {}", eventId);
 
-        eventService.updateEventStatusToPublished(eventId, isUpdated);
+        eventService.updateEventStatusToPublished(eventId);
 
         log.info("[CONTROLLER] end endpoint updateEventStatusToPublished");
         return ResponseEntity

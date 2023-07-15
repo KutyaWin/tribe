@@ -6,6 +6,7 @@ import com.covenant.tribe.util.querydsl.EventFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +30,7 @@ public interface EventService {
 
     List<EventVerificationDTO> getEventWithVerificationPendingStatus();
 
-    void updateEventStatusToPublished(Long eventId, Boolean isUpdated);
+    void updateEventStatusToPublished(Long eventId);
 
     void updateEventStatusToSendToRework(Long eventId);
 
