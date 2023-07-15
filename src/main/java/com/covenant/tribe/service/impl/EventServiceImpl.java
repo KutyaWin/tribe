@@ -31,6 +31,7 @@ import com.covenant.tribe.util.querydsl.QPredicates;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -48,8 +49,11 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -97,7 +101,7 @@ public class EventServiceImpl implements EventService {
         qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
         qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
         handleText(filter, qPredicates);
-        Pageable pageable = QPageRequest.of(page, pageSize, orders);
+        Pageable pageable =  QPageRequest.of(page, pageSize, orders);
         Predicate predicate = qPredicates.build();
         Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
         if (currentUserId != null) {
@@ -108,21 +112,31 @@ public class EventServiceImpl implements EventService {
     }
 
     private void handleText(EventFilter filter, QPredicates qPredicates) {
-        qPredicates.add(filter.getText(), (t) -> QEvent.event.eventName.containsIgnoreCase(t).or(QEvent.event.eventDescription.containsIgnoreCase(t)).or(QEvent.event.tagList.any().tagName.contains(t)));
+        qPredicates.add(filter.getText(), (t)->
+                QEvent.event.eventName.containsIgnoreCase(t)
+                .or(QEvent.event.eventDescription.containsIgnoreCase(t))
+                        .or(QEvent.event.tagList.any().tagName.contains(t)));
     }
 
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(Long currentUserId) {
-        List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(currentUserId, UserStatus.ENABLED).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] User with id %s, dont exist", currentUserId);
-            log.error(message);
-            return new UserNotFoundException(message);
-        }).getUserRelationsWithEvents();
+        List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
+                        currentUserId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s, dont exist", currentUserId
+                    );
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                }).getUserRelationsWithEvents();
         return eventsCurrentUser;
     }
 
     private QSort handleDistance(EventFilter filter, QPredicates qPredicates, QSort orders, boolean distanceFilter) {
         if (filter.getLongitude() != null && filter.getLatitude() != null) {
-            NumberExpression<Double> distance = Expressions.numberTemplate(Double.class, "ST_Distance(" + QEvent.event.eventAddress.eventPosition + ", ST_MakePoint(" + filter.getLongitude() + ", " + filter.getLatitude() + "))");
+            NumberExpression<Double> distance = Expressions.numberTemplate(
+                    Double.class,
+                    "ST_Distance(" + QEvent.event.eventAddress.eventPosition +
+                            ", ST_MakePoint(" + filter.getLongitude() + ", " + filter.getLatitude() + "))");
 
             qPredicates.add(filter.getDistanceInMeters(), distance::lt);
 
@@ -154,37 +168,61 @@ public class EventServiceImpl implements EventService {
         if (filter.getNumberOfParticipantsMin() != null && filter.getNumberOfParticipantsMax() != null) {
             QUserRelationsWithEvent qUserRelationsWithEvent = QUserRelationsWithEvent.userRelationsWithEvent;
 
-            qPredicates.add(filter.getNumberOfParticipantsMin(), QEvent.event.eventRelationsWithUser.size().goe(JPAExpressions.select(qUserRelationsWithEvent.count()).from(qUserRelationsWithEvent).where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id)).where(qUserRelationsWithEvent.isParticipant.isTrue())));
-            qPredicates.add(filter.getNumberOfParticipantsMax(), QEvent.event.eventRelationsWithUser.size().loe(JPAExpressions.select(qUserRelationsWithEvent.count()).from(qUserRelationsWithEvent).where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id)).where(qUserRelationsWithEvent.isParticipant.isTrue())));
+            qPredicates.add(filter.getNumberOfParticipantsMin(), QEvent.event.eventRelationsWithUser.size().goe(
+                    JPAExpressions.select(qUserRelationsWithEvent.count())
+                            .from(qUserRelationsWithEvent)
+                            .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id))
+                            .where(qUserRelationsWithEvent.isParticipant.isTrue())
+            ));
+            qPredicates.add(filter.getNumberOfParticipantsMax(), QEvent.event.eventRelationsWithUser.size().loe(
+                    JPAExpressions.select(qUserRelationsWithEvent.count())
+                            .from(qUserRelationsWithEvent)
+                            .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id))
+                            .where(qUserRelationsWithEvent.isParticipant.isTrue())
+            ));
         }
-        handlePartsOfDay(filter, qPredicates, startTime, endTime);
+        String partsOfDay = filter.getPartsOfDay();
+
+        qPredicates.add(partsOfDay, (p)->{
+            String[] partsOfDaySplit = partsOfDay.trim().replaceAll(" ","").split(",");
+            List<NumberExpression<Integer>> enums = new ArrayList<>();
+            Set<String> partsSet = new HashSet<>();
+            try {
+                for (String part : partsOfDaySplit) {
+                    PartsOfDay partE = PartsOfDay.valueOf(part);
+                    partsSet.add(String.valueOf(partE.ordinal()));
+                }
+            } catch (IllegalArgumentException e) {
+                   throw new WrongPartOfADayFilter("Part of day filter is incorrect");
+            }
+            String join = String.join(", ", partsSet);
+            QEventPartOfDay eventPartOfDay = QEventPartOfDay.eventPartOfDay;
+            QEvent event = QEvent.event;
+            JPQLQuery<Long> subQuery = JPAExpressions.select(event.id)
+                    .from(eventPartOfDay)
+                    .join(eventPartOfDay.event, event)
+                    .where(Expressions.booleanTemplate(eventPartOfDay.partsOfDay + " in ("+join+")"))
+                    .groupBy(event.id).having(eventPartOfDay.partsOfDay.countDistinct()
+                            .eq(Expressions.asNumber(partsSet.size())));
+            JPQLQuery<Long> mainQuery = JPAExpressions.select(event.id)
+                    .from(event)
+                    .join(event.partsOfDay, eventPartOfDay)
+                    .where(event.id.in(subQuery)).groupBy(event.id)
+                    .having(eventPartOfDay.id.countDistinct().eq(Expressions.asNumber(partsSet.size())));
+            BooleanExpression in = event.id
+                    .in(mainQuery);
+            return in;
+        });
         if (filter.getDurationEventInHoursMin() != null && filter.getDurationEventInHoursMax() != null) {
-            Predicate eventDurationInHours = endTime.hour().subtract(startTime.hour()).goe(filter.getDurationEventInHoursMin()).and(endTime.hour().subtract(startTime.hour()).loe(filter.getDurationEventInHoursMax()));
+            Predicate eventDurationInHours =
+                    endTime.hour().subtract(startTime.hour()).goe(filter.getDurationEventInHoursMin())
+                            .and(
+                                    endTime.hour().subtract(startTime.hour()).loe(filter.getDurationEventInHoursMax())
+                            );
 
             qPredicates.add(filter.getDurationEventInHoursMin(), eventDurationInHours);
         }
         return orders;
-    }
-
-    private void handlePartsOfDay(EventFilter filter, QPredicates qPredicates, DateTimePath<OffsetDateTime> startTime, DateTimePath<OffsetDateTime> endTime) {
-        if (filter.getPartsOfDay()!=null) {
-            String partsOfDay = filter.getPartsOfDay();
-            String[] partsOfDaySplit = partsOfDay.split(",");
-            Integer lower = Integer.valueOf(PartsOfDay.valueOf(partsOfDaySplit[0]).getHour());
-            Integer upper = Integer.valueOf(PartsOfDay.getNextEnumValue(
-                    PartsOfDay.valueOf(partsOfDaySplit[partsOfDaySplit.length - 1])).getHour());
-            if (upper < lower) {
-                upper += 24;
-            }
-            Integer diff = upper - lower;
-            DateTimeTemplate<OffsetDateTime> truncDay = Expressions.dateTimeTemplate(OffsetDateTime.class,
-                    "date_trunc('day', " + startTime + ")");
-            DateTimeTemplate<OffsetDateTime> lowerBound = Expressions.dateTimeTemplate(
-                    OffsetDateTime.class, truncDay + "+ interval '" + lower + " HOUR'");
-            DateTimeTemplate<OffsetDateTime> upperBound = Expressions.dateTimeTemplate(
-                    OffsetDateTime.class, lowerBound + "+ interval '" + diff + " HOUR'");
-            qPredicates.add(partsOfDay, upperBound.before(endTime).and(startTime.after(lowerBound)));
-        }
     }
 
     private QSort handleAlco(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {
@@ -200,12 +238,13 @@ public class EventServiceImpl implements EventService {
     }
 
 
-    private QSort getOrder(EventFilter filter, ComparableExpressionBase expression) {
+    private  QSort getOrder(EventFilter filter ,ComparableExpressionBase expression) {
         if (filter.getOrder() == null || filter.getOrder().equals(SortOrder.ASC)) {
             return new QSort(expression.asc());
         }
         return new QSort(expression.desc());
     }
+
 
 
     @Transactional(readOnly = true)
@@ -218,14 +257,20 @@ public class EventServiceImpl implements EventService {
         DetailedEventInSearchDTO detailedEventInSearchDTO = null;
 
         if (userId != null) {
-            User currentUser = userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED).orElseThrow(() -> {
-                String message = String.format("User with id %s didn't found", userId);
-                log.error(message);
-                return new UserNotFoundException(message);
-            });
-            detailedEventInSearchDTO = eventMapper.mapToDetailedEvent(event, currentUser);
+            User currentUser = userRepository
+                    .findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "User with id %s didn't found", userId
+                        );
+                        log.error(message);
+                        return new UserNotFoundException(message);
+                    });
+            detailedEventInSearchDTO = eventMapper
+                    .mapToDetailedEvent(event, currentUser);
         } else {
-            detailedEventInSearchDTO = eventMapper.mapToDetailedEvent(event, null);
+            detailedEventInSearchDTO = eventMapper
+                    .mapToDetailedEvent(event, null);
         }
 
         log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
@@ -236,7 +281,12 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
         Long organizerIdLong = Long.parseLong(organizerId);
-        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(organizerIdLong, EventStatus.DELETED).stream().map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong)).toList();
+        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
+                        organizerIdLong, EventStatus.DELETED
+                )
+                .stream()
+                .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
+                .toList();
     }
 
     private void checkEventStatus(Event event) {
@@ -260,27 +310,34 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public Event saveNewEvent(Event event) {
-        if (eventRepository.findByEventNameAndStartTimeAndOrganizerId(event.getEventName(), event.getStartTime(), event.getOrganizer().getId()).isEmpty()) {
+        if (eventRepository.findByEventNameAndStartTimeAndOrganizerId(
+                event.getEventName(), event.getStartTime(), event.getOrganizer().getId()).isEmpty()) {
 
             return eventRepository.save(event);
         } else {
-            String message = String.format("[EXCEPTION] Event with name %s and start time %s already exist", event.getEventName(), event.getStartTime());
+            String message = String.format(
+                    "[EXCEPTION] Event with name %s and start time %s already exist",
+                    event.getEventName(), event.getStartTime());
             throw new EventAlreadyExistException(message);
         }
     }
 
     @Override
     public Event getEventById(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> {
-            log.error("[EXCEPTION] event with id {}, does not exist", eventId);
-            return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
-        });
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    log.error("[EXCEPTION] event with id {}, does not exist", eventId);
+                    return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
+                });
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
-        return eventRepository.findAllByEventStatus(EventStatus.VERIFICATION_PENDING).stream().map(eventMapper::mapToEventVerificationDTO).collect(Collectors.toList());
+        return eventRepository
+                .findAllByEventStatus(EventStatus.VERIFICATION_PENDING)
+                .stream().map(eventMapper::mapToEventVerificationDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -295,19 +352,28 @@ public class EventServiceImpl implements EventService {
         event.setEventStatus(EventStatus.PUBLISHED);
         eventRepository.save(event);
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
-        Broadcast broadcast = Broadcast.builder().subjectId(event.getId()).repeatDate(hourNotificationSendTime).endDate(event.getEndTime()).notificationStrategyName(NotificationStrategyName.EVENT).status(BroadcastStatuses.NEW).messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
+        Broadcast broadcast = Broadcast.builder()
+                .subjectId(event.getId())
+                .repeatDate(hourNotificationSendTime)
+                .endDate(event.getEndTime())
+                .notificationStrategyName(NotificationStrategyName.EVENT)
+                .status(BroadcastStatuses.NEW)
+                .messageStrategyName(MessageStrategyName.CONSOLE) // TODO после тестирования изменить на firebase
                 .build();
         try {
             if (isUpdated) {
                 BroadcastEntity broadcastE = broadcastService.findBySubjectId(eventId);
-                if (!event.getStartTime().isEqual(broadcastE.getStartTime())) {
+                if(!event.getStartTime().isEqual(broadcastE.getStartTime())) {
                     schedulerService.updateTriggerTime(broadcast);
                 }
             } else {
                 schedulerService.schedule(broadcast);
             }
         } catch (SchedulerException e) {
-            String message = String.format("Cannot schedule broadcast: %s for event with id %s", broadcast.toString(), event.getId());
+            String message = String.format(
+                    "Cannot schedule broadcast: %s for event with id %s",
+                    broadcast.toString(), event.getId()
+            );
             log.error(message);
         }
     }
@@ -331,9 +397,15 @@ public class EventServiceImpl implements EventService {
         User user = getUser(userId);
         List<UserRelationsWithEvent> userRelationsWithEvents = getUserRelationsWithEvents(user);
 
-        return userRelationsWithEvents.stream().filter(userRelationsWithEvent -> {
-            return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED && userRelationsWithEvent.isInvited();
-        }).map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(userRelationsWithEvent.getEventRelations(), userRelationsWithEvent.getUserRelations().getId())).toList();
+        return userRelationsWithEvents.stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED
+                            && userRelationsWithEvent.isInvited();
+                })
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations(), userRelationsWithEvent.getUserRelations().getId())
+                )
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -342,19 +414,29 @@ public class EventServiceImpl implements EventService {
         User user = getUser(userId);
         List<UserRelationsWithEvent> userRelationsWithEvents = getUserRelationsWithEvents(user);
 
-        return userRelationsWithEvents.stream().filter(userRelationsWithEvent -> {
-            return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED && userRelationsWithEvent.isParticipant();
-        }).map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(userRelationsWithEvent.getEventRelations(), userRelationsWithEvent.getUserRelations().getId())).toList();
+        return userRelationsWithEvents.stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.getEventRelations().getEventStatus() == EventStatus.PUBLISHED
+                            && userRelationsWithEvent.isParticipant();
+                })
+                .map(userRelationsWithEvent -> eventMapper.mapToEventInUserProfileDTO(
+                        userRelationsWithEvent.getEventRelations(), userRelationsWithEvent.getUserRelations().getId())
+                )
+                .toList();
     }
 
     @Transactional
     @Override
     public void confirmInvitationToEvent(Long eventId, String userId) {
-        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] User relations with id %s and event relations with id %s does not exist", userId, eventId);
-            log.error(message);
-            return new UserRelationsWithEventNotFoundException(message);
-        });
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId, eventId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
         userRelationsWithEvent.setParticipant(true);
         userRelationsWithEvent.setInvited(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
@@ -363,11 +445,15 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public void declineInvitationToEvent(Long eventId, String userId) {
-        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] User relations with id %s and event relations with id %s does not exist", userId, eventId);
-            log.error(message);
-            return new UserRelationsWithEventNotFoundException(message);
-        });
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId, eventId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
         userRelationsWithEvent.setInvited(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
@@ -375,11 +461,15 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public void declineToParticipantInEvent(Long eventId, String userId) {
-        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(Long.parseLong(userId), eventId).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] User relations with id %s and event relations with id %s does not exist", userId, eventId);
-            log.error(message);
-            return new UserRelationsWithEventNotFoundException(message);
-        });
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(Long.parseLong(userId), eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User relations with id %s and event relations with id %s does not exist",
+                            userId, eventId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
         userRelationsWithEvent.setParticipant(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
@@ -387,19 +477,26 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public void deleteEvent(Long organizerId, Long eventId) {
-        Event event = eventRepository.findByOrganizerIdAndId(organizerId, eventId).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] Event with id %s and organizer with id %s, does not exist", eventId, organizerId);
-            log.error(message);
-            return new EventNotFoundException(message);
-        });
+        Event event = eventRepository
+                .findByOrganizerIdAndId(organizerId, eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] Event with id %s and organizer with id %s, does not exist",
+                            eventId, organizerId);
+                    log.error(message);
+                    return new EventNotFoundException(message);
+                });
         event.setEventStatus(EventStatus.DELETED);
         eventRepository.save(event);
 
-        BroadcastEntity broadcastEntity = broadcastRepository.findBySubjectId(eventId).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] Broadcast with event id %s does not exist", eventId);
-            log.error(message);
-            return new BroadcastNotFoundException(message);
-        });
+        BroadcastEntity broadcastEntity = broadcastRepository
+                .findBySubjectId(eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] Broadcast with event id %s does not exist", eventId);
+                    log.error(message);
+                    return new BroadcastNotFoundException(message);
+                });
         broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
         TriggerKey triggerKey = new TriggerKey(broadcastEntity.getTriggerKey());
         schedulerService.unschedule(triggerKey);
@@ -408,25 +505,37 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId) {
-        boolean isUserAlreadyInvited = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId).isPresent();
+        boolean isUserAlreadyInvited = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
+                .isPresent();
         if (isUserAlreadyInvited) {
             String message = String.format("[EXCEPTION] User with id %s is already invited to this event", userId);
             log.error(message);
             throw new UserAlreadyInvitedException(message);
         }
-        boolean isUserAlreadyParticipant = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId)).isPresent();
+        boolean isUserAlreadyParticipant = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsParticipantTrue(eventId, Long.parseLong(userId))
+                .isPresent();
         if (isUserAlreadyParticipant) {
             String message = String.format("[EXCEPTION] User with id %s is already participant in this event", userId);
             log.error(message);
             throw new UserAlreadyParticipantException(message);
         }
-        boolean isUserAlreadySendRequest = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsIdAndIsWantToGoTrue(Long.parseLong(userId), eventId).isPresent();
+        boolean isUserAlreadySendRequest = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsIdAndIsWantToGoTrue(Long.parseLong(userId), eventId)
+                .isPresent();
         if (isUserAlreadySendRequest) {
             String message = String.format("[EXCEPTION] User with id %s is already send request to this event", userId);
             log.error(message);
             throw new UserAlreadySendRequestException(message);
         }
-        UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder().isInvited(false).isParticipant(false).isWantToGo(true).isFavorite(false).isViewed(false).build();
+        UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
+                .isInvited(false)
+                .isParticipant(false)
+                .isWantToGo(true)
+                .isFavorite(false)
+                .isViewed(false)
+                .build();
         User user = getUser(userId);
         Event event = getEventById(eventId);
         if (!event.isPrivate()) {
@@ -447,11 +556,19 @@ public class EventServiceImpl implements EventService {
             log.error(message);
             throw new NotPublicEventException(message);
         }
-        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId).orElseGet(() -> {
-            return null;
-        });
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId)
+                .orElseGet(() -> {
+                    return null;
+                });
         if (userRelationsWithEvent == null) {
-            userRelationsWithEvent = UserRelationsWithEvent.builder().isInvited(false).isParticipant(true).isWantToGo(false).isFavorite(false).isViewed(false).build();
+            userRelationsWithEvent = UserRelationsWithEvent.builder()
+                    .isInvited(false)
+                    .isParticipant(true)
+                    .isWantToGo(false)
+                    .isFavorite(false)
+                    .isViewed(false)
+                    .build();
             User user = getUser(userId);
             userRelationsWithEvent.setEventRelations(event);
             userRelationsWithEvent.setUserRelations(user);
@@ -465,7 +582,8 @@ public class EventServiceImpl implements EventService {
 
 
     private List<UserRelationsWithEvent> getUserRelationsWithEvents(User user) {
-        List<UserRelationsWithEvent> userRelationsWithEvents = userRelationsWithEventRepository.findAllByUserRelations(user);
+        List<UserRelationsWithEvent> userRelationsWithEvents =
+                userRelationsWithEventRepository.findAllByUserRelations(user);
         if (userRelationsWithEvents.isEmpty()) {
             return new ArrayList<>();
         }
@@ -473,11 +591,15 @@ public class EventServiceImpl implements EventService {
     }
 
     private User getUser(String userId) {
-        User user = userRepository.findUserByIdAndStatus(Long.parseLong(userId), UserStatus.ENABLED).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] User with id %s, does not exist", userId);
-            log.error(message);
-            return new UserNotFoundException(message);
-        });
+        User user = userRepository
+                .findUserByIdAndStatus(Long.parseLong(userId), UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s, does not exist",
+                            userId);
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
         return user;
     }
 
@@ -490,7 +612,8 @@ public class EventServiceImpl implements EventService {
             log.error(message);
             throw new NotPrivateEventException(message);
         }
-        List<UserRelationsWithEvent> userRelationsWithEvents = userRelationsWithEventRepository.findByEventRelationsIdAndIsWantToGo(eventId, true);
+        List<UserRelationsWithEvent> userRelationsWithEvents = userRelationsWithEventRepository
+                .findByEventRelationsIdAndIsWantToGo(eventId, true);
         userRelationsWithEvents.forEach(relation -> {
             relation.setParticipant(true);
             relation.setWantToGo(false);
@@ -507,11 +630,15 @@ public class EventServiceImpl implements EventService {
             log.error(message);
             throw new NotPrivateEventException(message);
         }
-        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(userId, eventId).orElseThrow(() -> {
-            String message = String.format("[EXCEPTION] User with id %s and event relations with id %s does not exist", userId, eventId);
-            log.error(message);
-            return new UserRelationsWithEventNotFoundException(message);
-        });
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(userId, eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "[EXCEPTION] User with id %s and event relations with id %s does not exist",
+                            userId, eventId);
+                    log.error(message);
+                    return new UserRelationsWithEventNotFoundException(message);
+                });
         if (userRelationsWithEvent.isInvited()) {
             userRelationsWithEvent.setInvited(false);
         }
@@ -522,22 +649,51 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public boolean isFavoriteEventForUser(Long userId, Long eventId) {
-        return findUserById(userId).getUserRelationsWithEvents().stream().filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId)).findFirst().map(UserRelationsWithEvent::isFavorite).orElse(false);
+        return findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
+                .findFirst()
+                .map(UserRelationsWithEvent::isFavorite)
+                .orElse(false);
     }
 
     @Override
     public EventDto getEvent(Long eventId, Long organizerId) {
         Event event = getEventById(eventId);
-        EventTypeInfoDto eventTypeInfoDto = eventTypeMapper.mapToEventTypeInfoDto(event.getEventType());
-        List<String> avatarUrlList = event.getEventAvatars().stream().map(EventAvatar::getAvatarUrl).toList();
-        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDTO(event.getEventAddress());
-        List<EventTagDTO> eventTagDtoList = eventTagMapper.mapEventTagListToEventTagDtoList(event.getTagList());
+        EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
+                .mapToEventTypeInfoDto(event.getEventType());
+        List<String> avatarUrlList = event.getEventAvatars().stream()
+                .map(EventAvatar::getAvatarUrl)
+                .toList();
+        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDTO(
+                event.getEventAddress()
+        );
+        List<EventTagDTO> eventTagDtoList = eventTagMapper.mapEventTagListToEventTagDtoList(
+                event.getTagList()
+        );
 
-        List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream().filter(userRelationsWithEvent -> {
-            return userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant();
-        }).map(UserRelationsWithEvent::getUserRelations).map(userMapper::mapToUserToSendInvitationDTO).toList();
+        List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream()
+                .filter(userRelationsWithEvent -> {
+                    return userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant();
+                })
+                .map(UserRelationsWithEvent::getUserRelations)
+                .map(userMapper::mapToUserToSendInvitationDTO)
+                .toList();
 
-        return EventDto.builder().eventTypeInfoDto(eventTypeInfoDto).avatarUrls(avatarUrlList).name(event.getEventName()).addressDTO(eventAddressDTO).startDateTime(event.getStartTime()).endDateTime(event.getEndTime()).tags(eventTagDtoList).description(event.getEventDescription()).invitations(invitedAndParticipatedUserList).isPrivate(event.isPrivate()).isShowInSearch(event.isShowEventInSearch()).isSendByInterests(event.isSendToAllUsersByInterests()).isEighteenYearLimit(event.isEighteenYearLimit()).build();
+        return EventDto.builder()
+                .eventTypeInfoDto(eventTypeInfoDto)
+                .avatarUrls(avatarUrlList)
+                .name(event.getEventName())
+                .addressDTO(eventAddressDTO)
+                .startDateTime(event.getStartTime())
+                .endDateTime(event.getEndTime())
+                .tags(eventTagDtoList)
+                .description(event.getEventDescription())
+                .invitations(invitedAndParticipatedUserList)
+                .isPrivate(event.isPrivate())
+                .isShowInSearch(event.isShowEventInSearch())
+                .isSendByInterests(event.isSendToAllUsersByInterests())
+                .isEighteenYearLimit(event.isEighteenYearLimit())
+                .build();
     }
 
     @Transactional
@@ -548,29 +704,39 @@ public class EventServiceImpl implements EventService {
         ArrayList<String> avatarsForDeletingFromDb = new ArrayList<>();
 
         if (updateEventDto.getEventTypeId().longValue() != eventForUpdate.getEventType().getId()) {
-            EventType newEventType = eventTypeRepository.findById(updateEventDto.getEventTypeId()).orElseThrow(() -> {
-                String message = String.format("EventType with id %s didn't found", updateEventDto.getEventTypeId());
-                log.error(message);
-                return new EventTypeNotFoundException(message);
-            });
+            EventType newEventType = eventTypeRepository
+                    .findById(updateEventDto.getEventTypeId())
+                    .orElseThrow(() -> {
+                        String message = String.format(
+                                "EventType with id %s didn't found", updateEventDto.getEventTypeId()
+                        );
+                        log.error(message);
+                        return new EventTypeNotFoundException(message);
+                    });
             eventForUpdate.setEventType(newEventType);
         }
 
         if (!updateEventDto.getAvatarsForDeleting().isEmpty()) {
             updateEventDto.getAvatarsForDeleting().forEach(avatarUrl -> {
-                if (avatarUrl.contains("/")) {
-                    avatarsForDeletingFromDb.add(avatarUrl);
-                } else {
-                    avatarsForDeletingFromTempDirectory.add(avatarUrl);
-                }
-            });
+                        if (avatarUrl.contains("/")) {
+                            avatarsForDeletingFromDb.add(avatarUrl);
+                        } else {
+                            avatarsForDeletingFromTempDirectory.add(avatarUrl);
+                        }
+                    }
+            );
             eventAvatarRepository.deleteAllByAvatarUrlIn(avatarsForDeletingFromDb);
         }
 
         if (!updateEventDto.getAvatarsForAdding().isEmpty()) {
-            List<String> avatarsUrlsForDb = fileStorageRepository.addEventAvatars(updateEventDto.getAvatarsForAdding());
+            List<String> avatarsUrlsForDb = fileStorageRepository.addEventAvatars(
+                    updateEventDto.getAvatarsForAdding()
+            );
             avatarsUrlsForDb.forEach(avatarUrl -> {
-                EventAvatar eventAvatar = EventAvatar.builder().event(eventForUpdate).avatarUrl(avatarUrl).build();
+                EventAvatar eventAvatar = EventAvatar.builder()
+                        .event(eventForUpdate)
+                        .avatarUrl(avatarUrl)
+                        .build();
                 eventForUpdate.addEventAvatar(eventAvatar);
             });
             avatarsForDeletingFromTempDirectory.addAll(updateEventDto.getAvatarsForAdding());
@@ -649,31 +815,56 @@ public class EventServiceImpl implements EventService {
             List<User> usersWhoSendNotification = new ArrayList<>();
             updateEventDto.getParticipantIdsForAdding().forEach(participantId -> {
                 User participant = findUserById(participantId);
-                UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(participantId, eventForUpdate.getId()).orElseGet(() -> {
-                    return UserRelationsWithEvent.builder().userRelations(participant).eventRelations(eventForUpdate).isInvited(true).isParticipant(false).isWantToGo(false).isFavorite(false).isViewed(false).build();
-                });
+                UserRelationsWithEvent userRelationsWithEvent =
+                        userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(
+                                participantId, eventForUpdate.getId()
+                        ).orElseGet(() -> {
+                            return
+                                    UserRelationsWithEvent.builder()
+                                            .userRelations(participant)
+                                            .eventRelations(eventForUpdate)
+                                            .isInvited(true)
+                                            .isParticipant(false)
+                                            .isWantToGo(false)
+                                            .isFavorite(false)
+                                            .isViewed(false)
+                                            .build();
+                        });
                 userRelationsWithEventRepository.save(userRelationsWithEvent);
                 usersWhoSendNotification.add(participant);
             });
-            firebaseService.sendNotificationsToUsers(usersWhoSendNotification, eventForUpdate.isEighteenYearLimit(), "Some title", "Текст приглашения нужно придумать, id мероприятия лежит в поле data", eventForUpdate.getId());
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
         }
 
         if (!updateEventDto.getParticipantIdsForDeleting().isEmpty()) {
             List<User> usersWhoSendNotification = new ArrayList<>();
             updateEventDto.getParticipantIdsForDeleting().forEach(participantId -> {
                 User participant = findUserById(participantId);
-                UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(participantId, eventForUpdate.getId()).orElseThrow(() -> {
-                    String message = String.format("User with id: %s don't know event with id: %s", participant.getId(), eventForUpdate.getId());
-                    log.error(message);
-                    return new UserRelationsWithEventNotFoundException(message);
-                });
+                UserRelationsWithEvent userRelationsWithEvent =
+                        userRelationsWithEventRepository.findByUserRelationsIdAndEventRelationsId(
+                                participantId, eventForUpdate.getId()
+                        ).orElseThrow(() -> {
+                            String message = String.format(
+                                    "User with id: %s don't know event with id: %s"
+                                    , participant.getId(), eventForUpdate.getId());
+                            log.error(message);
+                            return new UserRelationsWithEventNotFoundException(message);
+                        });
                 userRelationsWithEvent.setParticipant(false);
                 userRelationsWithEvent.setInvited(false);
                 userRelationsWithEvent.setWantToGo(false);
                 userRelationsWithEventRepository.save(userRelationsWithEvent);
                 usersWhoSendNotification.add(participant);
             });
-            firebaseService.sendNotificationsToUsers(usersWhoSendNotification, eventForUpdate.isEighteenYearLimit(), "Some title", "Текст отказа нужно придумать, id мероприятия лежит в поле data", eventForUpdate.getId());
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст отказа нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
         }
 
         if (updateEventDto.isPrivate() != eventForUpdate.isPrivate()) {
@@ -686,8 +877,15 @@ public class EventServiceImpl implements EventService {
 
         if (updateEventDto.isSendByInterests() && !eventForUpdate.isSendToAllUsersByInterests()) {
             eventForUpdate.setSendToAllUsersByInterests(true);
-            List<User> usersWhoSendNotification = userRepository.findAllByInterestingEventTypeContainingAndStatus(eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString());
-            firebaseService.sendNotificationsToUsers(usersWhoSendNotification, eventForUpdate.isEighteenYearLimit(), "Some title", "Текст оповещения нужно придумать, id мероприятия лежит в поле data", eventForUpdate.getId());
+            List<User> usersWhoSendNotification =
+                    userRepository.findAllByInterestingEventTypeContainingAndStatus(
+                            eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString()
+                    );
+            firebaseService.sendNotificationsToUsers(usersWhoSendNotification,
+                    eventForUpdate.isEighteenYearLimit(),
+                    "Some title",
+                    "Текст оповещения нужно придумать, id мероприятия лежит в поле data",
+                    eventForUpdate.getId());
         }
 
         eventRepository.save(eventForUpdate);
@@ -698,10 +896,24 @@ public class EventServiceImpl implements EventService {
         return eventMapper.mapToDetailedEvent(eventForUpdate, null);
     }
 
+    @Transactional
+    @Override
+    public void updatePartsOfDay() {
+        List<Event> all = eventRepository.findAll();
+        eventRepository.saveAll(all.stream().map(e -> {
+            Set<PartsOfDay> partsOfDay = eventMapper.getPartsOfDay(e);
+            Set<EventPartOfDay> collect = partsOfDay.stream().map(eventMapper::partEnumToEntity).collect(Collectors.toSet());
+            e.setPartsOfDay(collect);
+            return e;}).toList());
+    }
+
     @Transactional(readOnly = true)
     @Override
     public List<Event> getAllFavoritesByUserId(Long userId) {
-        return findUserById(userId).getUserRelationsWithEvents().stream().filter(UserRelationsWithEvent::isFavorite).map(UserRelationsWithEvent::getEventRelations).toList();
+        return findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(UserRelationsWithEvent::isFavorite)
+                .map(UserRelationsWithEvent::getEventRelations)
+                .toList();
     }
 
     @Transactional
@@ -709,13 +921,17 @@ public class EventServiceImpl implements EventService {
     public void removeEventFromFavorite(Long userId, Long eventId) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
-        User user = findUserById(userId).getUserRelationsWithEvents().stream().filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId)).findFirst().map(userRelationsWithEvent -> {
-            userRelationsWithEvent.setFavorite(false);
-            return userRelationsWithEvent.getUserRelations();
-        }).orElseThrow(() -> {
-            log.error("[EXCEPTION] Event with id: " + eventId + " not found.");
-            return new EventNotFoundException("Event with id: " + eventId + " not found.");
-        });
+        User user = findUserById(userId).getUserRelationsWithEvents().stream()
+                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
+                .findFirst()
+                .map(userRelationsWithEvent -> {
+                    userRelationsWithEvent.setFavorite(false);
+                    return userRelationsWithEvent.getUserRelations();
+                })
+                .orElseThrow(() -> {
+                    log.error("[EXCEPTION] Event with id: " + eventId + " not found.");
+                    return new EventNotFoundException("Event with id: " + eventId + " not found.");
+                });
 
         userRepository.save(user);
 
@@ -726,25 +942,33 @@ public class EventServiceImpl implements EventService {
     @Override
     public void saveEventToFavorite(Long userId, Long eventId) {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
-        User currentUser = userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED).orElseThrow(() -> {
-            String message = "[EXCEPTION] User with id: " + userId + " not found.";
-            log.error(message);
-            return new UserNotFoundException(message);
-        });
+        User currentUser = userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    String message = "[EXCEPTION] User with id: " + userId + " not found.";
+                    log.error(message);
+                    return new UserNotFoundException(message);
+                });
 
-        User user = currentUser.getUserRelationsWithEvents().stream().filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId)).findFirst().map(userRelationsWithEvent -> {
-            userRelationsWithEvent.setFavorite(true);
-            return userRelationsWithEvent.getUserRelations();
-        }).orElseGet(() -> {
-            UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder().isFavorite(true).build();
-            userRelationsWithEvent.setEventRelations(eventRepository.findById(eventId).orElseThrow(() -> {
-                log.error("[EXCEPTION] event with id {}, does not exist", eventId);
-                return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
-            }));
-            userRelationsWithEvent.setUserRelations(currentUser);
-            userRelationsWithEventService.saveUserRelationsWithEvent(userRelationsWithEvent);
-            return userRelationsWithEvent.getUserRelations();
-        });
+        User user = currentUser.getUserRelationsWithEvents().stream()
+                .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(eventId))
+                .findFirst()
+                .map(userRelationsWithEvent -> {
+                    userRelationsWithEvent.setFavorite(true);
+                    return userRelationsWithEvent.getUserRelations();
+                })
+                .orElseGet(() -> {
+                    UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent
+                            .builder()
+                            .isFavorite(true).build();
+                    userRelationsWithEvent.setEventRelations(eventRepository.findById(eventId)
+                            .orElseThrow(() -> {
+                                log.error("[EXCEPTION] event with id {}, does not exist", eventId);
+                                return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
+                            }));
+                    userRelationsWithEvent.setUserRelations(currentUser);
+                    userRelationsWithEventService.saveUserRelationsWithEvent(userRelationsWithEvent);
+                    return userRelationsWithEvent.getUserRelations();
+                });
 
         userRepository.save(user);
 
@@ -752,17 +976,21 @@ public class EventServiceImpl implements EventService {
     }
 
     private User findUserById(Long userId) {
-        return userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED).orElseThrow(() -> {
-            log.error("[EXCEPTION] User with id: " + userId + " not found.");
-            return new UserNotFoundException("User with id: " + userId + " not found.");
-        });
+        return userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
+                .orElseThrow(() -> {
+                    log.error("[EXCEPTION] User with id: " + userId + " not found.");
+                    return new UserNotFoundException("User with id: " + userId + " not found.");
+                });
     }
 
     private Event findEventById(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> {
-            String message = String.format("Event with id %s didn't found", eventId);
-            log.error(message);
-            return new EventNotFoundException(message);
-        });
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    String message = String.format(
+                            "Event with id %s didn't found", eventId
+                    );
+                    log.error(message);
+                    return new EventNotFoundException(message);
+                });
     }
 }
