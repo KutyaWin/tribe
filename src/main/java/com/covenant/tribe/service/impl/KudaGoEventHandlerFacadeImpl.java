@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,9 +42,13 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
                     formatted(e.getMessage());
             log.error(erMessage);
         }
+
+        List<KudagoEventDto> eventsForComparing = null;
         if (kudaGoEventsOpt.isPresent()) {
             Map<Long, KudagoEventDto> kudaGoEvents = kudaGoEventsOpt.get();
-
+            eventsForComparing = externalEventService.deleteExistingInDbEvents(kudaGoEvents);
         }
+
+        
     }
 }
