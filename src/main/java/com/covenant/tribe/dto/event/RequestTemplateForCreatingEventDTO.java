@@ -20,7 +20,7 @@ import java.util.Set;
 public class RequestTemplateForCreatingEventDTO implements Serializable {
 
     @JsonProperty(value = "event_type_id")
-    @NotBlank(message = "event_type_name should not be null or 0")
+    @NotNull(message = "event_type_name should not be null or 0")
     Long eventTypeId;
 
     @JsonProperty(value = "event_name")
@@ -70,6 +70,10 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @JsonProperty(value = "is_private")
     @NotNull(message = "is_private should not be null")
     Boolean isPrivate;
+
+    @JsonProperty(value = "has_alcohol")
+    @NotNull(message = "has_alcohol should not be null")
+    Boolean hasAlcohol;
 
     @JsonProperty(value = "send_to_all_users_by_interests")
     @NotNull(message = "send_to_all_users_by_interests should not be null.")

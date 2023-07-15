@@ -85,6 +85,10 @@ public class Event {
     @Column(name = "is_free", nullable = false, columnDefinition = "boolean default false")
     boolean isFree;
 
+    @Column(name = "is_start_time_updated", nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    boolean isStartTimeUpdated = false;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type")
     @ToString.Exclude

@@ -96,7 +96,8 @@ public class UserController {
         log.info("[CONTROLLER] start endpoint findAllSubscribersByUsername with param: {}", subscriberUsername);
 
         Pageable pageable = Pageable.ofSize(size).withPage(page);
-        Page<UserSubscriberDto> responseUser = userService.findAllSubscribersByUsername(subscriberUsername, Long.parseLong(userId), pageable);
+        Page<UserSubscriberDto> responseUser = userService.findAllSubscribersByUsername(subscriberUsername,
+                Long.parseLong(userId), pageable);
 
         log.info("[CONTROLLER] end endpoint findAllSubscribersByUsername with response: {}", responseUser);
 
@@ -183,7 +184,7 @@ public class UserController {
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
     @GetMapping("/subscriber/{user_id}")
-    public ResponseEntity<?> findAllSubscribersByUsername(
+    public ResponseEntity<?> findAllSubscribersById(
             @PathVariable(value = "user_id") String userId,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "100") Integer size
