@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -22,8 +23,8 @@ public class KudaGoEvent {
     @Column(name = "handled_event_id", nullable = false)
     Long handledEventId;
 
-    @Column(name = "ended_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    OffsetDateTime endedAt;
+    @Column(name = "publication_date", columnDefinition = "TIMESTAMP")
+    LocalDate publicationDate;
 
     @Column(name = "similarity_percent")
     Double similarityPercent;
