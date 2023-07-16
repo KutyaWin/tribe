@@ -17,7 +17,7 @@ public class  UserForSignInUpDTO implements Serializable {
 
     @JsonProperty("firebase_id")
     @NotBlank(message = "firebase_id should not be null or empty")
-    @Size(max = 100, message = "firebase_id must not consist of more than 100 characters")
+    @Size(max = 400, message = "firebase_id must not consist of more than 400 characters")
     String firebaseId;
 
     @Size(max = 50, message = "Email must not consist of more than 50 characters")

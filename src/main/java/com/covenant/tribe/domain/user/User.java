@@ -36,7 +36,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "firebase_id", nullable = false)
+    @Column(name = "firebase_id", nullable = false, columnDefinition = "TEXT")
     String firebaseId;
 
     @Builder.Default
