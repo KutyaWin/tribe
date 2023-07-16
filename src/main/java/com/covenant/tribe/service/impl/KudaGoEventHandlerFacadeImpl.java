@@ -2,9 +2,8 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
-import com.covenant.tribe.service.ExternalEventService;
-import com.covenant.tribe.service.ExternalEventHandlerFacade;
-import com.covenant.tribe.service.KudagoFetchService;
+import com.covenant.tribe.dto.event.EventComparisonDto;
+import com.covenant.tribe.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,6 +27,8 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
 
     KudagoFetchService kudagoFetchService;
     ExternalEventService externalEventService;
+    EventService eventService;
+    CompareEventService compareEventService;
 
 
     @Override
@@ -49,6 +50,8 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
             eventsForComparing = externalEventService.deleteExistingInDbEvents(kudaGoEvents);
         }
 
-        
+        List<EventComparisonDto> eventComparisons = eventService.getEventComparisonDto();
+
+
     }
 }

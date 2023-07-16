@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -20,4 +21,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
 
     List<Event> findAllByEventStatus(EventStatus eventStatus);
     Optional<Event> findByOrganizerIdAndId(Long organizerId, Long eventId);
+
+    List<Event> findAllByExternalPublicationDateBetween(LocalDate from, LocalDate to);
 }

@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -303,6 +304,18 @@ public class EventServiceImpl implements EventService {
                     log.error("[EXCEPTION] event with id {}, does not exist", eventId);
                     return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                 });
+    }
+
+    @Override
+    public List<EventComparisonDto> getEventComparisonDto() {
+        LocalDate from = LocalDate.now().minusDays(1);
+        LocalDate to = LocalDate.now();
+        return eventRepository
+                .findAllByExternalPublicationDateBetween(from, to).stream()
+                .map(event -> {
+                    return new EventComparisonDto(event.getId(), event.getEventDescription())
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -670,7 +683,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDto getEvent(Long eventId, Long organizerId) {
+    public EventDto getEvent(Long eventId, Long organizerId) { //TODO Проверить как работае т для приватного события
         Event event = getEventById(eventId);
         EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
                 .mapToEventTypeInfoDto(event.getEventType());
