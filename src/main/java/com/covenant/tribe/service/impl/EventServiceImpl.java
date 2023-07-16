@@ -187,9 +187,8 @@ public class EventServiceImpl implements EventService {
         }
         String partsOfDay = filter.getPartsOfDay();
 
-        qPredicates.add(partsOfDay, (p)->{
-            String[] partsOfDaySplit = partsOfDay.trim().replaceAll(" ","").split(",");
-            List<NumberExpression<Integer>> enums = new ArrayList<>();
+        qPredicates.add(partsOfDay, (p) -> {
+            String[] partsOfDaySplit = partsOfDay.trim().replaceAll(" ", "").split(",");
             Set<String> partsSet = new HashSet<>();
             try {
                 for (String part : partsOfDaySplit) {
@@ -197,7 +196,7 @@ public class EventServiceImpl implements EventService {
                     partsSet.add(String.valueOf(partE.ordinal()));
                 }
             } catch (IllegalArgumentException e) {
-                   throw new WrongPartOfADayFilter("Part of day filter is incorrect");
+                throw new WrongPartOfADayFilter("Part of day filter is incorrect");
             }
             String join = String.join(", ", partsSet);
             QEventPartOfDay eventPartOfDay = QEventPartOfDay.eventPartOfDay;
@@ -205,7 +204,7 @@ public class EventServiceImpl implements EventService {
             JPQLQuery<Long> subQuery = JPAExpressions.select(event.id)
                     .from(eventPartOfDay)
                     .join(eventPartOfDay.event, event)
-                    .where(Expressions.booleanTemplate(eventPartOfDay.partsOfDay + " in ("+join+")"))
+                    .where(Expressions.booleanTemplate(eventPartOfDay.partsOfDay + " in (" + join + ")"))
                     .groupBy(event.id).having(eventPartOfDay.partsOfDay.countDistinct()
                             .eq(Expressions.asNumber(partsSet.size())));
             JPQLQuery<Long> mainQuery = JPAExpressions.select(event.id)
