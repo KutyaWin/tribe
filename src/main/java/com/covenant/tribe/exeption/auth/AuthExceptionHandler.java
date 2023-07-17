@@ -64,12 +64,11 @@ public class AuthExceptionHandler {
     @ExceptionHandler(ExpiredCodeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleGoogleIntrospectionException(ExpiredCodeException e) {
-        String message = String.format("Code %s is expired", e.getMessage());
-        log.error("[EXCEPTION] message: " + message);
+        log.error("[EXCEPTION] message: " + e.getMessage());
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
-                .errorMessage(List.of(message))
+                .errorMessage(List.of(e.getMessage()))
                 .build();
     }
 

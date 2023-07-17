@@ -46,12 +46,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -304,6 +306,18 @@ public class EventServiceImpl implements EventService {
                 });
     }
 
+    @Override
+    public List<EventComparisonDto> getEventComparisonDto() {
+        LocalDate from = LocalDate.now().minusDays(1);
+        LocalDate to = LocalDate.now();
+        return eventRepository
+                .findAllByExternalPublicationDateBetween(from, to).stream()
+                .map(event -> {
+                    return new EventComparisonDto(event.getId(), event.getEventDescription())
+                })
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     @Override
     public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
@@ -347,7 +361,7 @@ public class EventServiceImpl implements EventService {
                 event.setStartTimeUpdated(false);
                 eventRepository.save(event);
             } else {
-                schedulerService.schedule(broadcast); //TODO Обработать DateTimeException
+                schedulerService.schedule(broadcast);
             }
         } catch (SchedulerException e) {
             String message = String.format(
@@ -501,18 +515,17 @@ public class EventServiceImpl implements EventService {
         event.setEventStatus(EventStatus.DELETED);
         eventRepository.save(event);
 
-        BroadcastEntity broadcastEntity = broadcastRepository
-                .findBySubjectIdAndStatusNot(eventId, BroadcastStatuses.COMPLETE_SUCCESSFULLY)
-                .orElseThrow(() -> {
-                    String message = String.format(
-                            "[EXCEPTION] Broadcast with event id %s does not exist", eventId);
-                    log.error(message);
-                    return new BroadcastNotFoundException(message);
-                });
-        broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
-        TriggerKey triggerKey = new TriggerKey(broadcastEntity.getTriggerKey());
-        schedulerService.unschedule(triggerKey);
-        broadcastRepository.save(broadcastEntity);
+        Optional<BroadcastEntity> broadcastEntityOpt = broadcastRepository
+                .findBySubjectIdAndStatusNot(eventId, BroadcastStatuses.COMPLETE_SUCCESSFULLY);
+
+        if (broadcastEntityOpt.isPresent()) {
+            BroadcastEntity broadcastEntity = broadcastEntityOpt.get();
+            broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
+            TriggerKey triggerKey = new TriggerKey(broadcastEntity.getTriggerKey());
+            schedulerService.unschedule(triggerKey);
+            broadcastRepository.save(broadcastEntity);
+        }
+
     }
 
     @Override
@@ -670,7 +683,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDto getEvent(Long eventId, Long organizerId) {
+    public EventDto getEvent(Long eventId, Long organizerId) { //TODO Проверить как работае т для приватного события
         Event event = getEventById(eventId);
         EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
                 .mapToEventTypeInfoDto(event.getEventType());

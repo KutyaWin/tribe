@@ -29,7 +29,12 @@ public class QuartzSchedulerService implements SchedulerService{
         broadcast.setBroadcastEntityId(broadcastEntity.getId());
         JobDetail jobDetail = TimerUtil.buildJobDetail(broadcast);
         Trigger trigger = TimerUtil.buildTrigger(broadcast)
-                .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
+                .orElseThrow(()-> {
+                    String erMessage = "Broadcast with id: %s start after event with id: %s end"
+                            .formatted(broadcastEntity.getId(), broadcastEntity.getSubjectId());
+                    log.error(erMessage);
+                    return new DateTimeException(erMessage);
+                });
         broadcastEntity.setTriggerKey(trigger.getKey().getName());
         broadcastService.update(broadcastEntity);
         scheduler.scheduleJob(jobDetail,trigger);
@@ -56,7 +61,12 @@ public class QuartzSchedulerService implements SchedulerService{
         broadcast.setBroadcastEntityId(broadcastEntity.getId());
         try {
             Trigger newTrigger = TimerUtil.buildTrigger(broadcast)
-                    .orElseThrow(()->new DateTimeException("Broadcast start is after end"));
+                    .orElseThrow(()-> {
+                        String erMessage = "Broadcast with id: %s start after event with id: %s end"
+                                .formatted(broadcastEntity.getId(), broadcastEntity.getSubjectId());
+                        log.error(erMessage);
+                        return new DateTimeException(erMessage);
+                    });
             Trigger oldTrigger = scheduler.getTrigger(new TriggerKey(broadcastEntity.getTriggerKey()));
             scheduler.rescheduleJob(oldTrigger.getKey(), newTrigger);
             broadcastEntity.setStartTime(broadcast.getRepeatDate());
