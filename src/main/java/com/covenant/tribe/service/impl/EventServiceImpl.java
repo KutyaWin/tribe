@@ -92,7 +92,7 @@ public class EventServiceImpl implements EventService {
 
     @Transactional(readOnly = true)
     public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Integer page, Integer pageSize) {
-
+        if (filter.getStrictEventSort() == null) filter.setStrictEventSort(false);
         QPredicates qPredicates = QPredicates.builder();
         QSort orders = new QSort();
         qPredicates.add(Boolean.TRUE, QEvent.event.showEventInSearch.isTrue());
@@ -186,36 +186,36 @@ public class EventServiceImpl implements EventService {
             ));
         }
         String partsOfDay = filter.getPartsOfDay();
+        QEventPartOfDay eventPartOfDay = QEventPartOfDay.eventPartOfDay;
+        QEvent event = QEvent.event;
+        if (filter.getStrictEventSort()) {
+            qPredicates.add(partsOfDay, (p) -> {
+                Set<String> partsSet = getStrings(partsOfDay);
+                String join = String.join(", ", partsSet);
+                JPQLQuery<Long> notStrict = getNotStrict(join, eventPartOfDay, event);
+                JPQLQuery<Long> strict = notStrict //event has all parts of day in partSet
+                        .having(eventPartOfDay.partsOfDay.countDistinct()
+                                .eq(Expressions.asNumber(partsSet.size())));
+                JPQLQuery<Long> mainQuery = JPAExpressions.select(event.id) //event has only those parts of day which are in partSet
+                        .from(event)
+                        .join(event.partsOfDay, eventPartOfDay)
+                        .where(event.id.in(strict)).groupBy(event.id)
+                        .having(eventPartOfDay.id.countDistinct().eq(Expressions.asNumber(partsSet.size())));
+                BooleanExpression in = event.id
+                        .in(mainQuery);
+                return in;
+            });
+        } else {
+            qPredicates.add(partsOfDay, (p) -> {
+                Set<String> partsSet = getStrings(partsOfDay);
+                String join = String.join(", ", partsSet);
+                JPQLQuery<Long> notStrict = getNotStrict(join, eventPartOfDay, event);
+                BooleanExpression in = event.id
+                        .in(notStrict);
+                return in;
+            });
+        }
 
-        qPredicates.add(partsOfDay, (p) -> {
-            String[] partsOfDaySplit = partsOfDay.trim().replaceAll(" ", "").split(",");
-            Set<String> partsSet = new HashSet<>();
-            try {
-                for (String part : partsOfDaySplit) {
-                    PartsOfDay partE = PartsOfDay.valueOf(part);
-                    partsSet.add(String.valueOf(partE.ordinal()));
-                }
-            } catch (IllegalArgumentException e) {
-                throw new WrongPartOfADayFilter("Part of day filter is incorrect");
-            }
-            String join = String.join(", ", partsSet);
-            QEventPartOfDay eventPartOfDay = QEventPartOfDay.eventPartOfDay;
-            QEvent event = QEvent.event;
-            JPQLQuery<Long> subQuery = JPAExpressions.select(event.id)
-                    .from(eventPartOfDay)
-                    .join(eventPartOfDay.event, event)
-                    .where(Expressions.booleanTemplate(eventPartOfDay.partsOfDay + " in (" + join + ")"))
-                    .groupBy(event.id).having(eventPartOfDay.partsOfDay.countDistinct()
-                            .eq(Expressions.asNumber(partsSet.size())));
-            JPQLQuery<Long> mainQuery = JPAExpressions.select(event.id)
-                    .from(event)
-                    .join(event.partsOfDay, eventPartOfDay)
-                    .where(event.id.in(subQuery)).groupBy(event.id)
-                    .having(eventPartOfDay.id.countDistinct().eq(Expressions.asNumber(partsSet.size())));
-            BooleanExpression in = event.id
-                    .in(mainQuery);
-            return in;
-        });
         if (filter.getDurationEventInHoursMin() != null && filter.getDurationEventInHoursMax() != null) {
             Predicate eventDurationInHours =
                     endTime.hour().subtract(startTime.hour()).goe(filter.getDurationEventInHoursMin())
@@ -226,6 +226,28 @@ public class EventServiceImpl implements EventService {
             qPredicates.add(filter.getDurationEventInHoursMin(), eventDurationInHours);
         }
         return orders;
+    }
+
+    private Set<String> getStrings(String partsOfDay) {
+        String[] partsOfDaySplit = partsOfDay.trim().replaceAll(" ", "").split(",");
+        Set<String> partsSet = new HashSet<>();
+        try {
+            for (String part : partsOfDaySplit) {
+                PartsOfDay partE = PartsOfDay.valueOf(part);
+                partsSet.add(String.valueOf(partE.ordinal()));
+            }
+        } catch (IllegalArgumentException e) {
+            throw new WrongPartOfADayFilter("Part of day filter is incorrect");
+        }
+        return partsSet;
+    }
+
+    private JPQLQuery<Long> getNotStrict(String join, QEventPartOfDay eventPartOfDay, QEvent event) {  //event has any part of day in partSet
+        return JPAExpressions.select(event.id)
+                .from(eventPartOfDay)
+                .join(eventPartOfDay.event, event)
+                .where(Expressions.booleanTemplate(eventPartOfDay.partsOfDay + " in (" + join + ")"))
+                .groupBy(event.id);
     }
 
     private QSort handleAlco(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {

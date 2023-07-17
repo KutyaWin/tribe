@@ -52,6 +52,9 @@ public class EventFilter implements Serializable {
     @Schema(description = "Available: DISTANCE, DATE, ALCOHOL")
     EventSort sort;
 
+    @Builder.Default
+    Boolean strictEventSort = false;
+
     @Schema(description = "Can be: ASC, DSC")
     SortOrder order;
 }
