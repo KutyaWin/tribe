@@ -36,7 +36,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "firebase_id", nullable = false)
+    @Column(name = "firebase_id", nullable = false, columnDefinition = "TEXT")
     String firebaseId;
 
     @Builder.Default
@@ -304,6 +304,9 @@ public class User {
     }
 
     public int getAge() {
+        if (birthday == null) {
+            return 0;
+        }
         return Period.between(birthday, LocalDate.now()).getYears();
     }
 

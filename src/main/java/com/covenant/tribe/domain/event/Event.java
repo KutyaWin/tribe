@@ -2,6 +2,7 @@ package com.covenant.tribe.domain.event;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
+import com.covenant.tribe.domain.event.external.KudaGoEvent;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import jakarta.persistence.*;
@@ -9,6 +10,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -89,6 +91,14 @@ public class Event {
     @Builder.Default
     boolean isStartTimeUpdated = false;
 
+    @Column(name = "is_from_kudago", columnDefinition = "boolean default false")
+    @Builder.Default
+    boolean isFromKudaGo = false;
+
+    @Column(name = "external_publication_date")
+    @Builder.Default
+    LocalDate externalPublicationDate = null;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type")
     @ToString.Exclude
@@ -110,6 +120,9 @@ public class Event {
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
     List<Tag> tagList = new ArrayList<>();
+
+    @ManyToMany
+    List<KudaGoEvent> similarEvents;
 
     @OneToMany(
             mappedBy = "eventRelations",
