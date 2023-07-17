@@ -353,22 +353,26 @@ public class EventMapperImpl implements EventMapper {
         OffsetDateTime endTime = event.getEndTime();
         Set<PartsOfDay> newParts = new HashSet<>();
         int passedDays = 0;
-        while (trunc.isBefore(endTime) && newParts.size() < 4) {
+        while (trunc.isBefore(endTime) && newParts.size() < 4 && passedDays < 3) {
+            if (passedDays == 0) {
+                trunc = trunc.minus(1, ChronoUnit.DAYS); //to check yesterday 23 - today 06
+            }
             for (PartsOfDay part : PartsOfDay.values()) {
                 int cur = Integer.parseInt(part.getHour());
                 int next = Integer.parseInt(PartsOfDay.getNextEnumValue(part).getHour());
-                if (next == 0) {
+                if (next < cur) {
                     next += 24;
                 }
                 OffsetDateTime lb = trunc.plus(cur, ChronoUnit.HOURS);
                 OffsetDateTime hb = trunc.plus(next, ChronoUnit.HOURS);
-                if (((lb.isBefore(startTime) || lb.isEqual(startTime)) && startTime.isBefore(hb))
-                        || (lb.isBefore(endTime) && (endTime.isBefore(hb) || endTime.isEqual(hb)))
-                        || (startTime.isBefore(lb) && hb.isBefore(endTime)) ) {
+                if (((lb.isBefore(startTime) || lb.isEqual(startTime)) && startTime.isBefore(hb))  //time period and dates are crossing
+                        || (lb.isBefore(endTime) && (endTime.isBefore(hb) || endTime.isEqual(hb))) //
+                        || (startTime.isBefore(lb) && hb.isBefore(endTime)) //time period is between events start and end time
+                ) {
                     newParts.add(part);
                 }
             }
-            trunc = trunc.plus(1, ChronoUnit.DAYS);
+            trunc = trunc.plus(1, ChronoUnit.DAYS); //to check today 23 - today + n days 06
             passedDays +=1 ;
         }
 
