@@ -25,10 +25,11 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
 
     @JsonProperty(value = "event_name")
     @NotBlank(message = "event_name should not be null or empty")
-    @Size(max = 100)
+    @Size(max = 100, min = 2)
     String eventName;
 
     @JsonProperty(value = "event_address")
+    @NotNull(message = "event_address should not be null")
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
@@ -51,6 +52,7 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     Set<Long> eventTagIds;
 
     @JsonProperty(value = "description")
+    @NotNull(message = "description should not be null")
     String description;
 
     @JsonProperty(value = "avatars_for_deleting")
@@ -85,5 +87,6 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
 
     @JsonProperty(value = "organizer_id")
     @Min(value = 1, message = "organizer_id should be greater than 0")
+    @NotNull(message = "organizer_id should not be null")
     Long organizerId;
 }
