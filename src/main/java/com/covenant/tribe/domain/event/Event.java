@@ -111,6 +111,13 @@ public class Event {
     @Builder.Default
     List<Tag> tagList = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(name = "event_part_of_day",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "part_of_day_id")
+    )
+    private Set<EventPartOfDay> partsOfDay;
+
     @OneToMany(
             mappedBy = "eventRelations",
             fetch = FetchType.LAZY,

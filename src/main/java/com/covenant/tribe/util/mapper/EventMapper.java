@@ -4,12 +4,15 @@ import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventAddress;
+import com.covenant.tribe.domain.event.EventPartOfDay;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.util.querydsl.PartsOfDay;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 
 public interface EventMapper {
 
@@ -30,4 +33,10 @@ public interface EventMapper {
     SearchEventDTO  mapToSearchEventDTO(Event event);
 
     SearchEventDTO  mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId);
+
+    Set<EventPartOfDay> partEnumSetToEntity(Set<PartsOfDay> partsOfDay);
+
+    Set<PartsOfDay> getPartsOfDay(Event event);
+
+    EventPartOfDay partEnumToEntity(PartsOfDay partsOfDay);
 }
