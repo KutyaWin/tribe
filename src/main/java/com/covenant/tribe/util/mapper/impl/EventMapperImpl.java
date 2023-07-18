@@ -2,16 +2,16 @@ package com.covenant.tribe.util.mapper.impl;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventAddress;
-import com.covenant.tribe.domain.event.EventAvatar;
-import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
+import com.covenant.tribe.repository.EventPartOfDayRepository;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventMapper;
+import com.covenant.tribe.util.querydsl.PartsOfDay;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +21,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,6 +36,8 @@ import java.util.stream.Collectors;
 public class EventMapperImpl implements EventMapper {
 
     EventAddressMapper eventAddressMapper;
+
+    EventPartOfDayRepository eventPartOfDayRepository;
 
     @Override
     public List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, List<UserRelationsWithEvent> relationsWithEventCurrentUserId) {
@@ -223,7 +227,7 @@ public class EventMapperImpl implements EventMapper {
                 .isPresenceOfAlcohol(dto.getHasAlcohol())
                 .eventType(eventType)
                 .build();
-
+        event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
         organizer.addEventWhereUserAsOrganizer(event);
         eventType.addEvent(event);
 
@@ -329,5 +333,49 @@ public class EventMapperImpl implements EventMapper {
                         .participantAvatarUrl(user.getUserAvatar())
                         .build())
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public EventPartOfDay partEnumToEntity(PartsOfDay partsOfDay) {
+        return eventPartOfDayRepository.findByPartsOfDay(partsOfDay.ordinal())
+                .orElseThrow(() -> new EntityNotFoundException("Part of day not found"));
+    }
+
+    @Override
+    public Set<EventPartOfDay> partEnumSetToEntity(Set<PartsOfDay> partsOfDay) {
+        return partsOfDay.stream().map(this::partEnumToEntity).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<PartsOfDay> getPartsOfDay(Event event) {
+        OffsetDateTime startTime = event.getStartTime();
+        OffsetDateTime trunc = startTime.truncatedTo(ChronoUnit.DAYS);
+        OffsetDateTime endTime = event.getEndTime();
+        Set<PartsOfDay> newParts = new HashSet<>();
+        int passedDays = 0;
+        while (trunc.isBefore(endTime) && newParts.size() < 4 && passedDays < 3) {
+            if (passedDays == 0) {
+                trunc = trunc.minus(1, ChronoUnit.DAYS); //to check yesterday 23 - today 06
+            }
+            for (PartsOfDay part : PartsOfDay.values()) {
+                int cur = Integer.parseInt(part.getHour());
+                int next = Integer.parseInt(PartsOfDay.getNextEnumValue(part).getHour());
+                if (next < cur) {
+                    next += 24;
+                }
+                OffsetDateTime lb = trunc.plus(cur, ChronoUnit.HOURS);
+                OffsetDateTime hb = trunc.plus(next, ChronoUnit.HOURS);
+                if (((lb.isBefore(startTime) || lb.isEqual(startTime)) && startTime.isBefore(hb))  //time period and dates are crossing
+                        || (lb.isBefore(endTime) && (endTime.isBefore(hb) || endTime.isEqual(hb))) //
+                        || (startTime.isBefore(lb) && hb.isBefore(endTime)) //time period is between events start and end time
+                ) {
+                    newParts.add(part);
+                }
+            }
+            trunc = trunc.plus(1, ChronoUnit.DAYS); //to check today 23 - today + n days 06
+            passedDays +=1 ;
+        }
+
+        return newParts;
     }
 }

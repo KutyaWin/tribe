@@ -20,13 +20,11 @@ spring:
           kudago-client:
             url: "https://kudago.com/public-api/v1.4"
   jpa:
-    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
     show_sql: true
     open-in-view: false #lock auto start transactional anywhere
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
   servlet:

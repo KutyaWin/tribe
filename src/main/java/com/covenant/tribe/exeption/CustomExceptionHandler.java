@@ -1,6 +1,7 @@
 package com.covenant.tribe.exeption;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
+import com.covenant.tribe.exeption.event.WrongPartOfADayFilter;
 import com.covenant.tribe.exeption.auth.VerificationCodeNotFoundException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import com.google.auth.oauth2.TokenVerifier;
@@ -107,6 +108,17 @@ public class CustomExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.NOT_FOUND)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(WrongPartOfADayFilter.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleWrongFilterParams(RuntimeException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }
