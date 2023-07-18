@@ -843,10 +843,12 @@ public class EventServiceImpl implements EventService {
         if (!updateEventDto.getStartDateTime().isEqual(eventForUpdate.getStartTime())) {
             eventForUpdate.setStartTimeUpdated(true);
             eventForUpdate.setStartTime(updateEventDto.getStartDateTime());
+            eventForUpdate.setPartsOfDay(eventMapper.partEnumSetToEntity(eventMapper.getPartsOfDay(eventForUpdate)));
         }
 
         if (!updateEventDto.getEndDateTime().isEqual(eventForUpdate.getEndTime())) {
             eventForUpdate.setEndTime(updateEventDto.getEndDateTime());
+            eventForUpdate.setPartsOfDay(eventMapper.partEnumSetToEntity(eventMapper.getPartsOfDay(eventForUpdate)));
         }
 
         if (!updateEventDto.getTagIdsForDeleting().isEmpty()) {
@@ -945,7 +947,6 @@ public class EventServiceImpl implements EventService {
         if (updateEventDto.isHasAlcohol() != eventForUpdate.isPresenceOfAlcohol()) {
             eventForUpdate.setPresenceOfAlcohol(updateEventDto.isHasAlcohol());
         }
-        eventForUpdate.setPartsOfDay(eventMapper.partEnumSetToEntity(eventMapper.getPartsOfDay(eventForUpdate)));
         eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
 
