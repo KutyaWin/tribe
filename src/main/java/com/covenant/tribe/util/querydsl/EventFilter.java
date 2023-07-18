@@ -36,7 +36,7 @@ public class EventFilter implements Serializable {
 
     Integer numberOfParticipantsMax;
 
-    @Schema(example = "MORNING")
+    @Schema(example = "MORNING,EVENING,NIGHT")
     String partsOfDay;
 
     Integer durationEventInHoursMin;
@@ -51,6 +51,9 @@ public class EventFilter implements Serializable {
 
     @Schema(description = "Available: DISTANCE, DATE, ALCOHOL")
     EventSort sort;
+
+    @Builder.Default
+    Boolean strictEventSort = false;
 
     @Schema(description = "Can be: ASC, DSC")
     SortOrder order;
