@@ -945,7 +945,7 @@ public class EventServiceImpl implements EventService {
         if (updateEventDto.isHasAlcohol() != eventForUpdate.isPresenceOfAlcohol()) {
             eventForUpdate.setPresenceOfAlcohol(updateEventDto.isHasAlcohol());
         }
-
+        eventForUpdate.setPartsOfDay(eventMapper.partEnumSetToEntity(eventMapper.getPartsOfDay(eventForUpdate)));
         eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
 
