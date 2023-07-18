@@ -4,7 +4,7 @@ public enum PartsOfDay {
     MORNING("6"),
     AFTERNOON("12"),
     EVENING("18"),
-    NIGHT("0");
+    NIGHT("23");
 
     private final String hour;
 
