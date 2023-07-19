@@ -37,6 +37,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -61,6 +62,7 @@ public class ProjectSecurityConfig {
                         )
 
         );
+        http.cors();
         http.csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
         http.securityMatcher(new AntPathRequestMatcher("/api/**"))
                 .authorizeHttpRequests()
@@ -102,8 +104,9 @@ public class ProjectSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://tribual.ru", "http://localhost"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH"));
+        configuration.setAllowedOrigins(Arrays.asList("https://tribual.ru", "http://localhost", "http://localhost:3000"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
