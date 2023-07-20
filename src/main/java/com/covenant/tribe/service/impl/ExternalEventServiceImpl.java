@@ -24,17 +24,42 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     KudaGoEventRepository kudaGoRepository;
 
     @Override
-    public List<KudagoEventDto> deleteExistingInDbEvents(
+    public List<KudagoEventDto> deleteExtraEents(
             Map<Long, KudagoEventDto> kudaGoEvents
     ) {
         List<Long> existingEventIds = kudaGoRepository.findAllRepeatableEventIds(
                 kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(2))
         );
         existingEventIds.forEach(kudaGoEvents::remove);
-        return filterEventByPublicationDate(kudaGoEvents);
+        return filterEvents(kudaGoEvents);
     }
 
-    private List<KudagoEventDto> filterEventByPublicationDate(Map<Long, KudagoEventDto> events) {
+
+    private boolean checkEventsForRequiredFields(KudagoEventDto event) {
+        if (event.getCategories().isEmpty()) {
+            log.error("Categories in kudaGoEvent with id: {} is empty", event.getId());
+            return false;
+        }
+        if (event.getTitle() == null) {
+            log.error("Name in kudaGoEvent with id: {} is null", event.getId());
+            return false;
+        }
+        if (event.getLocation(). == null) {
+            log.error("eventAddress is null");
+            return false;
+        }
+        if (event.getStartTime() == null) {
+            log.error("startTime is null");
+            return false;
+        }
+        if (event.getEndTime() == null) {
+            log.error("endTime is null");
+            return false;
+        }
+
+    }
+
+    private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events) {
         return events.values().stream()
                 .filter(kudagoEvent -> {
                     return kudagoEvent
