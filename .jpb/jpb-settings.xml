@@ -20,4 +20,13 @@
     <exclude-change idName="qrtz_simprop_triggers" tagName="dropTable" />
     <exclude-change idName="qrtz_triggers" tagName="dropTable" />
   </component>
+  <component name="PersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit moduleName="Tribe" name="Default">
+        <packages>
+          <package value="com.covenant.tribe" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
 </project>
