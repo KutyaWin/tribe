@@ -29,6 +29,9 @@ public class EventVerificationDTO {
     @JsonProperty(value = "organizer_id")
     Long organizerId;
 
+    @JsonProperty(value = "event_photos")
+    List<String> eventPhotos;
+
     @JsonProperty(value = "created_at")
     OffsetDateTime createdAt;
 
