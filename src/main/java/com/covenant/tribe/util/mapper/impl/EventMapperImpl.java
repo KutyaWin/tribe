@@ -90,6 +90,11 @@ public class EventMapperImpl implements EventMapper {
                         .anyMatch(relations -> relations.getEventRelations().equals(event)))
                 .isPrivate(event.isPrivate())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
+                .participants(mapUsersToUsersWhoParticipantsOfEventDTO(
+                        event.getEventRelationsWithUser().stream()
+                                .filter(UserRelationsWithEvent::isParticipant)
+                                .map(UserRelationsWithEvent::getUserRelations)
+                                .collect(Collectors.toSet())))
                 .build();
     }
 
@@ -121,6 +126,11 @@ public class EventMapperImpl implements EventMapper {
                 .eventType(event.getEventType().getTypeName())
                 .isPrivate(event.isPrivate())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
+                .participants(mapUsersToUsersWhoParticipantsOfEventDTO(
+                        event.getEventRelationsWithUser().stream()
+                                .filter(UserRelationsWithEvent::isParticipant)
+                                .map(UserRelationsWithEvent::getUserRelations)
+                                .collect(Collectors.toSet())))
                 .build();
         if (event.getEventAddress() != null) {
             eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
@@ -187,7 +197,7 @@ public class EventMapperImpl implements EventMapper {
         return EventVerificationDTO.builder()
                 .eventId(event.getId())
                 .organizerId(event.getOrganizer().getId())
-                .avatarUrls(getAvatars(event))
+                .eventPhotos(getAvatars(event))
                 .createdAt(event.getCreatedAt())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .eventName(event.getEventName())
@@ -380,7 +390,7 @@ public class EventMapperImpl implements EventMapper {
                 }
             }
             trunc = trunc.plus(1, ChronoUnit.DAYS); //to check today 23 - today + n days 06
-            passedDays +=1 ;
+            passedDays += 1;
         }
 
         return newParts;
