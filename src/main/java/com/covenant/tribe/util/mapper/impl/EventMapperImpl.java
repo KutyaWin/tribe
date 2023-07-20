@@ -187,6 +187,7 @@ public class EventMapperImpl implements EventMapper {
         return EventVerificationDTO.builder()
                 .eventId(event.getId())
                 .organizerId(event.getOrganizer().getId())
+                .eventPhotos(getAvatars(event))
                 .createdAt(event.getCreatedAt())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .eventName(event.getEventName())
@@ -203,6 +204,12 @@ public class EventMapperImpl implements EventMapper {
         return eventTags.stream()
                 .map(Tag::getTagName)
                 .collect(Collectors.toList());
+    }
+
+    private List<String> getAvatars(Event event) {
+        return event.getEventAvatars().stream()
+                .map(EventAvatar::getAvatarUrl)
+                .toList();
     }
 
     @Override
