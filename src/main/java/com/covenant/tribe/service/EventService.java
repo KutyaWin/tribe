@@ -22,8 +22,6 @@ public interface EventService {
 
     Event getEventById(Long eventId);
 
-    List<EventComparisonDto> getEventComparisonDto();
-
     List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId);
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);

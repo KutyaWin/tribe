@@ -359,19 +359,6 @@ public class EventServiceImpl implements EventService {
                     return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                 });
     }
-
-    @Override
-    public List<EventComparisonDto> getEventComparisonDto() {
-        LocalDate from = LocalDate.now().minusDays(1);
-        LocalDate to = LocalDate.now();
-        return eventRepository
-                .findAllByExternalPublicationDateBetween(from, to).stream()
-                .map(event -> {
-                    return new EventComparisonDto(event.getId(), event.getEventDescription())
-                })
-                .toList();
-    }
-
     @Transactional(readOnly = true)
     @Override
     public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {

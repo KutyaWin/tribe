@@ -28,7 +28,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             Map<Long, KudagoEventDto> kudaGoEvents
     ) {
         List<Long> existingEventIds = kudaGoRepository.findAllRepeatableEventIds(
-                kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(1))
+                kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(2))
         );
         existingEventIds.forEach(kudaGoEvents::remove);
         return filterEventByPublicationDate(kudaGoEvents);
