@@ -1,11 +1,16 @@
 package com.covenant.tribe.dto.event;
 
+import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -37,4 +42,7 @@ public class SearchEventDTO implements Serializable {
     Boolean isPrivate;
 
     Boolean isPresenceOfAlcohol = false;
+
+    @JsonProperty(value = "participants")
+    Set<UsersWhoParticipantsOfEventDTO> participants = new HashSet<>();
 }
