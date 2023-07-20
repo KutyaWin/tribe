@@ -173,18 +173,22 @@ public class EventServiceImpl implements EventService {
         if (filter.getNumberOfParticipantsMin() != null && filter.getNumberOfParticipantsMax() != null) {
             QUserRelationsWithEvent qUserRelationsWithEvent = QUserRelationsWithEvent.userRelationsWithEvent;
 
-            qPredicates.add(filter.getNumberOfParticipantsMin(), QEvent.event.eventRelationsWithUser.size().goe(
-                    JPAExpressions.select(qUserRelationsWithEvent.count())
-                            .from(qUserRelationsWithEvent)
-                            .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id))
-                            .where(qUserRelationsWithEvent.isParticipant.isTrue())
-            ));
-            qPredicates.add(filter.getNumberOfParticipantsMax(), QEvent.event.eventRelationsWithUser.size().loe(
-                    JPAExpressions.select(qUserRelationsWithEvent.count())
-                            .from(qUserRelationsWithEvent)
-                            .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id))
-                            .where(qUserRelationsWithEvent.isParticipant.isTrue())
-            ));
+            qPredicates.add(filter.getNumberOfParticipantsMin(), m -> {
+                        JPQLQuery<Long> where = JPAExpressions.select(qUserRelationsWithEvent.count())
+                                .from(qUserRelationsWithEvent)
+                                .where(qUserRelationsWithEvent.isParticipant.isTrue())
+                                .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id));
+                        return where.goe(Long.valueOf(filter.getNumberOfParticipantsMin()));
+                    }
+            );
+            qPredicates.add(filter.getNumberOfParticipantsMax(), m -> {
+                        JPQLQuery<Long> where = JPAExpressions.select(qUserRelationsWithEvent.count())
+                                .from(qUserRelationsWithEvent)
+                                .where(qUserRelationsWithEvent.isParticipant.isTrue())
+                                .where(qUserRelationsWithEvent.eventRelations.id.eq(QEvent.event.id));
+                        return where.loe(Long.valueOf(filter.getNumberOfParticipantsMax()));
+                    }
+            );
         }
         String partsOfDay = filter.getPartsOfDay();
         QEventPartOfDay eventPartOfDay = QEventPartOfDay.eventPartOfDay;
