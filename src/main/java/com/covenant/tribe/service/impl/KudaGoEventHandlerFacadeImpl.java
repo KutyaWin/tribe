@@ -44,13 +44,12 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
             log.error(erMessage);
         }
 
-        List<KudagoEventDto> eventsForComparing = null;
+        List<KudagoEventDto> eventsAfterDeletingExiting = null;
         if (kudaGoEventsOpt.isPresent()) {
             Map<Long, KudagoEventDto> kudaGoEvents = kudaGoEventsOpt.get();
-            eventsForComparing = externalEventService.deleteExistingInDbEvents(kudaGoEvents);
+            eventsAfterDeletingExiting = externalEventService.deleteExistingInDbEvents(kudaGoEvents);
         }
 
-        List<EventComparisonDto> eventComparisons = eventService.getEventComparisonDto();
 
 
     }
