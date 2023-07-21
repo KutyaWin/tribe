@@ -16,6 +16,15 @@ spring:
             readTimeout: 100000
             error-decoder: com.covenant.tribe.client.kudago.decoder.KudagoDecoder
             retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
+          dadata-client:
+            url: "https://suggestions.dadata.ru"
+            defaultRequestHeaders:
+              Content-Type: application/json
+              Accept: application/json
+              Authorization: ${SPRING_DADATA_TOKEN}
+            connectTimeout: 100000
+            readTimeout: 100000
+
 
 
 scheduler:
