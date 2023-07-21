@@ -31,7 +31,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
 
 
     @Override
-    public void handleNewEvents(Map<Long, KudagoEventDto> externalEvents) {
+    public void handleNewEvents(Map<Long, KudagoEventDto> externalEvents, int daysQuantityToFirstPublication) {
         OffsetDateTime createEventTime = OffsetDateTime.now().minusHours(1);
         Optional<Map<Long, KudagoEventDto>> kudaGoEventsOpt = Optional.empty();
         try {
@@ -46,7 +46,9 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         List<KudagoEventDto> eventsAfterDeletingExiting = null;
         if (kudaGoEventsOpt.isPresent()) {
             Map<Long, KudagoEventDto> kudaGoEvents = kudaGoEventsOpt.get();
-            eventsAfterDeletingExiting = externalEventService.deleteExtraEents(kudaGoEvents);
+            eventsAfterDeletingExiting = externalEventService.deleteExtraInfo(
+                    kudaGoEvents, daysQuantityToFirstPublication
+            );
         }
 
 
