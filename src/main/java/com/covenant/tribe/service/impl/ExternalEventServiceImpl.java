@@ -24,15 +24,18 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     KudaGoEventRepository kudaGoRepository;
 
     @Override
-    public List<KudagoEventDto> deleteExtraEents(
-            Map<Long, KudagoEventDto> kudaGoEvents
+    public List<KudagoEventDto> deleteExtraInfo(
+            Map<Long, KudagoEventDto> kudaGoEvents,
+            int daysQuantityToFirstPublication
     ) {
         List<Long> existingEventIds = kudaGoRepository.findAllRepeatableEventIds(
                 kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(2))
         );
         existingEventIds.forEach(kudaGoEvents::remove);
-        return filterEvents(kudaGoEvents);
+        return filterEvents(kudaGoEvents, daysQuantityToFirstPublication);
     }
+
+
 
 
     private boolean checkEventsForRequiredFields(KudagoEventDto event) {
@@ -44,29 +47,34 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             log.error("Name in kudaGoEvent with id: {} is null", event.getId());
             return false;
         }
-        if (event.getLocation(). == null) {
-            log.error("eventAddress is null");
+        if (event.getLocation() == null) {
+            log.error("Event with id: {} has no location", event.getId());
             return false;
         }
-        if (event.getStartTime() == null) {
-            log.error("startTime is null");
+        if (event.getDates() == null  || event.getDates().isEmpty()) {
+            log.error("Event with id: {} has no dates", event.getId());
             return false;
         }
-        if (event.getEndTime() == null) {
-            log.error("endTime is null");
+        if (event.getDescription() == null) {
+            log.error("Event with id: {} has no description", event.getId());
             return false;
         }
-
+        if (event.getAgeRestriction() == null) {
+            log.error("Event with id: {} has no age restriction", event.getId());
+            return false;
+        }
+        return true;
     }
 
-    private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events) {
+    private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events, int daysQuantityToFirstPublication) {
         return events.values().stream()
                 .filter(kudagoEvent -> {
                     return kudagoEvent
                             .getPublicationDate()
-                            .isEqual(LocalDate.now().minusDays(1)) ||
-                            kudagoEvent.getPublicationDate().isEqual(LocalDate.now());
+                            .isAfter(LocalDate.now().minusDays(daysQuantityToFirstPublication));
                 })
+                .filter(this::checkEventsForRequiredFields)
+
                 .toList();
     }
 
