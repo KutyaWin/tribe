@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ExternalEventService {
-    List<KudagoEventDto> deleteExtraInfo(
+    List<KudagoEventDto> prepareEventsForCreating(
             Map<Long, KudagoEventDto> kudaGoEvents,
             int daysQuantityToFirstPublication
     );
