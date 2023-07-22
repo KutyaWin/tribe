@@ -2,6 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.dto.EventCategory;
 import com.covenant.tribe.repository.KudaGoEventRepository;
 import com.covenant.tribe.service.ExternalEventService;
 import lombok.AccessLevel;
@@ -13,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +26,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExternalEventServiceImpl implements ExternalEventService {
+
+    final Set<String> EXTRA_KUDA_GO_CATEGORIES = Set.of(EventCategory.STOCKS.getKudaGoName());
+    final Map<String, String> CATEGORY_NAMES_FOR_MATCHING = getCategoryNamesForMatching();
 
     KudaGoEventRepository kudaGoRepository;
 
@@ -36,7 +42,8 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         );
         existingEventIds.forEach(kudaGoEvents::remove);
         List<KudagoEventDto> filteredEvents = filterEvents(kudaGoEvents, daysQuantityToFirstPublication);
-        return deleteExpiredStartDates(filteredEvents);
+        List<KudagoEventDto> eventsAfterDeletingStartDates = deleteExpiredStartDates(filteredEvents);
+        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingStartDates);
     }
 
     private List<KudagoEventDto> deleteExpiredStartDates(List<KudagoEventDto> filteredEvents) {
@@ -48,7 +55,22 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         return filteredEvents;
     }
 
+    private List<KudagoEventDto> changeKudaGoCategoriesToTribeCategories(List<KudagoEventDto> events) {
+        for (KudagoEventDto event : events) {
+            List<String> categories = event.getCategories();
+            String tribeCategory = CATEGORY_NAMES_FOR_MATCHING.get(categories.get(0));
+            event.setCategories(List.of(tribeCategory));
+        }
+        return events;
+    }
 
+    private Map<String, String> getCategoryNamesForMatching() {
+        Map<String, String> categoryNamesForMatching = new HashMap<>();
+        for(EventCategory eventCategory : EventCategory.values()) {
+            categoryNamesForMatching.put(eventCategory.getKudaGoName(), eventCategory.getTribeName());
+        }
+        return categoryNamesForMatching;
+    }
 
 
     private boolean checkEventsForRequiredFields(KudagoEventDto event) {
@@ -79,6 +101,15 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         return true;
     }
 
+    private boolean checkForExtraCategories(List<String> kudaGoCategories) {
+        for(String kudaGoCategoryName : kudaGoCategories) {
+            if (EXTRA_KUDA_GO_CATEGORIES.contains(kudaGoCategoryName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events, int daysQuantityToFirstPublication) {
         return events.values().stream()
                 .filter(kudagoEvent -> {
@@ -87,7 +118,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                             .isAfter(LocalDate.now().minusDays(daysQuantityToFirstPublication));
                 })
                 .filter(this::checkEventsForRequiredFields)
-
+                .filter(kudagoEventDto -> !checkForExtraCategories(kudagoEventDto.getCategories()))
                 .toList();
     }
 
