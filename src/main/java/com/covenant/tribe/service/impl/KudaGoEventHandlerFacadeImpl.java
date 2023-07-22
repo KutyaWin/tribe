@@ -1,5 +1,6 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.service.*;
@@ -26,6 +27,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
 
     KudagoFetchService kudagoFetchService;
     ExternalEventService externalEventService;
+    ReverseGeolocationService reverseGeolocationService;
     EventService eventService;
     CompareEventService compareEventService;
 
@@ -46,10 +48,16 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         List<KudagoEventDto> eventsAfterDeletingExiting = null;
         if (kudaGoEventsOpt.isPresent()) {
             Map<Long, KudagoEventDto> kudaGoEvents = kudaGoEventsOpt.get();
-            eventsAfterDeletingExiting = externalEventService.deleteExtraInfo(
+            eventsAfterDeletingExiting = externalEventService.prepareEventsForCreating(
                     kudaGoEvents, daysQuantityToFirstPublication
             );
         }
+        Map<Long, ReverseGeocodingData> reverseGeocodingData = reverseGeolocationService.getExternalEventAddresses(
+                eventsAfterDeletingExiting
+        );
+        
+
+
 
 
 
