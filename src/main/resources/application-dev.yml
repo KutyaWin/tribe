@@ -2,7 +2,13 @@ server:
   port: ${APP_PORT}
   forward-headers-strategy: framework
 
+
 spring:
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
+      username:
+      password:
   cloud:
     openfeign:
       client:

@@ -728,4 +728,10 @@ public class EventController {
                 .body(detailedEventDto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/parts_of_day")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateEventsPartsOfDay() {
+        eventService.updatePartsOfDay();
+    }
 }
