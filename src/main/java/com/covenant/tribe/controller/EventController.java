@@ -734,4 +734,5 @@ public class EventController {
     public void updateEventsPartsOfDay() {
         eventService.updatePartsOfDay();
     }
+
 }

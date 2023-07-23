@@ -65,4 +65,7 @@ public interface EventService {
     EventDto getEvent(Long eventId, Long organizerId);
 
     DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto) throws IOException;
+
+    void updatePartsOfDay();
+
 }
