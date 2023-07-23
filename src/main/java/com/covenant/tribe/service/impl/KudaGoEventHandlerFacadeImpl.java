@@ -56,7 +56,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
                 eventsAfterDeletingExiting
         );
         
-
+        
 
 
 
