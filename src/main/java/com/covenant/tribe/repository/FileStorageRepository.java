@@ -11,6 +11,8 @@ import java.util.List;
 public interface FileStorageRepository {
     public String saveFileToTmpDir(String contentType, byte[] photo);
 
+    public List<String> saveExternalEventImages(List<ImageDto> externalImages);
+
     public ImageDto getEventAvatarByFileName(String avatarFileName) throws FileNotFoundException;
 
     public List<String> addEventAvatars(List<String> fileNames) throws IOException;

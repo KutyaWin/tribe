@@ -29,6 +29,7 @@ import java.util.UUID;
 public class FileStorageRepositoryImpl implements FileStorageRepository {
 
     PathConfiguration pathConfiguration;
+
     @Override
     public String saveFileToTmpDir(String contentType, byte[] image) throws FilesNotHandleException {
         String fileName = UUID.randomUUID().toString();
@@ -54,6 +55,12 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
             log.info("Path for avatar is {}", pathToTmpDirBuilder);
             throw new FilesNotHandleException(message);
         }
+    }
+
+    @Override
+    public List<String> saveExternalEventImages(List<ImageDto> externalImages) {
+
+
     }
 
     @Override
