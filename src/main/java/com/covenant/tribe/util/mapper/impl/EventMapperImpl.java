@@ -284,11 +284,35 @@ public class EventMapperImpl implements EventMapper {
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
         boolean isFavoriteEvent = false;
+        boolean isParticipant = false;
+        boolean isWantToGo = false;
+        boolean isInvited = false;
         if (currentUserWhoSendRequest != null) {
             isFavoriteEvent = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
                     .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(event.getId()))
                     .findFirst()
                     .map(UserRelationsWithEvent::isFavorite)
+                    .orElse(false);
+            isParticipant = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> {
+                        return userRelationsWithEvent.getEventRelations().getId().equals(event.getId());
+                    })
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isParticipant)
+                    .orElse(false);
+            isWantToGo = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> {
+                        return userRelationsWithEvent.getEventRelations().getId().equals(event.getId());
+                    })
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isWantToGo)
+                    .orElse(false);
+            isInvited = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> {
+                        return userRelationsWithEvent.getEventRelations().getId().equals(event.getId());
+                    })
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isInvited)
                     .orElse(false);
         }
 
@@ -302,6 +326,9 @@ public class EventMapperImpl implements EventMapper {
                     .description(event.getEventDescription())
                     .isPrivate(event.isPrivate())
                     .isFree(event.isFree())
+                    .isParticipant(isParticipant)
+                    .isInvited(isInvited)
+                    .isWantToGo(isWantToGo)
                     .build();
         }
         var responseDto = DetailedEventInSearchDTO.builder()
@@ -324,6 +351,9 @@ public class EventMapperImpl implements EventMapper {
                 .isPrivate(event.isPrivate())
                 .isFree(event.isFree())
                 .isFinished(isEventFinished(event))
+                .isParticipant(isParticipant)
+                .isInvited(isInvited)
+                .isWantToGo(isWantToGo)
                 .build();
         if (event.getEventAddress() != null) {
             responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
