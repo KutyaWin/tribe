@@ -36,6 +36,7 @@ public class DetailedEventInSearchDTO {
     @NotNull(message = "favorite_event should not be null")
     Boolean favoriteEvent;
 
+
     @JsonProperty(value = "organizer_photo")
     @Size(max = 200, message = "organizer_photo must not consist of more than 200 characters")
     String organizerPhoto;
@@ -71,5 +72,9 @@ public class DetailedEventInSearchDTO {
     @UniqueElements(message = "All elements in usersWhoParticipantsOfEvent must be unique")
     Set<UsersWhoParticipantsOfEventDTO> usersWhoParticipantsOfEvent = new HashSet<>();
 
+    @JsonProperty(value = "is_private")
     Boolean isPrivate;
+
+    @JsonProperty(value = "is_free")
+    Boolean isFree;
 }

@@ -71,6 +71,7 @@ public class EventMapperImpl implements EventMapper {
                             .anyMatch(relations -> relations.getEventRelations().equals(event)))
                     .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                     .isPrivate(true)
+                    .isFree(event.isFree())
                     .build();
         }
 
@@ -89,6 +90,7 @@ public class EventMapperImpl implements EventMapper {
                         .filter(UserRelationsWithEvent::isViewed)
                         .anyMatch(relations -> relations.getEventRelations().equals(event)))
                 .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                 .participants(mapUsersToUsersWhoParticipantsOfEventDTO(
                         event.getEventRelationsWithUser().stream()
@@ -113,6 +115,7 @@ public class EventMapperImpl implements EventMapper {
                     .eventType(event.getEventType().getTypeName())
                     .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                     .isPrivate(true)
+                    .isFree(event.isFree())
                     .build();
         }
         var eventDto = SearchEventDTO.builder()
@@ -125,6 +128,7 @@ public class EventMapperImpl implements EventMapper {
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
                 .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                 .participants(mapUsersToUsersWhoParticipantsOfEventDTO(
                         event.getEventRelationsWithUser().stream()
@@ -314,6 +318,7 @@ public class EventMapperImpl implements EventMapper {
                     .eventName(event.getEventName())
                     .description(event.getEventDescription())
                     .isPrivate(event.isPrivate())
+                    .isFree(event.isFree())
                     .build();
         }
         var responseDto = DetailedEventInSearchDTO.builder()
@@ -334,6 +339,7 @@ public class EventMapperImpl implements EventMapper {
                                         .map(UserRelationsWithEvent::getUserRelations)
                                         .collect(Collectors.toSet())))
                 .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
                 .build();
         if (event.getEventAddress() != null) {
             responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));

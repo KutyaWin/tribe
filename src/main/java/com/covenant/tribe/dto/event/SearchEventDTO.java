@@ -41,6 +41,8 @@ public class SearchEventDTO implements Serializable {
 
     Boolean isPrivate;
 
+    Boolean isFree;
+
     Boolean isPresenceOfAlcohol = false;
 
     @JsonProperty(value = "participants")
