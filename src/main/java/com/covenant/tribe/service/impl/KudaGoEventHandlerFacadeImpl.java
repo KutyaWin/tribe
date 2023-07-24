@@ -28,6 +28,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
     KudagoFetchService kudagoFetchService;
     ExternalEventService externalEventService;
     ReverseGeolocationService reverseGeolocationService;
+    ExternalImageStorageService externalImageStorageService;
     EventService eventService;
     CompareEventService compareEventService;
 
@@ -55,6 +56,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         Map<Long, ReverseGeocodingData> reverseGeocodingData = reverseGeolocationService.getExternalEventAddresses(
                 eventsAfterDeletingExiting
         );
+
         
         
 

@@ -59,8 +59,31 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
 
     @Override
     public List<String> saveExternalEventImages(List<ImageDto> externalImages) {
+        List<String> savingFilePaths = new ArrayList<>();
+        try {
 
-
+            String folderName = LocalDate.now().toString();
+            String pathToDir = new StringBuilder(pathConfiguration.getHome())
+                    .append(pathConfiguration.getMain()).append(File.separator)
+                    .append(pathConfiguration.getImage()).append(File.separator)
+                    .append(pathConfiguration.getEvent()).append(File.separator)
+                    .append(pathConfiguration.getAvatar()).append(File.separator)
+                    .append(folderName).append(File.separator).toString();
+            Files.createDirectories(Path.of(pathToDir));
+            for (ImageDto externalImage : externalImages) {
+                String fileName = UUID.randomUUID().toString();
+                String fileExtension = externalImage.getContentType().split("/")[1];
+                String fileNameWithExtension = fileName + "." + fileExtension;
+                String pathForSaving = pathToDir + File.separator + fileNameWithExtension;
+                Files.write(Path.of(pathForSaving), externalImage.getImage());
+                savingFilePaths.add(pathForSaving);
+            }
+            return savingFilePaths;
+        } catch (IOException e) {
+            String message = String.format("File didn't save, because %s'", e.getMessage());
+            log.error(message);
+            throw new FilesNotHandleException(message);
+        }
     }
 
     @Override
@@ -76,7 +99,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 .append(pathConfiguration.getEvent()).append(File.separator)
                 .append(pathConfiguration.getAvatar()).append(File.separator)
                 .append(currentDate).toString();
-        System.out.println("Path to new folder is " + pathToNewFolder);
         Files.createDirectories(Path.of(pathToNewFolder));
 
         for (String fileName : fileNames) {
