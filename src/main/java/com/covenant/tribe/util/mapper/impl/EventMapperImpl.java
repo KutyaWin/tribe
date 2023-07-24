@@ -127,6 +127,8 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
+                .longitude(event.getEventAddress().getEventLongitude())
+                .latitude(event.getEventAddress().getEventLatitude())
                 .isPrivate(event.isPrivate())
                 .isFree(event.isFree())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
