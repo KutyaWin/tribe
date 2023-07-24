@@ -80,4 +80,13 @@ public class DetailedEventInSearchDTO {
 
     @JsonProperty(value = "is_finished")
     Boolean isFinished;
+
+    @JsonProperty(value = "is_participant")
+    Boolean isParticipant;
+
+    @JsonProperty(value = "is_want_to_go")
+    Boolean isWantToGo;
+
+    @JsonProperty(value = "is_invited")
+    Boolean isInvited;
 }
