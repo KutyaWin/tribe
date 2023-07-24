@@ -77,4 +77,7 @@ public class DetailedEventInSearchDTO {
 
     @JsonProperty(value = "is_free")
     Boolean isFree;
+
+    @JsonProperty(value = "is_finished")
+    Boolean isFinished;
 }

@@ -25,8 +25,6 @@ public class SearchEventDTO implements Serializable {
 
     Boolean favoriteEvent;
 
-    Boolean viewEvent;
-
     Double latitude;
 
     Double longitude;
@@ -46,6 +44,8 @@ public class SearchEventDTO implements Serializable {
     Boolean isPrivate;
 
     Boolean isFree;
+
+    Boolean isFinished;
 
     Boolean isPresenceOfAlcohol = false;
 
