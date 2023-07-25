@@ -572,7 +572,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    public TokensDTO getTokenForVkUser(String token, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException {
+    private TokensDTO getTokenForVkUser(String token, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException {
 
         VkValidationParams vkValidationParams = new VkValidationParams(token, clientSecret, apiVersion);
         ResponseEntity<String> vkResponse = vkClient.isTokenValid(vkValidationParams);
