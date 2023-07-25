@@ -1,5 +1,7 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
@@ -52,12 +54,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -348,6 +345,14 @@ public class EventServiceImpl implements EventService {
                     "[EXCEPTION] Event with name %s and start time %s already exist",
                     event.getEventName(), event.getStartTime());
             throw new EventAlreadyExistException(message);
+        }
+    }
+
+    @Transactional
+    @Override
+    public Event saveNewExternalEvent(List<KudagoEventDto> externalEvents, Map<Long, ReverseGeocodingData> reverseGeocodingData, Map<Long, List<String>> images) {
+        for (KudagoEventDto externalEvent : externalEvents) {
+
         }
     }
 
