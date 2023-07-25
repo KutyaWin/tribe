@@ -30,7 +30,6 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
     ReverseGeolocationService reverseGeolocationService;
     ExternalImageStorageService externalImageStorageService;
     EventService eventService;
-    CompareEventService compareEventService;
 
 
     @Override
@@ -61,7 +60,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
                 eventsAfterDeletingExiting
         );
 
-        
+
 
 
 
