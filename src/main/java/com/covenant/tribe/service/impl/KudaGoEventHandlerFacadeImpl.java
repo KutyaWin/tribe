@@ -57,7 +57,10 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
                 eventsAfterDeletingExiting
         );
 
-        
+        Map<Long, List<String>> images = externalImageStorageService.saveExternalImages(
+                eventsAfterDeletingExiting
+        );
+
         
 
 

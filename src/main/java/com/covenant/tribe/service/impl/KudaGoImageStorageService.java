@@ -1,5 +1,6 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.client.kudago.KudaGoImageClient;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.client.kudago.dto.KudagoImageDto;
 import com.covenant.tribe.dto.ImageDto;
@@ -19,20 +20,18 @@ import java.util.Map;
 public class KudaGoImageStorageService implements ExternalImageStorageService {
 
     FileStorageRepository fileStorageRepository;
+    ImageDownloadService imageDownloadService;
     @Override
-    public List<String> saveExternalImages(List<KudagoEventDto> events) {
+    public Map<Long, List<String>> saveExternalImages(List<KudagoEventDto> events) {
         Map<Long, List<String>> eventImages = new HashMap<>();
         for(KudagoEventDto event : events) {
-            List<ImageDto> imageUrls = event.getImages().stream()
-                    .map(image -> {
-                        return ImageDto.builder()
-                                .
-                    })
+            List<String> imageUrls = event.getImages().stream()
+                    .map(KudagoImageDto::getImage)
                     .toList();
-            List<String> imagePaths = fileStorageRepository.saveExternalEventImages(imageUrls);
+            List<ImageDto> images = imageDownloadService.downloadImages(imageUrls);
+            List<String> imagePaths = fileStorageRepository.saveExternalEventImages(images);
+            eventImages.put(event.getId(), imagePaths);
         }
-
-
-        return fileStorageRepository.saveExternalEventImages(events);
+        return eventImages;
     }
 }
