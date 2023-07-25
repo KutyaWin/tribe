@@ -605,9 +605,9 @@ public class AuthServiceImpl implements AuthService {
                 tokensDTO.setUserId(user.getId());
                 return tokensDTO;
             } else {
-                Long userId = registerNewUser(userForSignInUpDTO, socialId, socialIdType);
-                TokensDTO tokensDTO = getTokenDTO(userId, user.getUserRole());
-                tokensDTO.setUserId(userId);
+                User newUser = registerNewUser(userForSignInUpDTO, socialId, socialIdType);
+                TokensDTO tokensDTO = getTokenDTO(newUser.getId(), newUser.getUserRole());
+                tokensDTO.setUserId(newUser.getId());
                 return tokensDTO;
             }
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -625,7 +625,7 @@ public class AuthServiceImpl implements AuthService {
         return objectMapper.readValue(error, VkValidationErrorDTO.class);
     }
 
-    public Long registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId, SocialIdType socialIdType) {
+    public User registerNewUser(UserForSignInUpDTO userForSignInUpDTO, String socialId, SocialIdType socialIdType) {
         if (userRepository.existsUserByUsername(userForSignInUpDTO.getUsername())) {
             String message = String.format("Username: %s, already exists", userForSignInUpDTO.getUsername());
             log.error(message);
@@ -652,7 +652,7 @@ public class AuthServiceImpl implements AuthService {
             userToSave.addInterestingEventTypes(new HashSet<>(allEventTypes));
         }
         userToSave = saveUser(userToSave);
-        return userToSave.getId();
+        return userToSave;
     }
 
     private TokensDTO getTokenDTO(Long userId, UserRole userRole) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
