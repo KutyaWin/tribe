@@ -127,8 +127,6 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
-                .longitude(event.getEventAddress().getEventLongitude())
-                .latitude(event.getEventAddress().getEventLatitude())
                 .isFinished(isEventFinished(event))
                 .isPrivate(event.isPrivate())
                 .isFree(event.isFree())
@@ -229,6 +227,7 @@ public class EventMapperImpl implements EventMapper {
                 .isEighteenYearLimit(dto.getIsEighteenYearLimit())
                 .isPrivate(dto.getIsPrivate())
                 .isPresenceOfAlcohol(dto.getHasAlcohol())
+                .isFree(dto.getIsFree())
                 .eventType(eventType)
                 .build();
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
