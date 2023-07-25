@@ -89,4 +89,8 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @Min(value = 1, message = "organizer_id should be greater than 0")
     @NotNull(message = "organizer_id should not be null")
     Long organizerId;
+
+    @JsonProperty(value = "is_free")
+    @NotNull(message = "is_free should not be null")
+    Boolean isFree;
 }
