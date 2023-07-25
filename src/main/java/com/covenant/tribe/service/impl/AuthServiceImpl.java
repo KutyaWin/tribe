@@ -272,6 +272,11 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format("User with email: %s, does not exist", resetPasswordDTO.getEmail())
                 ));
+        if (!user.hasEmailAuthentication()) {
+            String errMessage = "You cannot reset your password, because you don't have email authentication";
+            log.error(errMessage);
+            throw new BadCredentialsException(errMessage);
+        }
         int resetConfirmationCode = verificationCodeService.getVerificationCode(minCodeValue, maxCodeValue);
         String title = "Код для подтверждения сброса пароля";
         String message = String
