@@ -157,7 +157,12 @@ public class EventMapperImpl implements EventMapper {
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
                 .isFinished(isEventFinished(event))
+                .isDeleted(isEventDeleted(event))
                 .build();
+    }
+
+    private Boolean isEventDeleted(Event event) {
+        return event.getEventStatus().equals(EventStatus.DELETED);
     }
 
     private List<String> getEventAvatars(Set<EventAvatar> eventAvatars) {
