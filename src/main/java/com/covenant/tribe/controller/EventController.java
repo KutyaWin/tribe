@@ -33,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -185,11 +186,18 @@ public class EventController {
     @GetMapping("/{event_id}")
     public ResponseEntity<?> getEventById(
             @PathVariable("event_id") String eventId,
-            @RequestParam(value = "user-id", required = false) Long userId
+            HttpServletRequest token
     ) {
-        log.info("[CONTROLLER] start endpoint getEventById with param: {}, {}", eventId, userId);
+        log.info("[CONTROLLER] start endpoint getEventById with param: {}", eventId);
 
-        DetailedEventInSearchDTO responseEvent = eventService.getDetailedEventById(Long.parseLong(eventId), userId);
+        Long currentUserId = null;
+        if (token.getHeader(HttpHeaders.AUTHORIZATION) != null) {
+            currentUserId = jwtProvider.getUserIdFromToken(token.getHeader(HttpHeaders.AUTHORIZATION));
+        }
+
+        DetailedEventInSearchDTO responseEvent = eventService.getDetailedEventById(
+                Long.parseLong(eventId), currentUserId
+        );
 
         log.info("[CONTROLLER] end endpoint getEventById with response: {}", responseEvent);
         return ResponseEntity

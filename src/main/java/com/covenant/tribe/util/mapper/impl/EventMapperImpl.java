@@ -6,7 +6,6 @@ import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
-import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventPartOfDayRepository;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventMapper;
@@ -63,14 +62,13 @@ public class EventMapperImpl implements EventMapper {
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
                     .eventType(event.getEventType().getTypeName())
-                    .viewEvent(relationsWithEventCurrentUserId.stream()
-                            .filter(UserRelationsWithEvent::isViewed)
-                            .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                    .isFinished(isEventFinished(event))
                     .favoriteEvent(relationsWithEventCurrentUserId.stream()
                             .filter(UserRelationsWithEvent::isFavorite)
                             .anyMatch(relations -> relations.getEventRelations().equals(event)))
                     .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                     .isPrivate(true)
+                    .isFree(event.isFree())
                     .build();
         }
 
@@ -85,10 +83,9 @@ public class EventMapperImpl implements EventMapper {
                 .favoriteEvent(relationsWithEventCurrentUserId.stream()
                         .filter(UserRelationsWithEvent::isFavorite)
                         .anyMatch(relations -> relations.getEventRelations().equals(event)))
-                .viewEvent(relationsWithEventCurrentUserId.stream()
-                        .filter(UserRelationsWithEvent::isViewed)
-                        .anyMatch(relations -> relations.getEventRelations().equals(event)))
+                .isFinished(isEventFinished(event))
                 .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                 .participants(mapUsersToUsersWhoParticipantsOfEventDTO(
                         event.getEventRelationsWithUser().stream()
@@ -96,6 +93,10 @@ public class EventMapperImpl implements EventMapper {
                                 .map(UserRelationsWithEvent::getUserRelations)
                                 .collect(Collectors.toSet())))
                 .build();
+    }
+
+    private Boolean isEventFinished(Event event) {
+        return event.getEndTime().isBefore(OffsetDateTime.now());
     }
 
     public SearchEventDTO mapToSearchEventDTO(Event event) {
@@ -113,6 +114,8 @@ public class EventMapperImpl implements EventMapper {
                     .eventType(event.getEventType().getTypeName())
                     .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                     .isPrivate(true)
+                    .isFinished(isEventFinished(event))
+                    .isFree(event.isFree())
                     .build();
         }
         var eventDto = SearchEventDTO.builder()
@@ -124,7 +127,9 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
+                .isFinished(isEventFinished(event))
                 .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
                 .isPresenceOfAlcohol(event.isPresenceOfAlcohol())
                 .participants(mapUsersToUsersWhoParticipantsOfEventDTO(
                         event.getEventRelationsWithUser().stream()
@@ -151,8 +156,13 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime())
-                .isFinished(event.getEndTime().isBefore(OffsetDateTime.now()))
+                .isFinished(isEventFinished(event))
+                .isDeleted(isEventDeleted(event))
                 .build();
+    }
+
+    private Boolean isEventDeleted(Event event) {
+        return event.getEventStatus().equals(EventStatus.DELETED);
     }
 
     private List<String> getEventAvatars(Set<EventAvatar> eventAvatars) {
@@ -160,26 +170,6 @@ public class EventMapperImpl implements EventMapper {
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
     }
-
-    private boolean isEventViewed(Event event, Long userId) {
-        UserRelationsWithEvent currentUserRelations = event.getEventRelationsWithUser().stream()
-                .filter(userRelationsWithEvent ->
-                        userRelationsWithEvent
-                                .getUserRelations()
-                                .getId()
-                                .equals(userId)
-                )
-                .findFirst()
-                .orElseThrow(() -> {
-                    String message = String.format(
-                            "There isn't User with id %s in this event", userId
-                    );
-                    log.error(message);
-                    return new UserNotFoundException(message);
-                });
-        return currentUserRelations.isViewed();
-    }
-
     @Override
     public EventInUserProfileDTO mapToEventInUserProfileDTO(Event event, Long userId) {
         return EventInUserProfileDTO.builder()
@@ -188,7 +178,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .city(event.getEventAddress().getCity())
                 .startTime(event.getStartTime())
-                .isViewed(isEventViewed(event, userId))
+                .isViewed(isEventFinished(event))
                 .build();
     }
 
@@ -242,6 +232,7 @@ public class EventMapperImpl implements EventMapper {
                 .isEighteenYearLimit(dto.getIsEighteenYearLimit())
                 .isPrivate(dto.getIsPrivate())
                 .isPresenceOfAlcohol(dto.getHasAlcohol())
+                .isFree(dto.getIsFree())
                 .eventType(eventType)
                 .build();
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
@@ -297,11 +288,35 @@ public class EventMapperImpl implements EventMapper {
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
         boolean isFavoriteEvent = false;
+        boolean isParticipant = false;
+        boolean isWantToGo = false;
+        boolean isInvited = false;
         if (currentUserWhoSendRequest != null) {
             isFavoriteEvent = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
                     .filter(userRelationsWithEvent -> userRelationsWithEvent.getEventRelations().getId().equals(event.getId()))
                     .findFirst()
                     .map(UserRelationsWithEvent::isFavorite)
+                    .orElse(false);
+            isParticipant = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> {
+                        return userRelationsWithEvent.getEventRelations().getId().equals(event.getId());
+                    })
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isParticipant)
+                    .orElse(false);
+            isWantToGo = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> {
+                        return userRelationsWithEvent.getEventRelations().getId().equals(event.getId());
+                    })
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isWantToGo)
+                    .orElse(false);
+            isInvited = currentUserWhoSendRequest.getUserRelationsWithEvents().stream()
+                    .filter(userRelationsWithEvent -> {
+                        return userRelationsWithEvent.getEventRelations().getId().equals(event.getId());
+                    })
+                    .findFirst()
+                    .map(UserRelationsWithEvent::isInvited)
                     .orElse(false);
         }
 
@@ -314,6 +329,10 @@ public class EventMapperImpl implements EventMapper {
                     .eventName(event.getEventName())
                     .description(event.getEventDescription())
                     .isPrivate(event.isPrivate())
+                    .isFree(event.isFree())
+                    .isParticipant(isParticipant)
+                    .isInvited(isInvited)
+                    .isWantToGo(isWantToGo)
                     .build();
         }
         var responseDto = DetailedEventInSearchDTO.builder()
@@ -334,6 +353,11 @@ public class EventMapperImpl implements EventMapper {
                                         .map(UserRelationsWithEvent::getUserRelations)
                                         .collect(Collectors.toSet())))
                 .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
+                .isFinished(isEventFinished(event))
+                .isParticipant(isParticipant)
+                .isInvited(isInvited)
+                .isWantToGo(isWantToGo)
                 .build();
         if (event.getEventAddress() != null) {
             responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));

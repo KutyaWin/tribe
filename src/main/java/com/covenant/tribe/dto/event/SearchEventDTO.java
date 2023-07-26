@@ -25,8 +25,6 @@ public class SearchEventDTO implements Serializable {
 
     Boolean favoriteEvent;
 
-    Boolean viewEvent;
-
     String eventName;
 
     String eventType;
@@ -40,6 +38,10 @@ public class SearchEventDTO implements Serializable {
     LocalDateTime startTime;
 
     Boolean isPrivate;
+
+    Boolean isFree;
+
+    Boolean isFinished;
 
     Boolean isPresenceOfAlcohol = false;
 
