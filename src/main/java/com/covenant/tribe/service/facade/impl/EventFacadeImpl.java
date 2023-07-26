@@ -1,4 +1,4 @@
-package com.covenant.tribe.service.impl;
+package com.covenant.tribe.service.facade.impl;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.event.Event;
@@ -9,6 +9,7 @@ import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.service.*;
+import com.covenant.tribe.service.facade.EventFacade;
 import com.covenant.tribe.service.impl.pojo.CollectedDataForMappingToEvent;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventMapper;

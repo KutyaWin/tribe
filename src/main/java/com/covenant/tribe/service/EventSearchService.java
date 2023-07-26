@@ -1,8 +1,10 @@
 package com.covenant.tribe.service;
 
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.search.EventSearchUnit;
-import jakarta.transaction.Transactional;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,9 +13,9 @@ import java.util.List;
 public interface EventSearchService {
     EventSearchUnit create(Event event);
 
-    @Transactional
-    void updateAll();
+    List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable) throws JsonProcessingException;
 
-    @Transactional
-    void updateAll(List<Event> events);
+    List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable, List<EventIdView> ids) throws JsonProcessingException;
+
+    void deleteAll();
 }

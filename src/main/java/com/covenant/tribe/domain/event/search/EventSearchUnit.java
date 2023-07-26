@@ -20,7 +20,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventSearchUnit {
     @Id
-    private
     Long id;
 
     @Field(type = FieldType.Object)

@@ -9,7 +9,6 @@ import com.covenant.tribe.domain.user.UserStatus;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.covenant.tribe.exeption.event.*;
-import com.covenant.tribe.exeption.scheduling.BroadcastNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.*;
 import com.covenant.tribe.scheduling.BroadcastStatuses;
@@ -19,11 +18,7 @@ import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import com.covenant.tribe.scheduling.notifications.BroadcastRepository;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
 import com.covenant.tribe.scheduling.service.SchedulerService;
-import com.covenant.tribe.service.EventService;
-import com.covenant.tribe.service.FirebaseService;
-import com.covenant.tribe.service.TagService;
-import com.covenant.tribe.service.UserRelationsWithEventService;
-import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.service.*;
 import com.covenant.tribe.util.mapper.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
@@ -36,10 +31,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.QPageRequest;
 import org.springframework.data.querydsl.QSort;
@@ -50,7 +48,6 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -91,7 +88,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Integer page, Integer pageSize) {
+    public Pair<Predicate, Pageable> getPredicateForFilters(EventFilter filter, Long currentUserId, Integer page, Integer pageSize) {
         if (filter.getStrictEventSort() == null) filter.setStrictEventSort(false);
         QPredicates qPredicates = QPredicates.builder();
         QSort orders = new QSort();
@@ -107,12 +104,13 @@ public class EventServiceImpl implements EventService {
         handleText(filter, qPredicates);
         Pageable pageable = QPageRequest.of(page, pageSize, orders);
         Predicate predicate = qPredicates.build();
-        Page<Event> filteredEvents = eventRepository.findAll(predicate, pageable);
-        if (currentUserId != null) {
-            List<UserRelationsWithEvent> eventsCurrentUser = getUserRelationsWithEvents(currentUserId);
-            return filteredEvents.map(event -> eventMapper.mapToSearchEventDTO(event, eventsCurrentUser));
-        }
-        return filteredEvents.map(eventMapper::mapToSearchEventDTO);
+        Pair<Predicate, Pageable> pair = new ImmutablePair<>(predicate, pageable);
+        return pair;
+    }
+
+    @Override
+    public Page<Event> getAll(Pageable pageable, Predicate predicate) {
+        return eventRepository.findAll(predicate, pageable);
     }
 
     private void handleText(EventFilter filter, QPredicates qPredicates) {
@@ -122,7 +120,8 @@ public class EventServiceImpl implements EventService {
                         .or(QEvent.event.tagList.any().tagName.contains(t)));
     }
 
-    private List<UserRelationsWithEvent> getUserRelationsWithEvents(Long currentUserId) {
+    @Override
+    public List<UserRelationsWithEvent> getUserRelationsWithEvents(Long currentUserId) {
         List<UserRelationsWithEvent> eventsCurrentUser = userRepository.findUserByIdAndStatus(
                         currentUserId, UserStatus.ENABLED)
                 .orElseThrow(() -> {
@@ -357,6 +356,27 @@ public class EventServiceImpl implements EventService {
                     log.error("[EXCEPTION] event with id {}, does not exist", eventId);
                     return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                 });
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<Event> getByIdIn(List<Long> ids, Pageable pageable) {
+        return eventRepository.findAllByIdIn(ids, pageable);
+    }
+
+    @Override
+    public Page<Event> findAll(Pageable pageable, Predicate predicate) {
+        return eventRepository.findAll(predicate, pageable);
+    }
+
+    @Override
+    public List<Event> findAll(Integer page, Integer size) {
+        return eventRepository.findAll(PageRequest.of(page, size)).stream().toList();
+    }
+
+    @Override
+    public List<EventIdView> findIdsByPredicate(Predicate predicate) {
+        return eventRepository.findBy(predicate, q -> q.as(EventIdView.class).all());
     }
 
     @Transactional(readOnly = true)

@@ -1,6 +1,7 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.service.EventSearchService;
+import com.covenant.tribe.service.facade.EventSearchFacade;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReplicatorController {
 
-    EventSearchService eventSearchService;
+    EventSearchFacade eventSearchFacade;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/create_events")
     @ResponseStatus(HttpStatus.OK)
     public void updateEventsSearchUnits() {
-        eventSearchService.updateAll();
+        eventSearchFacade.updateAll();
     }
 }

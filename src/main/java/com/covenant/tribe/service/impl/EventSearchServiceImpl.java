@@ -1,31 +1,59 @@
 package com.covenant.tribe.service.impl;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.ObjectBuilder;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.search.EventSearchUnit;
 import com.covenant.tribe.domain.event.search.EventSearchUnitFactory;
 import com.covenant.tribe.repository.EventSearchUnitRepository;
 import com.covenant.tribe.service.EventSearchService;
-import com.covenant.tribe.service.EventService;
+import com.covenant.tribe.service.impl.pojo.SearchFunctionParam;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@ConditionalOnProperty(value = "elastic.enabled", havingValue = "true")
 public class EventSearchServiceImpl implements EventSearchService {
 
     EventSearchUnitFactory eventSearchUnitFactory;
 
     EventSearchUnitRepository eventSearchUnitRepository;
 
-    EventService eventService;
+    ElasticsearchTemplate client;
+
+    List<SearchFunctionParam> searchFunctionParams = new ArrayList<>();
+    @PostConstruct
+    public void addSearchFields() {
+        searchFunctionParams.add(new SearchFunctionParam("eventName", 2.0F));
+        searchFunctionParams.add(new SearchFunctionParam("eventAddress.names", 1.5F));
+        searchFunctionParams.add(new SearchFunctionParam("eventDescription", 1.0F));
+    }
 
     @Override
     @Transactional
@@ -33,26 +61,68 @@ public class EventSearchServiceImpl implements EventSearchService {
         EventSearchUnit eventSearchUnit = eventSearchUnitFactory.create(event);
         return eventSearchUnitRepository.save(eventSearchUnit);
     }
-
     @Override
-    @Transactional
-    public void updateAll() {
-        Integer size = 1000;
-        int i = 0;
-        eventSearchUnitRepository.deleteAll();
-        while (true) {
-            List<Event> all = eventService.findAll(i, size);
-            if (all.size() == 0) break;
-            updateAll(all);
-            i++;
-        }
+    public List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable) throws JsonProcessingException {
+        return findByTextAndIds(text, pageable, new ArrayList<>());
     }
 
     @Override
     @Transactional
-    public void updateAll(List<Event> events) {
-        for (Event event : events) {
-            create(event);
+    public List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable, List<EventIdView> ids) throws JsonProcessingException {
+        var tokens = getTokens(text);
+        NativeQueryBuilder query = NativeQuery.builder().withQuery(q -> q.bool(allTokens -> {
+            for (String token : tokens) {
+                allTokens.must(perTokenQ -> perTokenQ.bool(b -> {
+                    b.minimumShouldMatch(String.valueOf(1));
+                    for (SearchFunctionParam param : searchFunctionParams) {
+                        b.should(m -> m.functionScore(getFunctionScore(token, param)));
+                    }
+                    b.should(m -> m.matchAll(getMatchAll()));
+                    return b;
+                }));
+            }
+            return allTokens;
+        })).withPageable(pageable);
+        if (!ids.isEmpty()) {
+            List<Long> list = ids.stream().map(i -> i.getId()).toList();
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<String> list1 = list.stream().map(l -> String.valueOf(l)).toList();
+            String s1 = objectMapper.writeValueAsString(list);
+            TermsSetQuery.Builder id = QueryBuilders.termsSet().field("id").terms(list1).minimumShouldMatchScript(s -> s.inline(i -> i.source(String.valueOf(1))));
+            query.withFilter(f->f.termsSet(id.build()));
         }
+        NativeQuery build = query.build();
+        SearchHits<EventSearchUnit> hits = client.search(build, EventSearchUnit.class, IndexCoordinates.of("event"));
+        return hits.get().map(SearchHit::getContent).collect(Collectors.toList());
+
+    }
+
+    private static Function<FunctionScoreQuery.Builder, ObjectBuilder<FunctionScoreQuery>> getFunctionScore(String val,SearchFunctionParam param) {
+        return fs -> fs.query(
+                    fq -> fq.fuzzy(
+                            f -> f.field(param.getField()).value(val)
+                    )
+        ).scoreMode(FunctionScoreMode.Sum).boost(param.getBoost());
+    }
+
+    private MatchAllQuery getMatchAll() {
+        MatchAllQuery.Builder builder = QueryBuilders.matchAll().boost(0.0F);
+        return builder.build();
+    }
+
+    @Override
+    public void deleteAll() {
+        eventSearchUnitRepository.deleteAll();
+    }
+
+    private List<String> getTokens(String text) {
+        return Arrays.stream(text.trim().split("[\\s-,|]+")).map(String::toLowerCase).toList();
+    }
+
+    private FunctionScoreQuery.Builder getQueryBuilder(String token, String field, Float boost) {
+        return QueryBuilders
+                .functionScore().query(QueryBuilders.fuzzy().field(field).value(token).build()._toQuery())
+                .scoreMode(FunctionScoreMode.Sum)
+                .boost(boost);
     }
 }

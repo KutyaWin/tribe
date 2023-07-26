@@ -1,12 +1,15 @@
 package com.covenant.tribe.service;
 
+import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
+import com.querydsl.core.types.Predicate;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,7 +17,7 @@ import java.util.List;
 @Service
 public interface EventService {
 
-    Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Integer page, Integer size);
+    Pair<Predicate, Pageable> getPredicateForFilters(EventFilter filter, Long currentUserId, Integer page, Integer size);
 
     Event saveNewEvent(Event event);
 
@@ -22,13 +25,23 @@ public interface EventService {
 
     Event getEventById(Long eventId);
 
-    List<Event> findAll(Integer page, Integer size);
+    Page<Event> getByIdIn(List<Long> ids, Pageable pageable);
 
     List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId);
+
+    Page<Event> getAll(Pageable pageable, Predicate predicate);
+
+    List<UserRelationsWithEvent> getUserRelationsWithEvents(Long currentUserId);
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);
 
     void addUsersToPrivateEventAsParticipants(Long eventId, Long userId);
+
+    Page<Event> findAll(Pageable pageable, Predicate predicate);
+
+    List<Event> findAll(Integer page, Integer size);
+
+    List<EventIdView> findIdsByPredicate(Predicate predicate);
 
     List<EventVerificationDTO> getEventWithVerificationPendingStatus();
 

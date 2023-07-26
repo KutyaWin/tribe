@@ -6,7 +6,7 @@ server:
 spring:
   elasticsearch:
     rest:
-      uris: http://localhost:9200
+      uris: localhost:9200
       username:
       password:
   cloud:

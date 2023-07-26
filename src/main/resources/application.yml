@@ -1,4 +1,8 @@
 spring:
+  autoconfigure:
+    exclude: "org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration,
+    org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration,
+    org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration"
   properties:
     hibernate:
       dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
@@ -17,6 +21,7 @@ spring:
             error-decoder: com.covenant.tribe.client.kudago.decoder.KudagoDecoder
             retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
 
-
+elastic:
+  enabled: false
 scheduler:
   mode: "retrying"

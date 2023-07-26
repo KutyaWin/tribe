@@ -1,4 +1,4 @@
-package com.covenant.tribe.service;
+package com.covenant.tribe.service.facade;
 
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
