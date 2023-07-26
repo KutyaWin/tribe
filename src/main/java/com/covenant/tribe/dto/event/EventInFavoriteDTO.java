@@ -44,4 +44,8 @@ public class EventInFavoriteDTO {
     @JsonProperty(value = "is_finished")
     @NotNull(message = "is_finished should not be null")
     Boolean isFinished;
+
+    @JsonProperty(value = "is_deleted")
+    @NotNull(message = "is_deleted should not be null")
+    Boolean isDeleted;
 }
