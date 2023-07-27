@@ -1,5 +1,6 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.dto.EventCategory;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -45,6 +47,19 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         List<KudagoEventDto> eventsAfterDeletingStartDates = deleteExpiredStartDates(filteredEvents);
         return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingStartDates);
     }
+
+    @Transactional
+    @Override
+    public void saveNewExternalEvents(
+            List<KudagoEventDto> kudaGoEvents,
+            Map<Long, ReverseGeocodingData> reverseGeocodingData,
+            Map<Long, List<String>> imageFileNames,
+            Map<Long, List<Long>> eventTagIds
+    ) {
+
+    }
+
+
 
     private List<KudagoEventDto> deleteExpiredStartDates(List<KudagoEventDto> filteredEvents) {
         for(KudagoEventDto event : filteredEvents) {
