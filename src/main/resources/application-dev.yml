@@ -4,6 +4,8 @@ server:
 
 
 spring:
+  autoconfigure:
+    exclude:
   elasticsearch:
     rest:
       uris: localhost:9200
@@ -105,3 +107,5 @@ verification:
 
 scheduler:
   enabled: false
+elastic:
+  enabled: true

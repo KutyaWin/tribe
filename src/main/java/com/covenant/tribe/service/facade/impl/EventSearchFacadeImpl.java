@@ -19,9 +19,13 @@ import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +39,7 @@ public class EventSearchFacadeImpl implements EventSearchFacade {
 
     EventMapper eventMapper;
     @Override
+    @Transactional
     public Page<SearchEventDTO> getEventsByFilter(EventFilter filter, Long currentUserId, Integer page, Integer size) throws JsonProcessingException {
         Pair<Predicate, Pageable> predicateAndPageable = eventService.getPredicateForFilters(filter, currentUserId, page, size);
         Predicate predicate = predicateAndPageable.getLeft();
@@ -52,8 +57,13 @@ public class EventSearchFacadeImpl implements EventSearchFacade {
         List<EventIdView> ids = eventService.findIdsByPredicate(predicate);
         List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds(filter.getText(), pageable, ids);
         List<Long> collect = byTextAndIds.stream().map(EventSearchUnit::getId).collect(Collectors.toList());
-        Page<Event> byIdIn = eventService.getByIdIn(collect, pageable);
-        return byIdIn;
+        List<Event> byIdIn = eventService.getByIdIn(collect);
+        Event[] list = new Event[byIdIn.size()];
+        for (Event event : byIdIn) {
+            list[collect.indexOf(event.getId())] = event;
+        }
+        PageImpl<Event> events = new PageImpl<>(Arrays.stream(list).toList());
+        return events;
     }
 
     @Override

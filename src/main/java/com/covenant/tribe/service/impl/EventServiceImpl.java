@@ -101,7 +101,7 @@ public class EventServiceImpl implements EventService {
         orders = handleAlco(filter, qPredicates, orders, filterPresent);
         qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
         qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
-        handleText(filter, qPredicates);
+//        handleText(filter, qPredicates);
         Pageable pageable = QPageRequest.of(page, pageSize, orders);
         Predicate predicate = qPredicates.build();
         Pair<Predicate, Pageable> pair = new ImmutablePair<>(predicate, pageable);
@@ -362,6 +362,12 @@ public class EventServiceImpl implements EventService {
     @Override
     public Page<Event> getByIdIn(List<Long> ids, Pageable pageable) {
         return eventRepository.findAllByIdIn(ids, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Event> getByIdIn(List<Long> ids) {
+        return eventRepository.findAllByIdIn(ids);
     }
 
     @Override
@@ -990,6 +996,8 @@ public class EventServiceImpl implements EventService {
             e.setPartsOfDay(collect);
             return e;}).toList());
     }
+
+
 
     @Transactional(readOnly = true)
     @Override

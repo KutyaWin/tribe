@@ -38,6 +38,7 @@ services:
     volumes:
       - ~/tribe:/tribe
       - ~/tribe/logs:/tribe/logs
+    restart: unless-stopped
 
   db:
     image: postgis/postgis

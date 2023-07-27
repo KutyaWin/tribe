@@ -601,7 +601,6 @@ public class EventController {
         }
 
         PageResponse<SearchEventDTO> response = PageResponse.of(
-//                eventService.getEventsByFilter(eventFilter, currentUserId, page, size)
                 eventSearchFacade.getEventsByFilter(eventFilter, currentUserId, page, size)
         );
 

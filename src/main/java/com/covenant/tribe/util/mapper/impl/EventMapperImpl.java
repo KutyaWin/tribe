@@ -17,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -49,6 +50,7 @@ public class EventMapperImpl implements EventMapper {
     }
 
     @Override
+    @Transactional
     public SearchEventDTO mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId) {
         log.info("map Event to SearchEventDTO");
         log.debug("Passed Event: {}", event);

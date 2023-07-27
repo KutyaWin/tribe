@@ -81,4 +81,5 @@ public interface EventService {
 
     void updatePartsOfDay();
 
+    List<Event> getByIdIn(List<Long> collect);
 }

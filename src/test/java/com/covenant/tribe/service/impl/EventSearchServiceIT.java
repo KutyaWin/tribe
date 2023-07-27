@@ -44,11 +44,7 @@ import static org.hamcrest.Matchers.*;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @SpringBootTest
-public class EventSearchServiceIT extends AbstractTestcontainers {
-
-    private static final String ELASTIC_SEARCH_DOCKER = "8.8.2";
-
-    private static final Map<String, String> envsForEl = new HashMap<>();
+public class EventSearchServiceIT extends ElasticContainer {
 
     @Autowired
     private DataSource dataSource;
@@ -58,23 +54,6 @@ public class EventSearchServiceIT extends AbstractTestcontainers {
 
     @Autowired
     private EventSearchService eventSearchService;
-
-    static {
-        envsForEl.put("ES_JAVA_OPTS", "-Xms512m -Xmx512m");
-        envsForEl.put("xpack.security.enabled", "false");
-        envsForEl.put("discovery.type", "single-node");
-    }
-
-    @Container
-    protected static final ElasticsearchContainer elasticContainer;
-
-    static {
-        try {
-            elasticContainer = getElasticContainer();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     @PostConstruct
     public void beforeAll() throws IOException, SQLException {
@@ -94,24 +73,6 @@ public class EventSearchServiceIT extends AbstractTestcontainers {
             ScriptUtils.executeSqlScript(connection, resource);
         }
     }
-
-    protected static ElasticsearchContainer getElasticContainer() throws InterruptedException {
-        ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch").withTag(ELASTIC_SEARCH_DOCKER)).withExposedPorts(9200, 9300).withEnv(envsForEl);
-        elasticsearchContainer.start();
-        elasticsearchContainer.setWaitStrategy(Wait.forHttp("/")
-                .forPort(elasticsearchContainer.getMappedPort(9200))
-                .forStatusCode(200).withStartupTimeout(Duration.ofSeconds(60)));
-        return elasticsearchContainer;
-    }
-
-    @DynamicPropertySource
-    private static void registerElasticProps(DynamicPropertyRegistry registry) {
-        String url = elasticContainer.getHost() + ":" + elasticContainer.getMappedPort(9200);
-        registry.add("spring.elasticsearch.rest.uris", () -> url);
-        registry.add("elastic.enabled", () -> true);
-        registry.add("spring.autoconfigure.exclude", () -> "none");
-    }
-
     @Test
     public void if_context_loads_then_no_exception() {}
 

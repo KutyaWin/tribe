@@ -22,7 +22,7 @@ insert into events(id, created_at, start_time, end_time, event_name, event_statu
 VALUES (1000, now(), now(), now(), 'КУОК. BESKONECHNIY TOUR', 'PUBLISHED', false, false, false, false, true,
         true, 1000, 1000, 1000,
         'Больше шоу, больше рейва, специальные гости и презентация нового альбома — это 13 только часть того, что вас ждет.'),
-       (1001, now(), now(), now(), 'INSTASAMKA & MONEYKEN', 'PUBLISHED', false, false, false, true, true,
+       (1001, now(), now(), now(), 'INSTASAMKA & MONEYKEN', 'PUBLISHED', false, true, false, true, true,
         true, 1003, 1001, 1001,
         'Приготовьтесь: INSTASAMKA x MONEYKEN выступят с КУОК большим концертом и специальной программой 13 апреля в "A2 Green Concert"'),
        (1002, now(), now(), now(), 'Скриптонит', 'PUBLISHED', false, false, false, true, true,

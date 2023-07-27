@@ -85,9 +85,7 @@ public class EventSearchServiceImpl implements EventSearchService {
         })).withPageable(pageable);
         if (!ids.isEmpty()) {
             List<Long> list = ids.stream().map(i -> i.getId()).toList();
-            ObjectMapper objectMapper = new ObjectMapper();
             List<String> list1 = list.stream().map(l -> String.valueOf(l)).toList();
-            String s1 = objectMapper.writeValueAsString(list);
             TermsSetQuery.Builder id = QueryBuilders.termsSet().field("id").terms(list1).minimumShouldMatchScript(s -> s.inline(i -> i.source(String.valueOf(1))));
             query.withFilter(f->f.termsSet(id.build()));
         }
