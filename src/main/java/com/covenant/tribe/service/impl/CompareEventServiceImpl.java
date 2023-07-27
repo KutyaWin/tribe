@@ -10,7 +10,7 @@ import java.util.List;
 public class CompareEventServiceImpl implements CompareEventService {
     @Override
     public List<ExternalEventDescription> getExternalEventForAdding(List<EventComparisonDto> eventsFromDb, List<KudagoEventDto> eventsToDb) {
-
+        return null; //TODO После появления второго api для получения событий добавить метод
     }
 
     private Double calculateSimilarityInPercent(
