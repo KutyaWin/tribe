@@ -29,6 +29,8 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
     ExternalEventService externalEventService;
     ReverseGeolocationService reverseGeolocationService;
     ExternalImageStorageService externalImageStorageService;
+    ExternalEventTagService externalEventTagService;
+    TagService tagService;
     EventService eventService;
 
 
@@ -60,9 +62,10 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
                 eventsAfterDeletingExiting
         );
 
+        Map<Long, List<Long>> eventTagIds = externalEventTagService
+                .handleNewExternalTags(eventsAfterDeletingExiting);
 
-
-
+    
 
 
     }
