@@ -2,7 +2,6 @@ package com.covenant.tribe.domain.event;
 
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
-import com.covenant.tribe.domain.event.external.KudaGoEvent;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.AlreadyExistArgumentForAddToEntityException;
 import jakarta.persistence.*;
@@ -98,6 +97,10 @@ public class Event {
     @Column(name = "external_publication_date")
     @Builder.Default
     LocalDate externalPublicationDate = null;
+
+    @Column(name = "kudago_id")
+    @Builder.Default
+    Long kudaGoId = null;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type")

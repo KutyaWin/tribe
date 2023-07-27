@@ -1,10 +1,9 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
-import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.dto.EventCategory;
-import com.covenant.tribe.repository.KudaGoEventRepository;
+import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.service.ExternalEventService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -15,12 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -29,17 +26,18 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExternalEventServiceImpl implements ExternalEventService {
 
+    EventRepository eventRepository;
+
     final Set<String> EXTRA_KUDA_GO_CATEGORIES = Set.of(EventCategory.STOCKS.getKudaGoName());
     final Map<String, String> CATEGORY_NAMES_FOR_MATCHING = getCategoryNamesForMatching();
 
-    KudaGoEventRepository kudaGoRepository;
 
     @Override
     public List<KudagoEventDto> prepareEventsForCreating(
             Map<Long, KudagoEventDto> kudaGoEvents,
             int daysQuantityToFirstPublication
     ) {
-        List<Long> existingEventIds = kudaGoRepository.findAllRepeatableEventIds(
+        List<Long> existingEventIds = eventRepository.findAllRepeatableEventIds(
                 kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(2))
         );
         existingEventIds.forEach(kudaGoEvents::remove);

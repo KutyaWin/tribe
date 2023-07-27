@@ -354,6 +354,7 @@ public class EventServiceImpl implements EventService {
         for (KudagoEventDto externalEvent : externalEvents) {
 
         }
+        return null;
     }
 
     @Override
