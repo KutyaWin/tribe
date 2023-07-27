@@ -178,6 +178,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .city(event.getEventAddress().getCity())
                 .startTime(event.getStartTime())
+                .eventStatus(event.getEventStatus())
                 .isViewed(isEventFinished(event))
                 .build();
     }
