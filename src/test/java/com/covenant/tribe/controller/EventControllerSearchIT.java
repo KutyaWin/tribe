@@ -2,7 +2,6 @@ package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.covenant.tribe.dto.event.SearchEventDTO;
-import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.facade.EventSearchFacade;
 import com.covenant.tribe.service.impl.ElasticContainer;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +27,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.type.TypeReference;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -51,7 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @SpringBootTest
 @DirtiesContext
-public class EventControllerSearchTest extends ElasticContainer {
+public class EventControllerSearchIT extends ElasticContainer {
 
     @Autowired
     private DataSource dataSource;
