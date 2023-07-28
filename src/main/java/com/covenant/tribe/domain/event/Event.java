@@ -196,7 +196,6 @@ public class Event {
 
             this.tagList.add(tag);
             tag.getEventListWithTag().add(this);
-
         } else {
             log.error(
                     String.format("There's already a passed tag in the event tagSet." +

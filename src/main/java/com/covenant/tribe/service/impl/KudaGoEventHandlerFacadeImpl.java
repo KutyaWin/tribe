@@ -3,6 +3,7 @@ package com.covenant.tribe.service.impl;
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
@@ -30,6 +31,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
     ReverseGeolocationService reverseGeolocationService;
     ExternalImageStorageService externalImageStorageService;
     ExternalEventTagService externalEventTagService;
+    ExternalEventDateService externalEventDateService;
     TagService tagService;
     EventService eventService;
 
@@ -65,8 +67,17 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         Map<Long, List<Long>> eventTagIds = externalEventTagService
                 .handleNewExternalTags(eventsAfterDeletingExiting);
 
-    
 
+        Map<Long, ExternalEventDates> externalEventDates = externalEventDateService
+                .handleExternalEventDates(eventsAfterDeletingExiting);
+
+        externalEventService.saveNewExternalEvents(
+                eventsAfterDeletingExiting,
+                reverseGeocodingData,
+                images,
+                eventTagIds,
+                externalEventDates
+        );
 
     }
 }

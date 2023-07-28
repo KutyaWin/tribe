@@ -2,6 +2,7 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.dto.event.external.ExternalEventDates;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,8 @@ public interface ExternalEventService {
             List<KudagoEventDto> kudaGoEvents,
             Map<Long, ReverseGeocodingData> reverseGeocodingData,
             Map<Long, List<String>> imageFileNames,
-            Map<Long, List<Long>> eventTagIds
+            Map<Long, List<Long>> eventTagIds,
+            Map<Long, ExternalEventDates> externalEventDates
     );
 
 }

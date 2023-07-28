@@ -1,5 +1,6 @@
 package com.covenant.tribe.util.mapper;
 
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
@@ -8,6 +9,7 @@ import com.covenant.tribe.domain.event.EventPartOfDay;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.util.querydsl.PartsOfDay;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,6 +21,12 @@ public interface EventMapper {
     Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer, EventType eventType,
                      @Nullable EventAddress eventAddress, @Nullable List<Tag> alreadyExistEventTags,
                      @Nullable List<Tag> createdEventTagsByRequest, @Nullable List<User> invitedUserByRequest);
+
+    Event mapToEvent(
+            KudagoEventDto kudagoEventDto, User organizer, EventAddress eventAddress,
+            EventType eventType, List<Tag> eventTags, UserRelationsWithEvent userRelationsWithEvent,
+            ExternalEventDates externalEventDates, Boolean hasAgeRestriction
+    );
 
     DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest);
 
