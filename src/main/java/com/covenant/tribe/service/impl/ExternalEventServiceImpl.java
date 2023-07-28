@@ -2,9 +2,14 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.domain.event.EventAddress;
+import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.EventCategory;
+import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventRepository;
+import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.ExternalEventService;
+import com.covenant.tribe.util.mapper.EventAddressMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -27,9 +32,13 @@ import java.util.Set;
 public class ExternalEventServiceImpl implements ExternalEventService {
 
     EventRepository eventRepository;
+    UserRepository userRepository;
+    EventAddressMapper eventAddressMapper;
 
     final Set<String> EXTRA_KUDA_GO_CATEGORIES = Set.of(EventCategory.STOCKS.getKudaGoName());
     final Map<String, String> CATEGORY_NAMES_FOR_MATCHING = getCategoryNamesForMatching();
+
+    final String EXTERNAL_EVENT_ORGANIZER_NAME = "Tribe";
 
 
     @Override
@@ -38,7 +47,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             int daysQuantityToFirstPublication
     ) {
         List<Long> existingEventIds = eventRepository.findAllRepeatableEventIds(
-                kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(2))
+                kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(100))
         );
         existingEventIds.forEach(kudaGoEvents::remove);
         List<KudagoEventDto> filteredEvents = filterEvents(kudaGoEvents, daysQuantityToFirstPublication);
@@ -54,10 +63,23 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             Map<Long, List<String>> imageFileNames,
             Map<Long, List<Long>> eventTagIds
     ) {
+        kudaGoEvents.forEach(kudagoEvent -> {
+            User organizer = getExternalEventOrganizer();
+            EventAddress eventAddress = eventAddressMapper.matToEventAddress(
+                    reverseGeocodingData, kudagoEvent.getId()
+            );
+        });
 
     }
-
-
+    private User getExternalEventOrganizer() {
+        return userRepository
+                .findUserByUsername(EXTERNAL_EVENT_ORGANIZER_NAME)
+                .orElseThrow(() -> {
+                    String erMessage = "[EXCEPTION]: External event organizer not found.";
+                    log.error(erMessage);
+                    return new UserNotFoundException(erMessage);
+                });
+    }
 
     private List<KudagoEventDto> deleteExpiredStartDates(List<KudagoEventDto> filteredEvents) {
         for(KudagoEventDto event : filteredEvents) {

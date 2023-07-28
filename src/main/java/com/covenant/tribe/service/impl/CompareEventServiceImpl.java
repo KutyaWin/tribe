@@ -2,7 +2,7 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.dto.event.EventComparisonDto;
-import com.covenant.tribe.dto.event.ExternalEventDescription;
+import com.covenant.tribe.dto.event.external.ExternalEventDescription;
 import com.covenant.tribe.service.CompareEventService;
 
 import java.util.List;
