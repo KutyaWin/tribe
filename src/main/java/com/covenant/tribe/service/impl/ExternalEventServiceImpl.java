@@ -2,14 +2,26 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.domain.Tag;
+import com.covenant.tribe.domain.UserRelationsWithEvent;
+import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventAddress;
+import com.covenant.tribe.domain.event.EventAvatar;
+import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.EventCategory;
+import com.covenant.tribe.dto.event.external.ExternalEventDates;
+import com.covenant.tribe.exeption.event.EventTypeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
 import com.covenant.tribe.repository.EventRepository;
+import com.covenant.tribe.repository.EventTypeRepository;
+import com.covenant.tribe.repository.TagRepository;
 import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.service.ExternalEventDateService;
 import com.covenant.tribe.service.ExternalEventService;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
+import com.covenant.tribe.util.mapper.EventAvatarMapper;
+import com.covenant.tribe.util.mapper.EventMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -23,6 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @AllArgsConstructor
@@ -34,6 +48,9 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     EventRepository eventRepository;
     UserRepository userRepository;
     EventAddressMapper eventAddressMapper;
+    EventTypeRepository eventTypeRepository;
+    TagRepository tagRepository;
+    EventMapper eventMapper;
 
     final Set<String> EXTRA_KUDA_GO_CATEGORIES = Set.of(EventCategory.STOCKS.getKudaGoName());
     final Map<String, String> CATEGORY_NAMES_FOR_MATCHING = getCategoryNamesForMatching();
@@ -61,15 +78,57 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             List<KudagoEventDto> kudaGoEvents,
             Map<Long, ReverseGeocodingData> reverseGeocodingData,
             Map<Long, List<String>> imageFileNames,
-            Map<Long, List<Long>> eventTagIds
+            Map<Long, List<Long>> eventTagIds,
+            Map<Long, ExternalEventDates> externalEventDates
     ) {
         kudaGoEvents.forEach(kudagoEvent -> {
             User organizer = getExternalEventOrganizer();
             EventAddress eventAddress = eventAddressMapper.matToEventAddress(
                     reverseGeocodingData, kudagoEvent.getId()
             );
+            EventType eventType = getEventTypeByName(kudagoEvent.getCategories().get(0));
+            List<Tag> eventTags = tagRepository.findByIdIn(eventTagIds.get(kudagoEvent.getId()));
+            UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
+                    .userRelations(organizer)
+                    .isInvited(false)
+                    .isParticipant(true)
+                    .isWantToGo(false)
+                    .isViewed(false)
+                    .isFavorite(false)
+                    .build();
+            ExternalEventDates dates = externalEventDates.get(kudagoEvent.getId());
+            Boolean hasAgeRestriction = hasAgeRestriction(kudagoEvent.getAgeRestriction());
+
+            Event newEventFromKudaGo = eventMapper.mapToEvent(
+                    kudagoEvent, organizer, eventAddress, eventType,
+                    eventTags, userRelationsWithEvent, dates, hasAgeRestriction
+            );
+            eventRepository.save(newEventFromKudaGo);
         });
 
+    }
+
+    private Boolean hasAgeRestriction(String ageRestriction) {
+        if (ageRestriction == null) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile("\\d+");
+        Matcher matcher = pattern.matcher(ageRestriction);
+        if (matcher.find()) {
+            int restriction = Integer.parseInt(matcher.group());
+            return restriction >= 18;
+        }
+        return false;
+    }
+
+    private EventType getEventTypeByName(String name) {
+        return eventTypeRepository.findEventTypeByTypeName(name).orElseThrow(
+                () -> {
+                    String erMessage = "EventType with name %s not found.".formatted(name);
+                    log.error(erMessage);
+                    return new EventTypeNotFoundException(erMessage);
+                }
+        );
     }
     private User getExternalEventOrganizer() {
         return userRepository

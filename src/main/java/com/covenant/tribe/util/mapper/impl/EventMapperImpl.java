@@ -1,10 +1,12 @@
 package com.covenant.tribe.util.mapper.impl;
 
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
 import com.covenant.tribe.repository.EventPartOfDayRepository;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
@@ -170,6 +172,7 @@ public class EventMapperImpl implements EventMapper {
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
     }
+
     @Override
     public EventInUserProfileDTO mapToEventInUserProfileDTO(Event event, Long userId) {
         return EventInUserProfileDTO.builder()
@@ -280,6 +283,41 @@ public class EventMapperImpl implements EventMapper {
 
         return event;
     }
+
+    @Override
+    public Event mapToEvent(
+            KudagoEventDto kudagoEventDto, User organizer, EventAddress eventAddress,
+            EventType eventType, List<Tag> eventTags,
+            UserRelationsWithEvent userRelationsWithEvent, ExternalEventDates externalEventDates,
+            Boolean hasAgeRestriction
+    ) {
+        Long kudaGoEventID = kudagoEventDto.getId();
+        Event event = Event.builder()
+                .organizer(organizer)
+                .eventName(kudagoEventDto.getTitle())
+                .eventDescription(kudagoEventDto.getDescription())
+                .startTime(externalEventDates.start())
+                .endTime(externalEventDates.end())
+                .showEventInSearch(true)
+                .sendToAllUsersByInterests(false)
+                .isEighteenYearLimit(kudagoEventDto.getAgeRestriction() != null)
+                .isPrivate(false)
+                .isPresenceOfAlcohol(hasAgeRestriction)
+                .isFree(kudagoEventDto.getIsFree())
+                .eventType(eventType)
+                .build();
+        event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
+        organizer.addEventWhereUserAsOrganizer(event);
+        eventType.addEvent(event);
+
+        if (eventAddress != null) {
+            event.setEventAddress(eventAddress);
+            eventAddress.addEvent(event);
+        }
+        event.addTagList(eventTags);
+        event.addEventRelationsWithUser(userRelationsWithEvent);
+        return event;
+}
 
     @Override
     public DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest) {
