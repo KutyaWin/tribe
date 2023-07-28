@@ -1,4 +1,4 @@
-package com.covenant.tribe.dto.event;
+package com.covenant.tribe.dto.event.external;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
