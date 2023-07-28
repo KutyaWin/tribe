@@ -30,11 +30,13 @@ import com.querydsl.jpa.JPQLQuery;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -81,6 +83,11 @@ public class EventServiceImpl implements EventService {
     UserMapper userMapper;
     EventAddressMapper eventAddressMapper;
     Environment environment;
+    EventSearchService eventSearchService;
+
+    @NonFinal
+    @Value("${event.message.strategy}")
+    private String eventMessageStrategy;
 
     @Override
     public Event save(Event event) {
@@ -339,8 +346,9 @@ public class EventServiceImpl implements EventService {
     public Event saveNewEvent(Event event) {
         if (eventRepository.findByEventNameAndStartTimeAndOrganizerId(
                 event.getEventName(), event.getStartTime(), event.getOrganizer().getId()).isEmpty()) {
-
-            return eventRepository.save(event);
+            Event save = eventRepository.save(event);
+            eventSearchService.create(save);
+            return save;
         } else {
             String message = String.format(
                     "[EXCEPTION] Event with name %s and start time %s already exist",
@@ -405,15 +413,10 @@ public class EventServiceImpl implements EventService {
         }
         event.setEventStatus(EventStatus.PUBLISHED);
         eventRepository.save(event);
+        eventSearchService.update(event);
         sendNecessaryNotification(event);
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
-        MessageStrategyName messageStrategyName = null;
-        if (Objects.equals(environment.getProperty("spring.profiles.active"), "dev")
-                || Objects.equals(environment.getProperty("spring.profiles.active"), "test")) {
-            messageStrategyName = MessageStrategyName.CONSOLE;
-        } else {
-            messageStrategyName = MessageStrategyName.FIREBASE;
-        }
+        MessageStrategyName messageStrategyName = MessageStrategyName.valueOf(eventMessageStrategy);
         Broadcast broadcast = Broadcast.builder()
                 .subjectId(event.getId())
                 .repeatDate(hourNotificationSendTime)
@@ -979,7 +982,7 @@ public class EventServiceImpl implements EventService {
         }
         eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
-
+        eventSearchService.update(eventForUpdate);
         fileStorageRepository.deleteFileInTmpDir(avatarsForDeletingFromTempDirectory);
         fileStorageRepository.deleteEventAvatars(avatarsForDeletingFromDb);
 

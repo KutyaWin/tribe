@@ -1,24 +1,23 @@
 version: '3.8'
-
 services:
-
-
   app:
     image: docker-spring-boot-postgres:latest
     user: "${UID}:${GID}"
-    network_mode: bridge
     build:
       context: .
       dockerfile: ./docker/Dockerfile
     container_name: "app"
     depends_on:
+      tribe_elasticsearch:
+        condition: service_started
       db:
         condition: service_healthy
     links:
       - db
+      - tribe_elasticsearch
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5435/tribe
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tribe
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_VK_CLIENT_ID: ${VK_CLIENT_ID}
@@ -33,6 +32,7 @@ services:
       SPRING_WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN}
       SPRING_WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
       APP_PORT: ${APP_PORT}
+      ELASTIC_URI: tribe_elasticsearch:9200
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     volumes:
@@ -42,7 +42,6 @@ services:
 
   db:
     image: postgis/postgis
-    network_mode: bridge
     container_name: "db"
     restart: always
     volumes:
@@ -52,7 +51,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: tribe
     ports:
-      - "127.0.0.1:${EXTERNAL_DB_PORT}:5435"
+      - "127.0.0.1:${EXTERNAL_DB_PORT}:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d tribe" ]
       interval: 8s
@@ -60,6 +59,7 @@ services:
       retries: 4
 
   tribe_elasticsearch:
+    container_name: "tribe_elasticsearch"
     image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data

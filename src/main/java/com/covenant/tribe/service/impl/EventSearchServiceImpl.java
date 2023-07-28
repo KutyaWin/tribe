@@ -1,17 +1,17 @@
 package com.covenant.tribe.service.impl;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.search.EventSearchUnit;
 import com.covenant.tribe.domain.event.search.EventSearchUnitFactory;
+import com.covenant.tribe.exeption.event.search.EventSearchUnitNotFoundException;
 import com.covenant.tribe.repository.EventSearchUnitRepository;
 import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.impl.pojo.SearchFunctionParam;
+import com.covenant.tribe.util.reflection.UpdateUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,8 +27,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
-import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -61,6 +60,21 @@ public class EventSearchServiceImpl implements EventSearchService {
         EventSearchUnit eventSearchUnit = eventSearchUnitFactory.create(event);
         return eventSearchUnitRepository.save(eventSearchUnit);
     }
+
+    @Override
+    @Transactional
+    public EventSearchUnit update(Event event) {
+        EventSearchUnit oldUnit = getSafe(event);
+        EventSearchUnit newUnit = eventSearchUnitFactory.create(event);
+        UpdateUtil.updateEntity(oldUnit, newUnit);
+        UpdateUtil.updateEntity(newUnit.getEventAddress(), newUnit.getEventAddress());
+        return eventSearchUnitRepository.save(oldUnit);
+    }
+
+    private EventSearchUnit getSafe(Event event) {
+        return eventSearchUnitRepository.findById(String.valueOf(event.getId())).orElseThrow(() -> new EventSearchUnitNotFoundException("Event search unit not found"));
+    }
+
     @Override
     public List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable) throws JsonProcessingException {
         return findByTextAndIds(text, pageable, new ArrayList<>());

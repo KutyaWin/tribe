@@ -4,6 +4,7 @@ import com.covenant.tribe.dto.ResponseErrorDTO;
 import com.covenant.tribe.exeption.event.WrongPartOfADayFilter;
 import com.covenant.tribe.exeption.auth.VerificationCodeNotFoundException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
+import com.covenant.tribe.exeption.util.IllegalAccessDuringUpdateException;
 import com.google.auth.oauth2.TokenVerifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.NestedExceptionUtils;
@@ -119,6 +120,17 @@ public class CustomExceptionHandler {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(IllegalAccessDuringUpdateException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseErrorDTO handleReflectionException(RuntimeException e) {
+        log.error("[EXCEPTION] message: " + e.getMessage());
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .errorMessage(List.of(e.getMessage()))
                 .build();
     }

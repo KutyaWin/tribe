@@ -2,6 +2,9 @@ server:
   port: 8085
 
 spring:
+  elasticsearch:
+    rest:
+      uris: mock
   cloud:
     openfeign:
       client:

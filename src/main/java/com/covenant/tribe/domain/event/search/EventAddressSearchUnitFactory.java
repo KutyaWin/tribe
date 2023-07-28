@@ -22,7 +22,6 @@ public class EventAddressSearchUnitFactory {
                 .eventLatitude(eventAddress.getEventLatitude())
                 .eventLongitude(eventAddress.getEventLongitude())
                 .names(getAddressNames(eventAddress))
-                .eventPosition(eventAddress.getEventPosition())
                 .build();
     }
 

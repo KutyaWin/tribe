@@ -25,3 +25,6 @@ elastic:
   enabled: false
 scheduler:
   mode: "retrying"
+event:
+  message:
+    strategy: CONSOLE

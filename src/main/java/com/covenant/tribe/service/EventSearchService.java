@@ -13,6 +13,8 @@ import java.util.List;
 public interface EventSearchService {
     EventSearchUnit create(Event event);
 
+    EventSearchUnit update(Event event);
+
     List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable) throws JsonProcessingException;
 
     List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable, List<EventIdView> ids) throws JsonProcessingException;

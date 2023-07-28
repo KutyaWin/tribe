@@ -8,7 +8,7 @@ spring:
     exclude:
   elasticsearch:
     rest:
-      uris: localhost:9200
+      uris: ${ELASTIC_URI}
       username:
       password:
   cloud:
@@ -105,7 +105,12 @@ verification:
       min: 1000
       max: 9999
 
+#custom
+
 scheduler:
   enabled: false
 elastic:
   enabled: true
+event:
+  message:
+    strategy: FIREBASE
