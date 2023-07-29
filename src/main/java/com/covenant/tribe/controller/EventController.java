@@ -288,7 +288,6 @@ public class EventController {
                                     array = @ArraySchema(schema = @Schema(implementation = EventInUserProfileDTO.class))))},
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PreAuthorize("#organizerId.equals(authentication.getName())")
     @GetMapping("/organisation/{organizer_id}")
     public ResponseEntity<?> findEventsByOrganizerId(@PathVariable(value = "organizer_id") String organizerId) {
         log.info("[CONTROLLER] start endpoint findEventsByOrganizerId with param: {}", organizerId);
