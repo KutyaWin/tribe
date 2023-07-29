@@ -17,19 +17,17 @@ import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
 import com.covenant.tribe.repository.UserRepository;
-import com.covenant.tribe.service.ExternalEventDateService;
 import com.covenant.tribe.service.ExternalEventService;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventAvatarMapper;
 import com.covenant.tribe.util.mapper.EventMapper;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -39,24 +37,38 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@AllArgsConstructor
-@NoArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExternalEventServiceImpl implements ExternalEventService {
 
-    EventRepository eventRepository;
-    UserRepository userRepository;
-    EventAddressMapper eventAddressMapper;
-    EventTypeRepository eventTypeRepository;
-    TagRepository tagRepository;
-    EventMapper eventMapper;
+    final EventRepository eventRepository;
+    final UserRepository userRepository;
+    final EventAddressMapper eventAddressMapper;
+    final EventTypeRepository eventTypeRepository;
+    final TagRepository tagRepository;
+    final EventMapper eventMapper;
+    final EventAvatarMapper eventAvatarMapper;
+    Set<String> EXTRA_KUDA_GO_CATEGORIES;
+    Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
-    final Set<String> EXTRA_KUDA_GO_CATEGORIES = Set.of(EventCategory.STOCKS.getKudaGoName());
-    final Map<String, String> CATEGORY_NAMES_FOR_MATCHING = getCategoryNamesForMatching();
+    String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    final String EXTERNAL_EVENT_ORGANIZER_NAME = "Tribe";
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper) {
+        this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
+        this.eventAddressMapper = eventAddressMapper;
+        this.eventTypeRepository = eventTypeRepository;
+        this.tagRepository = tagRepository;
+        this.eventMapper = eventMapper;
+        this.eventAvatarMapper = eventAvatarMapper;
+    }
 
+    @PostConstruct
+    public void init() {
+        EXTRA_KUDA_GO_CATEGORIES = Set.of(EventCategory.STOCKS.getKudaGoName());
+        CATEGORY_NAMES_FOR_MATCHING = getCategoryNamesForMatching();
+        EXTERNAL_EVENT_ORGANIZER_NAME = "Tribe";
+    }
 
     @Override
     public List<KudagoEventDto> prepareEventsForCreating(
@@ -69,7 +81,32 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         existingEventIds.forEach(kudaGoEvents::remove);
         List<KudagoEventDto> filteredEvents = filterEvents(kudaGoEvents, daysQuantityToFirstPublication);
         List<KudagoEventDto> eventsAfterDeletingStartDates = deleteExpiredStartDates(filteredEvents);
-        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingStartDates);
+        List<KudagoEventDto> eventsAfterDeletingEventsWithoutDates = deleteEventsWithoutDates(eventsAfterDeletingStartDates);
+        List<KudagoEventDto> eventsAfterDeletingExtraCategories = deleteExtraCategories(eventsAfterDeletingEventsWithoutDates);
+        List<KudagoEventDto> eventsAfterIsFreeFieldChecking = fillBlankIsFreeFields(eventsAfterDeletingExtraCategories);
+        return changeKudaGoCategoriesToTribeCategories(eventsAfterIsFreeFieldChecking);
+    }
+
+    private List<KudagoEventDto> fillBlankIsFreeFields(List<KudagoEventDto> eventsAfterDeletingExtraCategories) {
+        eventsAfterDeletingExtraCategories.forEach(event -> {
+            if (event.getIsFree() == null) {
+                event.setIsFree(false);
+            }
+        });
+        return eventsAfterDeletingExtraCategories;
+    }
+
+    private List<KudagoEventDto> deleteEventsWithoutDates(List<KudagoEventDto> eventsAfterDeletingStartDates) {
+        return eventsAfterDeletingStartDates.stream()
+                .filter(event -> event.getDates() != null && !event.getDates().isEmpty())
+                .toList();
+    }
+
+    private List<KudagoEventDto> deleteExtraCategories(List<KudagoEventDto> eventsAfterDeletingStartDates) {
+        for (KudagoEventDto event : eventsAfterDeletingStartDates) {
+            event.getCategories().removeIf(category -> EXTRA_KUDA_GO_CATEGORIES.contains(category));
+        }
+        return eventsAfterDeletingStartDates;
     }
 
     @Transactional
@@ -86,6 +123,9 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             EventAddress eventAddress = eventAddressMapper.matToEventAddress(
                     reverseGeocodingData, kudagoEvent.getId()
             );
+            Set<EventAvatar> eventImages = eventAvatarMapper.mapToEventAvatars(
+                imageFileNames.get(kudagoEvent.getId())
+            );
             EventType eventType = getEventTypeByName(kudagoEvent.getCategories().get(0));
             List<Tag> eventTags = tagRepository.findByIdIn(eventTagIds.get(kudagoEvent.getId()));
             UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
@@ -101,7 +141,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
 
             Event newEventFromKudaGo = eventMapper.mapToEvent(
                     kudagoEvent, organizer, eventAddress, eventType,
-                    eventTags, userRelationsWithEvent, dates, hasAgeRestriction
+                    eventTags, userRelationsWithEvent, dates, hasAgeRestriction, eventImages
             );
             eventRepository.save(newEventFromKudaGo);
         });
@@ -130,6 +170,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                 }
         );
     }
+
     private User getExternalEventOrganizer() {
         return userRepository
                 .findUserByUsername(EXTERNAL_EVENT_ORGANIZER_NAME)
@@ -141,9 +182,9 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     }
 
     private List<KudagoEventDto> deleteExpiredStartDates(List<KudagoEventDto> filteredEvents) {
-        for(KudagoEventDto event : filteredEvents) {
+        for (KudagoEventDto event : filteredEvents) {
             event.getDates().removeIf(
-                    date -> LocalDate.parse(date.getStartDate()).isBefore(LocalDate.now())
+                    date -> date.getStartDate() == null || LocalDate.parse(date.getStartDate()).isBefore(LocalDate.now())
             );
         }
         return filteredEvents;
@@ -160,7 +201,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
 
     private Map<String, String> getCategoryNamesForMatching() {
         Map<String, String> categoryNamesForMatching = new HashMap<>();
-        for(EventCategory eventCategory : EventCategory.values()) {
+        for (EventCategory eventCategory : EventCategory.values()) {
             categoryNamesForMatching.put(eventCategory.getKudaGoName(), eventCategory.getTribeName());
         }
         return categoryNamesForMatching;
@@ -180,23 +221,27 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             log.error("Event with id: {} has no location", event.getId());
             return false;
         }
-        if (event.getDates() == null  || event.getDates().isEmpty()) {
+        if (event.getDates() == null || event.getDates().isEmpty()) {
             log.error("Event with id: {} has no dates", event.getId());
             return false;
         }
-        if (event.getDescription() == null) {
-            log.error("Event with id: {} has no description", event.getId());
+        if (event.getBodyText() == null) {
+            log.error("Event with id: {} has no boy text", event.getId());
             return false;
         }
         if (event.getAgeRestriction() == null) {
             log.error("Event with id: {} has no age restriction", event.getId());
             return false;
         }
+        if (event.getLocation().getCoords().getLat() == null || event.getLocation().getCoords().getLon() == null) {
+            log.error("Event with id: {} has no coords", event.getId());
+            return false;
+        }
         return true;
     }
 
     private boolean checkForExtraCategories(List<String> kudaGoCategories) {
-        for(String kudaGoCategoryName : kudaGoCategories) {
+        for (String kudaGoCategoryName : kudaGoCategories) {
             if (EXTRA_KUDA_GO_CATEGORIES.contains(kudaGoCategoryName)) {
                 return true;
             }
@@ -207,12 +252,16 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events, int daysQuantityToFirstPublication) {
         return events.values().stream()
                 .filter(kudagoEvent -> {
-                    return kudagoEvent
+                   return kudagoEvent
                             .getPublicationDate()
                             .isAfter(LocalDate.now().minusDays(daysQuantityToFirstPublication));
                 })
-                .filter(this::checkEventsForRequiredFields)
-                .filter(kudagoEventDto -> !checkForExtraCategories(kudagoEventDto.getCategories()))
+                .filter(event -> {
+                    return checkEventsForRequiredFields(event);
+                })
+                .filter(kudagoEventDto -> {
+                    return kudagoEventDto.getDates() != null && !kudagoEventDto.getDates().isEmpty();
+                })
                 .toList();
     }
 

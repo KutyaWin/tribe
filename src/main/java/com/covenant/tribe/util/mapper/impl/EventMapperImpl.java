@@ -289,14 +289,17 @@ public class EventMapperImpl implements EventMapper {
             KudagoEventDto kudagoEventDto, User organizer, EventAddress eventAddress,
             EventType eventType, List<Tag> eventTags,
             UserRelationsWithEvent userRelationsWithEvent, ExternalEventDates externalEventDates,
-            Boolean hasAgeRestriction
+            Boolean hasAgeRestriction, Set<EventAvatar> eventImages
     ) {
         Long kudaGoEventID = kudagoEventDto.getId();
         Event event = Event.builder()
                 .organizer(organizer)
                 .eventName(kudagoEventDto.getTitle())
-                .eventDescription(kudagoEventDto.getDescription())
+                .eventDescription(kudagoEventDto.getBodyText())
                 .startTime(externalEventDates.start())
+                .kudaGoId(kudaGoEventID)
+                .isFromKudaGo(true)
+                .externalPublicationDate(kudagoEventDto.getPublicationDate())
                 .endTime(externalEventDates.end())
                 .showEventInSearch(true)
                 .sendToAllUsersByInterests(false)
@@ -316,6 +319,7 @@ public class EventMapperImpl implements EventMapper {
         }
         event.addTagList(eventTags);
         event.addEventRelationsWithUser(userRelationsWithEvent);
+        event.addEventAvatars(eventImages);
         return event;
 }
 

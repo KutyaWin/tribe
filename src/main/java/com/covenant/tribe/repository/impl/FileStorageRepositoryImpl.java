@@ -61,7 +61,6 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     public List<String> saveExternalEventImages(List<ImageDto> externalImages) {
         List<String> savingFilePaths = new ArrayList<>();
         try {
-
             String folderName = LocalDate.now().toString();
             String pathToDir = new StringBuilder(pathConfiguration.getHome())
                     .append(pathConfiguration.getMain()).append(File.separator)
@@ -76,7 +75,8 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
                 String fileNameWithExtension = fileName + "." + fileExtension;
                 String pathForSaving = pathToDir + File.separator + fileNameWithExtension;
                 Files.write(Path.of(pathForSaving), externalImage.getImage());
-                savingFilePaths.add(pathForSaving);
+                String pathForDb = folderName + File.separator + fileNameWithExtension;
+                savingFilePaths.add(pathForDb);
             }
             return savingFilePaths;
         } catch (IOException e) {

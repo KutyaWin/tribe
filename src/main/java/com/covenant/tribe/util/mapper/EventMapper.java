@@ -3,10 +3,7 @@ package com.covenant.tribe.util.mapper;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventAddress;
-import com.covenant.tribe.domain.event.EventPartOfDay;
-import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
@@ -25,7 +22,7 @@ public interface EventMapper {
     Event mapToEvent(
             KudagoEventDto kudagoEventDto, User organizer, EventAddress eventAddress,
             EventType eventType, List<Tag> eventTags, UserRelationsWithEvent userRelationsWithEvent,
-            ExternalEventDates externalEventDates, Boolean hasAgeRestriction
+            ExternalEventDates externalEventDates, Boolean hasAgeRestriction, Set<EventAvatar> eventImages
     );
 
     DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest);

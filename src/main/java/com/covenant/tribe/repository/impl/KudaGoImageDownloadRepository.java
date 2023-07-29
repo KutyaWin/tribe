@@ -8,12 +8,13 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.thymeleaf.util.ArrayUtils;
 
 import java.util.List;
 
 @AllArgsConstructor
-@NoArgsConstructor
+@Repository
 @Slf4j
 public class KudaGoImageDownloadRepository implements ImageDownloadRepository {
 

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
-@NoArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade {
 
@@ -32,12 +32,10 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
     ExternalImageStorageService externalImageStorageService;
     ExternalEventTagService externalEventTagService;
     ExternalEventDateService externalEventDateService;
-    TagService tagService;
-    EventService eventService;
 
 
     @Override
-    public void handleNewEvents(Map<Long, KudagoEventDto> externalEvents, int daysQuantityToFirstPublication) {
+    public void handleNewEvents(int daysQuantityToFirstPublication) {
         OffsetDateTime createEventTime = OffsetDateTime.now().minusHours(1);
         Optional<Map<Long, KudagoEventDto>> kudaGoEventsOpt = Optional.empty();
         try {
