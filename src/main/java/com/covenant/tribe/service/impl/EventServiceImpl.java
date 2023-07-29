@@ -108,7 +108,6 @@ public class EventServiceImpl implements EventService {
         orders = handleAlco(filter, qPredicates, orders, filterPresent);
         qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
         qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
-//        handleText(filter, qPredicates);
         Pageable pageable = QPageRequest.of(page, pageSize, orders);
         Predicate predicate = qPredicates.build();
         Pair<Predicate, Pageable> pair = new ImmutablePair<>(predicate, pageable);
