@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,31 +38,38 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
     String expand;
     @JsonProperty(value = "text_format")
     String textFormat;
+    @JsonProperty(value = "order_by")
+    String orderBy;
 
     @PostConstruct
     public void init() {
-        List<String> fieldsToRetrieve = List.of("id","publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images", "tags");
+        List<String> fieldsToRetrieve = List.of("id", "publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images", "tags");
         List<String> detailedFields = List.of("place", "dates", "location", "categories", "images");
         textFormat = "text";
+        orderBy = "-publication_date";
 
         fields = String.join(",", fieldsToRetrieve);
         expand = String.join(",", detailedFields);
     }
 
     @Override
-    public Map<Long, KudagoEventDto> fetchPosts(KudagoClientParams kudagoClientParams) throws JsonProcessingException {
+    public Map<Long, KudagoEventDto> fetchPosts(Long sincePublicationDate) throws JsonProcessingException {
         List<KudagoEventDto> events = new ArrayList<>();
         Integer page = 0;
-        Integer pageSize = 10;
+        Integer pageSize = 100;
         List<KudagoEventDto> currentPage;
-        while (page != 2) {
+        while (true) {
             log.info("Current page is {}", page);
             page++;
-            currentPage = fetchPosts(page, pageSize, kudagoClientParams);
-            if (currentPage == null || currentPage.isEmpty()){
+            currentPage = fetchPosts(page, pageSize);
+            if (currentPage == null || currentPage.isEmpty()) {
                 break;
             } else {
                 events.addAll(currentPage);
+                if (checkPublicationDate(currentPage, sincePublicationDate)) {
+                    break;
+                }
+                ;
                 log.info("Current page has {} events", events.size());
             }
         }
@@ -67,26 +77,30 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
         return map;
     }
 
+    private boolean checkPublicationDate(List<KudagoEventDto> currentPage, Long sincePublicationDate) {
+        return currentPage
+                .get(currentPage.size() - 1)
+                .getPublicationDate() < sincePublicationDate;
+    }
+
     @Override
-    public List<KudagoEventDto> fetchPosts(Integer page, Integer pageSize, KudagoClientParams kudagoClientParams) throws JsonProcessingException {
+    public List<KudagoEventDto> fetchPosts(Integer page, Integer pageSize) throws JsonProcessingException {
         log.debug("request for page {}", page);
         EventRequestQueryMap.EventRequestQueryMapBuilder builder = EventRequestQueryMap.builder()
                 .fields(fields)
                 .expand(expand)
                 .text_format(textFormat)
+                .order_by(orderBy)
                 .page(page)
                 .page_size(pageSize);
-        if (kudagoClientParams.getActual_since()!=null) {
-            builder.actual_since(kudagoClientParams.getActual_since());
-        }
         EventRequestQueryMap request = builder.build();
         ResponseEntity<KudagoEventsResponseDto> events;
         try {
             events = kudaGoClient.getEvents(request);
             return events.getBody().getResults();
         } catch (FeignException.NotFound e) {
-          log.info("Page {} not found", page);
-          return null;
+            log.info("Page {} not found", page);
+            return null;
         }
     }
 }

@@ -11,8 +11,7 @@ import java.util.Map;
 @Service
 public interface ExternalEventService {
     List<KudagoEventDto> prepareEventsForCreating(
-            Map<Long, KudagoEventDto> kudaGoEvents,
-            int daysQuantityToFirstPublication
+            Map<Long, KudagoEventDto> kudaGoEvents
     );
 
     void saveNewExternalEvents(
