@@ -72,14 +72,13 @@ public class ExternalEventServiceImpl implements ExternalEventService {
 
     @Override
     public List<KudagoEventDto> prepareEventsForCreating(
-            Map<Long, KudagoEventDto> kudaGoEvents,
-            int daysQuantityToFirstPublication
+            Map<Long, KudagoEventDto> kudaGoEvents
     ) {
         List<Long> existingEventIds = eventRepository.findAllRepeatableEventIds(
                 kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(100))
         );
         existingEventIds.forEach(kudaGoEvents::remove);
-        List<KudagoEventDto> filteredEvents = filterEvents(kudaGoEvents, daysQuantityToFirstPublication);
+        List<KudagoEventDto> filteredEvents = filterEvents(kudaGoEvents);
         List<KudagoEventDto> eventsAfterDeletingStartDates = deleteExpiredStartDates(filteredEvents);
         List<KudagoEventDto> eventsAfterDeletingEventsWithoutDates = deleteEventsWithoutDates(eventsAfterDeletingStartDates);
         List<KudagoEventDto> eventsAfterDeletingExtraCategories = deleteExtraCategories(eventsAfterDeletingEventsWithoutDates);
@@ -249,16 +248,9 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         return false;
     }
 
-    private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events, int daysQuantityToFirstPublication) {
+    private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events) {
         return events.values().stream()
-                .filter(kudagoEvent -> {
-                   return kudagoEvent
-                            .getPublicationDate()
-                            .isAfter(LocalDate.now().minusDays(daysQuantityToFirstPublication));
-                })
-                .filter(event -> {
-                    return checkEventsForRequiredFields(event);
-                })
+                .filter(this::checkEventsForRequiredFields)
                 .filter(kudagoEventDto -> {
                     return kudagoEventDto.getDates() != null && !kudagoEventDto.getDates().isEmpty();
                 })

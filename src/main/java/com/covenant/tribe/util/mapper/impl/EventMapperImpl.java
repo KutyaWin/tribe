@@ -20,8 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -299,7 +298,7 @@ public class EventMapperImpl implements EventMapper {
                 .startTime(externalEventDates.start())
                 .kudaGoId(kudaGoEventID)
                 .isFromKudaGo(true)
-                .externalPublicationDate(kudagoEventDto.getPublicationDate())
+                .externalPublicationDate(getPublicationDate(kudagoEventDto))
                 .endTime(externalEventDates.end())
                 .showEventInSearch(true)
                 .sendToAllUsersByInterests(false)
@@ -322,6 +321,11 @@ public class EventMapperImpl implements EventMapper {
         event.addEventAvatars(eventImages);
         return event;
 }
+
+    private LocalDate getPublicationDate(KudagoEventDto kudagoEventDto) {
+        Instant instant = Instant.ofEpochMilli(kudagoEventDto.getPublicationDate());
+        return instant.atZone(ZoneId.systemDefault()).toLocalDate();
+    }
 
     @Override
     public DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest) {

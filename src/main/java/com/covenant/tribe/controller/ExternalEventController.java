@@ -34,14 +34,14 @@ public class ExternalEventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/kudago/{publication_day_offset}")
+    @PostMapping("/kudago/{min_publication_date}")
     public ResponseEntity<?> getKudaGoEvents(
-            @PathVariable(name = "publication_day_offset"
-            ) int publicationDateOffset) {
+            @PathVariable(name = "min_publication_date"
+            ) String minPublicationDate) {
         log.info("[CONTROLLER] start endpoint getKudaGoEvents");
 
         externalEventHandlerFacade.handleNewEvents(
-            publicationDateOffset
+                minPublicationDate
         );
 
         log.info("[CONTROLLER] end endpoint getKudaGoEvents");

@@ -14,7 +14,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,12 +39,17 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
 
 
     @Override
-    public void handleNewEvents(int daysQuantityToFirstPublication) {
-        OffsetDateTime createEventTime = OffsetDateTime.now().minusHours(1);
+    public void handleNewEvents(String sincePublicationDate) {
         Optional<Map<Long, KudagoEventDto>> kudaGoEventsOpt = Optional.empty();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime minPublicationDate = LocalDate
+                .parse(sincePublicationDate, formatter)
+                .atStartOfDay();
+        Timestamp timestamp = Timestamp.valueOf(minPublicationDate);
+        Long timestampLong = timestamp.getTime();
         try {
             kudaGoEventsOpt = Optional.of(kudagoFetchService
-                    .fetchPosts(new KudagoClientParams(createEventTime)));
+                    .fetchPosts(timestampLong));
         } catch (JsonProcessingException e) {
             String erMessage = "[EXCEPTION]: Failed to process data from KudaGo. Error: %s".
                     formatted(e.getMessage());
@@ -50,9 +59,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         List<KudagoEventDto> eventsAfterDeletingExiting = null;
         if (kudaGoEventsOpt.isPresent()) {
             Map<Long, KudagoEventDto> kudaGoEvents = kudaGoEventsOpt.get();
-            eventsAfterDeletingExiting = externalEventService.prepareEventsForCreating(
-                    kudaGoEvents, daysQuantityToFirstPublication
-            );
+            eventsAfterDeletingExiting = externalEventService.prepareEventsForCreating(kudaGoEvents);
         }
         Map<Long, ReverseGeocodingData> reverseGeocodingData = reverseGeolocationService.getExternalEventAddresses(
                 eventsAfterDeletingExiting
