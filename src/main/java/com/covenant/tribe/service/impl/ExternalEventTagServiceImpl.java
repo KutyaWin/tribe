@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-@NoArgsConstructor
 @Slf4j
 public class ExternalEventTagServiceImpl implements ExternalEventTagService {
 
@@ -39,10 +38,11 @@ public class ExternalEventTagServiceImpl implements ExternalEventTagService {
             Set<Tag> existTags = tagRepository.findAllByTagNameIn(existTagNames);
             allTags.removeAll(existTagNames);
             Set<Tag> newTagEntities = allTags.stream()
+                    .filter(tagName -> tagName.length() < 50)
                     .map(tagName -> {
                         return Tag.builder()
                                 .tagName(tagName)
-                                .tagNameEn("")
+                                .tagNameEn(null) //TODO исправить на перевод или удалить колонку из БД
                                 .build();
                     })
                     .collect(Collectors.toSet());

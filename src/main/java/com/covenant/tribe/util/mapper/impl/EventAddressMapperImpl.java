@@ -55,19 +55,17 @@ public class EventAddressMapperImpl implements EventAddressMapper {
     @Override
     public EventAddress matToEventAddress(Map<Long, ReverseGeocodingData> reverseGeocodingData, Long currentEventId) {
         ReverseGeocodingData geocodingDataForCurrentEvent = reverseGeocodingData.get(currentEventId);
-        EventAddress eventAddress = new EventAddress();
-        eventAddress.setEventLatitude(
-                Double.valueOf(geocodingDataForCurrentEvent.getGeoLat())
+        return new EventAddress(
+                null,
+                Double.valueOf(geocodingDataForCurrentEvent.getGeoLat()),
+                Double.valueOf(geocodingDataForCurrentEvent.getGeoLon()),
+                geocodingDataForCurrentEvent.getCity(),
+                geocodingDataForCurrentEvent.getRegionWithType(),
+                geocodingDataForCurrentEvent.getStreet(),
+                geocodingDataForCurrentEvent.getCityDistrict(),
+                geocodingDataForCurrentEvent.getBlock(),
+                geocodingDataForCurrentEvent.getHouse(),
+                null
         );
-        eventAddress.setEventLongitude(
-                Double.valueOf(geocodingDataForCurrentEvent.getGeoLon())
-        );
-        eventAddress.setCity(geocodingDataForCurrentEvent.getCity());
-        eventAddress.setRegion(geocodingDataForCurrentEvent.getRegionWithType());
-        eventAddress.setStreet(geocodingDataForCurrentEvent.getStreet());
-        eventAddress.setDistrict(geocodingDataForCurrentEvent.getCityDistrict());
-        eventAddress.setBuilding(geocodingDataForCurrentEvent.getBlock());
-        eventAddress.setHouseNumber(geocodingDataForCurrentEvent.getHouse());
-        return eventAddress;
     }
 }

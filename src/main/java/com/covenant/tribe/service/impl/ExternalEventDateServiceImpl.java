@@ -12,14 +12,15 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @AllArgsConstructor
-@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ExternalEventDateServiceImpl implements ExternalEventDateService {
 
@@ -34,8 +35,7 @@ public class ExternalEventDateServiceImpl implements ExternalEventDateService {
             ZoneOffset zoneOffset = null;
             List<KudagoDate> dates = kudagoEvent.getDates();
             if (kudagoEvent.getLocation().getTimezone() != null) {
-                String timezone = kudagoEvent.getLocation().getTimezone();
-                zoneOffset = ZoneOffset.of(timezone);
+                zoneOffset = getZoneOffset(kudagoEvent.getLocation().getTimezone());
             }
             OffsetDateTime eventStart = null;
             OffsetDateTime eventEnd = null;
@@ -63,5 +63,15 @@ public class ExternalEventDateServiceImpl implements ExternalEventDateService {
             );
         }
         return externalEventDates;
+    }
+
+    private ZoneOffset getZoneOffset(String timezone) {
+        if (timezone.contains("/")) {
+            ZoneId zoneId = ZoneId.of(timezone);
+            return zoneId.getRules().getOffset(Instant.now());
+        } else {
+            String timeZoneWithoutGmt = timezone.replace("GMT", "");
+            return ZoneOffset.of(timeZoneWithoutGmt);
+        }
     }
 }

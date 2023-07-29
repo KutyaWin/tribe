@@ -19,13 +19,15 @@ import java.util.Map;
 
 @Service
 @Slf4j
-@AllArgsConstructor
-@NoArgsConstructor
 public class ReverseGeolocationServiceImpl implements ReverseGeolocationService {
 
-    final static int DADATA_ADDRESS_SUGGESTIONS_COUNT = 1;
+    final int DADATA_ADDRESS_SUGGESTIONS_COUNT = 1;
 
-    DaDataClient daDataClient;
+    final DaDataClient daDataClient;
+
+    public ReverseGeolocationServiceImpl(DaDataClient daDataClient) {
+        this.daDataClient = daDataClient;
+    }
 
     @Override
     public Map<Long, ReverseGeocodingData> getExternalEventAddresses(
@@ -46,8 +48,16 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
             if (geolocationDataResponse.getStatusCode().is2xxSuccessful()
                     && geolocationDataResponse.getBody() != null) {
                 List<ReverseGeocodingSuggestions> suggestions = geolocationDataResponse.getBody().getSuggestions();
+                if (suggestions.isEmpty()) {
+                    System.out.println("No suggestions");
+                }
                 ReverseGeocodingData address = suggestions.get(0).getData();
                 externalEventAddresses.put(event.getId(), address);
+            }
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
             }
         });
         return externalEventAddresses;

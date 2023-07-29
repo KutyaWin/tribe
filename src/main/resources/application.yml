@@ -24,7 +24,11 @@ spring:
               Authorization: ${SPRING_DADATA_TOKEN}
             connectTimeout: 100000
             readTimeout: 100000
-
+          kudago-image-client:
+            url: "https://media.kudago.com/"
+            connectTimeout: 50000
+            readTimeout: 50000
+            retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
 
 
 scheduler:
