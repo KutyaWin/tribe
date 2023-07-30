@@ -18,6 +18,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +46,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         LocalDateTime minPublicationDate = LocalDate
                 .parse(sincePublicationDate, formatter)
                 .atStartOfDay();
-        Timestamp timestamp = Timestamp.valueOf(minPublicationDate);
-        Long timestampLong = timestamp.getTime();
+        Long timestampLong = minPublicationDate.toEpochSecond(ZoneOffset.ofHours(3));
         try {
             kudaGoEventsOpt = Optional.of(kudagoFetchService
                     .fetchPosts(timestampLong));
@@ -59,7 +59,9 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
         List<KudagoEventDto> eventsAfterDeletingExiting = null;
         if (kudaGoEventsOpt.isPresent()) {
             Map<Long, KudagoEventDto> kudaGoEvents = kudaGoEventsOpt.get();
-            eventsAfterDeletingExiting = externalEventService.prepareEventsForCreating(kudaGoEvents);
+            eventsAfterDeletingExiting = externalEventService.prepareEventsForCreating(
+                    kudaGoEvents, minPublicationDate.minusDays(1)
+            );
         }
         Map<Long, ReverseGeocodingData> reverseGeocodingData = reverseGeolocationService.getExternalEventAddresses(
                 eventsAfterDeletingExiting

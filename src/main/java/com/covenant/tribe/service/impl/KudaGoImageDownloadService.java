@@ -30,12 +30,15 @@ public class KudaGoImageDownloadService implements ImageDownloadService {
 
         List<ImageDto> images = new ArrayList<>();
 
-        urls.forEach(url -> {
+        for (int i = 0; i < urls.size(); i++) {
+            if (i == 3) {
+                break;
+            }
+            String url = urls.get(i);
             String urlWithoutHost = url.substring(url.indexOf("/images"));
             ImageDto image = imageDownloadRepository.downloadImage(urlWithoutHost);
             images.add(image);
-        });
-
+        }
         return images;
     }
 }

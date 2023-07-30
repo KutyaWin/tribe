@@ -22,6 +22,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     List<Event> findAllByOrganizerIdAndEventStatusIsNot(Long organizerId, EventStatus eventStatus);
 
     List<Event> findAllByEventStatus(EventStatus eventStatus);
+
     Optional<Event> findByOrganizerIdAndId(Long organizerId, Long eventId);
 
     List<Event> findAllByExternalPublicationDateBetween(LocalDate from, LocalDate to);
@@ -29,11 +30,15 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
 
     @Query(
             """
-                SELECT k.kudaGoId
-                FROM Event k
-                WHERE k.externalPublicationDate IN (:now)
-                AND k.kudaGoId IN (:newEventIds)
-            """
+                        SELECT k.kudaGoId
+                        FROM Event k
+                        WHERE k.externalPublicationDate >= (:externalPublicationDate)
+                        AND (k.kudaGoId IN (:kudaGoIds))
+                    """
     )
-    List<Long> findAllRepeatableEventIds(Set<Long> newEventIds, List<LocalDate> now);
+    List<Long> findAllRepeatableEventIds(
+
+            LocalDate externalPublicationDate,
+            Set<Long> kudaGoIds
+    );
 }

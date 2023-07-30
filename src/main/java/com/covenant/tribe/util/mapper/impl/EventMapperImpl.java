@@ -298,7 +298,7 @@ public class EventMapperImpl implements EventMapper {
                 .startTime(externalEventDates.start())
                 .kudaGoId(kudaGoEventID)
                 .isFromKudaGo(true)
-                .externalPublicationDate(getPublicationDate(kudagoEventDto))
+                .externalPublicationDate(externalEventDates.publicationDate())
                 .endTime(externalEventDates.end())
                 .showEventInSearch(true)
                 .sendToAllUsersByInterests(false)
@@ -321,11 +321,6 @@ public class EventMapperImpl implements EventMapper {
         event.addEventAvatars(eventImages);
         return event;
 }
-
-    private LocalDate getPublicationDate(KudagoEventDto kudagoEventDto) {
-        Instant instant = Instant.ofEpochMilli(kudagoEventDto.getPublicationDate());
-        return instant.atZone(ZoneId.systemDefault()).toLocalDate();
-    }
 
     @Override
     public DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest) {
