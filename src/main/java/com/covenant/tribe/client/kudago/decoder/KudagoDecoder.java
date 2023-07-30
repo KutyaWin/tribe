@@ -15,7 +15,7 @@ public class KudagoDecoder implements ErrorDecoder {
         if(exception instanceof RetryableException){
             return exception;
         }
-        if(response.status() >= 500){
+        if(response.status() >= 500 || response.status() == 403){
             return new RetryableException(response.status(),
                     exception.getMessage(),
                     response.request().httpMethod(),
