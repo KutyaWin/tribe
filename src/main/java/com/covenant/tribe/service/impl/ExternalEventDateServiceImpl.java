@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -39,27 +36,36 @@ public class ExternalEventDateServiceImpl implements ExternalEventDateService {
             }
             OffsetDateTime eventStart = null;
             OffsetDateTime eventEnd = null;
+            LocalDate publicationDate = null;
             if (zoneOffset != null) {
-                eventStart = OffsetDateTime.ofInstant(
-                        Instant.ofEpochMilli(dates.get(0).getStart()),
+                eventStart = OffsetDateTime.of(
+                        LocalDateTime.ofEpochSecond(dates.get(0).getStart(), 0, zoneOffset),
                         zoneOffset
                 );
-                eventEnd = OffsetDateTime.ofInstant(
-                        Instant.ofEpochMilli(dates.get(dates.size() - 1).getEnd()),
+                eventEnd = OffsetDateTime.of(
+                        LocalDateTime.ofEpochSecond(dates.get(dates.size() - 1).getEnd(), 0, zoneOffset),
                         zoneOffset
                 );
+                publicationDate = LocalDateTime
+                        .ofEpochSecond(kudagoEvent.getPublicationDate(), 0, zoneOffset).toLocalDate();
             } else {
-                eventStart = OffsetDateTime.ofInstant(
-                        Instant.ofEpochMilli(dates.get(0).getStart()),
+                eventStart = OffsetDateTime.of(
+                        LocalDateTime.ofEpochSecond(dates.get(0).getStart(), 0, MOSCOW_TIMEZONE_OFFSET),
                         MOSCOW_TIMEZONE_OFFSET
                 );
-                eventEnd = OffsetDateTime.ofInstant(
-                        Instant.ofEpochMilli(dates.get(dates.size() - 1).getEnd()),
+                eventEnd = OffsetDateTime.of(
+                        LocalDateTime
+                                .ofEpochSecond(
+                                        dates.get(dates.size() - 1).getEnd(), 0, MOSCOW_TIMEZONE_OFFSET
+                                ),
                         MOSCOW_TIMEZONE_OFFSET
                 );
+                publicationDate = LocalDateTime
+                        .ofEpochSecond(kudagoEvent.getPublicationDate(), 0, MOSCOW_TIMEZONE_OFFSET)
+                        .toLocalDate();
             }
             externalEventDates.put(
-                    kudagoEvent.getId(), new ExternalEventDates(eventStart, eventEnd)
+                    kudagoEvent.getId(), new ExternalEventDates(eventStart, eventEnd, publicationDate)
             );
         }
         return externalEventDates;

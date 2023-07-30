@@ -29,12 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -72,24 +71,49 @@ public class ExternalEventServiceImpl implements ExternalEventService {
 
     @Override
     public List<KudagoEventDto> prepareEventsForCreating(
-            Map<Long, KudagoEventDto> kudaGoEvents
+            Map<Long, KudagoEventDto> kudaGoEvents, LocalDateTime minPublicationDate
     ) {
+
         List<Long> existingEventIds = eventRepository.findAllRepeatableEventIds(
-                kudaGoEvents.keySet(), List.of(LocalDate.now(), LocalDate.now().minusDays(100))
-        );
+                minPublicationDate.toLocalDate(), kudaGoEvents.keySet());
         existingEventIds.forEach(kudaGoEvents::remove);
         List<KudagoEventDto> filteredEvents = filterEvents(kudaGoEvents);
         List<KudagoEventDto> eventsAfterDeletingStartDates = deleteExpiredStartDates(filteredEvents);
         List<KudagoEventDto> eventsAfterDeletingEventsWithoutDates = deleteEventsWithoutDates(eventsAfterDeletingStartDates);
         List<KudagoEventDto> eventsAfterDeletingExtraCategories = deleteExtraCategories(eventsAfterDeletingEventsWithoutDates);
-        List<KudagoEventDto> eventsAfterIsFreeFieldChecking = fillBlankIsFreeFields(eventsAfterDeletingExtraCategories);
-        return changeKudaGoCategoriesToTribeCategories(eventsAfterIsFreeFieldChecking);
+        List<KudagoEventDto> eventsAfterDeletingTooLongEventNames = deleteTooLongEventNames(eventsAfterDeletingExtraCategories);
+        List<KudagoEventDto> eventsAfterIsFreeFieldChecking = fillBlankIsFreeFields(eventsAfterDeletingTooLongEventNames);
+        List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = deleteRecurringEventNames(eventsAfterIsFreeFieldChecking);
+        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingRecurringEventNames);
+    }
+
+    private List<KudagoEventDto> deleteRecurringEventNames(List<KudagoEventDto> eventsAfterIsFreeFieldChecking) {
+        Set<String> alreadyCheckEventNames = new HashSet<>();
+        List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = new ArrayList<>();
+        eventsAfterIsFreeFieldChecking.forEach(event -> {
+            if (!alreadyCheckEventNames.contains(event.getTitle())) {
+                alreadyCheckEventNames.add(event.getTitle());
+                eventsAfterDeletingRecurringEventNames.add(event);
+            }
+        });
+        return eventsAfterDeletingRecurringEventNames;
+    }
+
+    private List<KudagoEventDto> deleteTooLongEventNames(List<KudagoEventDto> eventsAfterDeletingExtraCategories) {
+        return eventsAfterDeletingExtraCategories.stream()
+                .filter(event -> event.getTitle().length() < 100)
+                .toList();
     }
 
     private List<KudagoEventDto> fillBlankIsFreeFields(List<KudagoEventDto> eventsAfterDeletingExtraCategories) {
         eventsAfterDeletingExtraCategories.forEach(event -> {
             if (event.getIsFree() == null) {
                 event.setIsFree(false);
+                log.info("Event with id: {} has no is free field", event.getId());
+            }
+            if (event.getAgeRestriction() == null) {
+                event.setAgeRestriction("0");
+                log.info("Event with id: {} has no age restriction", event.getId());
             }
         });
         return eventsAfterDeletingExtraCategories;
@@ -123,7 +147,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                     reverseGeocodingData, kudagoEvent.getId()
             );
             Set<EventAvatar> eventImages = eventAvatarMapper.mapToEventAvatars(
-                imageFileNames.get(kudagoEvent.getId())
+                    imageFileNames.get(kudagoEvent.getId())
             );
             EventType eventType = getEventTypeByName(kudagoEvent.getCategories().get(0));
             List<Tag> eventTags = tagRepository.findByIdIn(eventTagIds.get(kudagoEvent.getId()));
@@ -226,10 +250,6 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         }
         if (event.getBodyText() == null) {
             log.error("Event with id: {} has no boy text", event.getId());
-            return false;
-        }
-        if (event.getAgeRestriction() == null) {
-            log.error("Event with id: {} has no age restriction", event.getId());
             return false;
         }
         if (event.getLocation().getCoords().getLat() == null || event.getLocation().getCoords().getLon() == null) {

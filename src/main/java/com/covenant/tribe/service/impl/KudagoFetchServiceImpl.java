@@ -78,9 +78,9 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
     }
 
     private boolean checkPublicationDate(List<KudagoEventDto> currentPage, Long sincePublicationDate) {
-        return currentPage
-                .get(currentPage.size() - 1)
-                .getPublicationDate() < sincePublicationDate;
+        KudagoEventDto lastEventInPage = currentPage.get(currentPage.size() - 1);
+        Long publicationDate = lastEventInPage.getPublicationDate();
+        return publicationDate < sincePublicationDate;
     }
 
     @Override
