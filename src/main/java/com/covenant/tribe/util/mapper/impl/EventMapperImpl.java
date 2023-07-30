@@ -293,6 +293,7 @@ public class EventMapperImpl implements EventMapper {
         Long kudaGoEventID = kudagoEventDto.getId();
         Event event = Event.builder()
                 .organizer(organizer)
+                .eventStatus(EventStatus.PUBLISHED)
                 .eventName(kudagoEventDto.getTitle())
                 .eventDescription(kudagoEventDto.getBodyText())
                 .startTime(externalEventDates.start())
