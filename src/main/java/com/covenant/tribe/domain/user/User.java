@@ -300,6 +300,15 @@ public class User {
     }
 
     public String getFullName() {
+        if (this.firstName == null && this.lastName == null) {
+            return "";
+        }
+        if (this.firstName == null) {
+            return this.lastName;
+        }
+        if (this.lastName == null) {
+            return firstName;
+        }
         return this.firstName + " " + this.lastName;
     }
 
