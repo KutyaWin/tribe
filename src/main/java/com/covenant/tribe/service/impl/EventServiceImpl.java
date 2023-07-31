@@ -305,14 +305,23 @@ public class EventServiceImpl implements EventService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
+    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId, Long requestUserId) {
         Long organizerIdLong = Long.parseLong(organizerId);
-        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
-                        organizerIdLong, EventStatus.DELETED
-                )
-                .stream()
-                .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
-                .toList();
+        if (organizerIdLong.equals(requestUserId)) {
+            return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
+                            organizerIdLong, EventStatus.DELETED
+                    )
+                    .stream()
+                    .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
+                    .toList();
+        } else {
+            return eventRepository
+                    .findAllByOrganizerIdAndEventStatusIs(organizerIdLong, EventStatus.PUBLISHED)
+                    .stream()
+                    .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
+                    .toList();
+        }
+
     }
 
     private void checkEventStatus(Event event) {
