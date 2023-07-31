@@ -9,6 +9,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -88,6 +89,18 @@ public class Event {
     @Column(name = "is_start_time_updated", nullable = false, columnDefinition = "boolean default false")
     @Builder.Default
     boolean isStartTimeUpdated = false;
+
+    @Column(name = "is_from_kudago", columnDefinition = "boolean default false")
+    @Builder.Default
+    boolean isFromKudaGo = false;
+
+    @Column(name = "external_publication_date")
+    @Builder.Default
+    LocalDate externalPublicationDate = null;
+
+    @Column(name = "kudago_id")
+    @Builder.Default
+    Long kudaGoId = null;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_type")
@@ -183,7 +196,6 @@ public class Event {
 
             this.tagList.add(tag);
             tag.getEventListWithTag().add(this);
-
         } else {
             log.error(
                     String.format("There's already a passed tag in the event tagSet." +

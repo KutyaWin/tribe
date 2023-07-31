@@ -12,9 +12,9 @@ import java.time.OffsetDateTime;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class KudagoClientParams {
-    Long actual_since;
+    Long actualPublicationDate;
 
     public KudagoClientParams(OffsetDateTime since) {
-        actual_since = since.toEpochSecond();
+        actualPublicationDate = since.toEpochSecond();
     }
 }

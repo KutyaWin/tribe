@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class KudagoFetchServiceImplIT extends TestcontainersTest {
     @Test
     public void eventsAreRetrievable() throws JsonProcessingException {
         OffsetDateTime now = OffsetDateTime.now().minusDays(2);
-        Map<Long, KudagoEventDto> kudagoEventDtos = kudaGoFetchService.fetchPosts(new KudagoClientParams(now));
+        Map<Long, KudagoEventDto> kudagoEventDtos = kudaGoFetchService.fetchPosts(30L);
         System.out.println(kudagoEventDtos);
     }
 }
