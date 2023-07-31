@@ -399,6 +399,7 @@ public class EventMapperImpl implements EventMapper {
                 .favoriteEvent(isFavoriteEvent)
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .organizerUsername(event.getOrganizer().getUsername())
+                .organizerId(event.getOrganizer().getId())
                 .eventAddress(
                         EventAddressDTO.builder()
                                 .city(event.getEventAddress().getCity())
@@ -426,6 +427,7 @@ public class EventMapperImpl implements EventMapper {
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .eventName(event.getEventName())
                 .organizerUsername(event.getOrganizer().getUsername())
+                .organizerId(event.getOrganizer().getId())
                 .startTime(event.getStartTime())
                 .eventDuration(
                         Duration.between(event.getStartTime(), event.getEndTime()).toString())
