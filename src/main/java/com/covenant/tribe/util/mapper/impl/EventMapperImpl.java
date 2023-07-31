@@ -109,6 +109,11 @@ public class EventMapperImpl implements EventMapper {
                     .eventId(event.getId())
                     .description(event.getEventDescription())
                     .organizerUsername(event.getOrganizer().getUsername())
+                    .eventAddress(EventAddressDTO.builder()
+                            .city(event.getEventAddress().getCity())
+                            .region(event.getEventAddress().getRegion())
+                            .build()
+                    )
                     .avatarUrl(event.getEventAvatars().stream()
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
@@ -155,7 +160,10 @@ public class EventMapperImpl implements EventMapper {
                 .eventId(event.getId())
                 .eventPhoto(eventAvatars)
                 .eventName(event.getEventName())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventAddress(EventAddressDTO.builder()
+                        .city(event.getEventAddress().getCity())
+                        .build()
+                )
                 .startTime(event.getStartTime())
                 .isFinished(isEventFinished(event))
                 .isDeleted(isEventDeleted(event))
@@ -319,7 +327,7 @@ public class EventMapperImpl implements EventMapper {
         event.addEventRelationsWithUser(userRelationsWithEvent);
         event.addEventAvatars(eventImages);
         return event;
-}
+    }
 
     @Override
     public DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest) {
@@ -359,23 +367,58 @@ public class EventMapperImpl implements EventMapper {
                     .findFirst()
                     .map(UserRelationsWithEvent::isInvited)
                     .orElse(false);
+            if (event.isPrivate() && isParticipant) {
+                return makeDetailedEventForParticipantOrNoPrivateEvent(
+                        event, eventAvatars, isFavoriteEvent, isParticipant, isInvited, isWantToGo
+                );
+            }
+            if (event.isPrivate()) {
+                return makeDetailedEventForNoParticipantAndPrivateEvent(
+                        event, eventAvatars, isFavoriteEvent, isParticipant, isInvited, isWantToGo
+                );
+            }
         }
-
         if (event.isPrivate()) {
-            return DetailedEventInSearchDTO.builder()
-                    .eventId(event.getId())
-                    .eventPhoto(eventAvatars)
-                    .favoriteEvent(isFavoriteEvent)
-                    .organizerPhoto(event.getOrganizer().getUserAvatar())
-                    .eventName(event.getEventName())
-                    .description(event.getEventDescription())
-                    .isPrivate(event.isPrivate())
-                    .isFree(event.isFree())
-                    .isParticipant(isParticipant)
-                    .isInvited(isInvited)
-                    .isWantToGo(isWantToGo)
-                    .build();
+            return makeDetailedEventForNoParticipantAndPrivateEvent(
+                    event, eventAvatars, isFavoriteEvent,
+                    isParticipant, isInvited, isWantToGo
+            );
         }
+        return makeDetailedEventForParticipantOrNoPrivateEvent(
+                event, eventAvatars, isFavoriteEvent, isParticipant, isInvited, isWantToGo
+        );
+    }
+
+    private DetailedEventInSearchDTO makeDetailedEventForNoParticipantAndPrivateEvent(
+            Event event, List<String> eventAvatars, boolean isFavoriteEvent,
+            boolean isParticipant, boolean isInvited, boolean isWantToGo
+    ) {
+        return DetailedEventInSearchDTO.builder()
+                .eventId(event.getId())
+                .eventPhoto(eventAvatars)
+                .favoriteEvent(isFavoriteEvent)
+                .organizerPhoto(event.getOrganizer().getUserAvatar())
+                .organizerUsername(event.getOrganizer().getUsername())
+                .eventAddress(
+                        EventAddressDTO.builder()
+                                .city(event.getEventAddress().getCity())
+                                .region(event.getEventAddress().getRegion())
+                                .build()
+                )
+                .eventName(event.getEventName())
+                .description(event.getEventDescription())
+                .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
+                .isParticipant(isParticipant)
+                .isInvited(isInvited)
+                .isWantToGo(isWantToGo)
+                .build();
+    }
+
+    private DetailedEventInSearchDTO makeDetailedEventForParticipantOrNoPrivateEvent(
+            Event event, List<String> eventAvatars, boolean isFavoriteEvent, boolean isParticipant,
+            boolean isInvited, boolean isWantToGo
+    ) {
         var responseDto = DetailedEventInSearchDTO.builder()
                 .eventId(event.getId())
                 .eventPhoto(eventAvatars)
