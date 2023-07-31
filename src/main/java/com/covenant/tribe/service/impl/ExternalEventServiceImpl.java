@@ -232,7 +232,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
 
 
     private boolean checkEventsForRequiredFields(KudagoEventDto event) {
-        if (event.getCategories().isEmpty()) {
+        if (event.getCategories() == null || event.getCategories().isEmpty()) {
             log.error("Categories in kudaGoEvent with id: {} is empty", event.getId());
             return false;
         }
