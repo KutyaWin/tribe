@@ -51,6 +51,9 @@ public class DetailedEventInSearchDTO {
     @Size(max = 100, message = "organizer_username must not consist of more than 100 characters")
     String organizerUsername;
 
+    @JsonProperty(value = "organizer_id")
+    Long organizerId;
+
     @JsonProperty(value = "event_address")
     EventAddressDTO eventAddress;
 

@@ -56,6 +56,16 @@ public class CustomExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseErrorDTO handleNotFoundException(NotFoundException e) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .errorMessage(List.of(e.getMessage()))
+                .build();
+    }
+
     @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleMissingRequestHeaderException(MissingRequestHeaderException e) {

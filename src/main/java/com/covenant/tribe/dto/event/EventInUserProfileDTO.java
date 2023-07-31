@@ -1,5 +1,6 @@
 package com.covenant.tribe.dto.event;
 
+import com.covenant.tribe.domain.event.EventStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -34,7 +35,9 @@ public class EventInUserProfileDTO implements Serializable {
         @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
         OffsetDateTime startTime;
 
-        @JsonProperty(value = "is_viewed")
-        Boolean isViewed;
+        @JsonProperty(value = "event_status")
+        EventStatus eventStatus;
 
+        @JsonProperty(value = "is_finished")
+        boolean isFinished;
 }

@@ -1,10 +1,12 @@
 package com.covenant.tribe.util.mapper.impl;
 
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.*;
+import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
 import com.covenant.tribe.repository.EventPartOfDayRepository;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
@@ -18,8 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -108,6 +109,11 @@ public class EventMapperImpl implements EventMapper {
                     .eventId(event.getId())
                     .description(event.getEventDescription())
                     .organizerUsername(event.getOrganizer().getUsername())
+                    .eventAddress(EventAddressDTO.builder()
+                            .city(event.getEventAddress().getCity())
+                            .region(event.getEventAddress().getRegion())
+                            .build()
+                    )
                     .avatarUrl(event.getEventAvatars().stream()
                             .map(EventAvatar::getAvatarUrl).toList())
                     .eventName(event.getEventName())
@@ -127,8 +133,6 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
-                .longitude(event.getEventAddress().getEventLongitude())
-                .latitude(event.getEventAddress().getEventLatitude())
                 .isFinished(isEventFinished(event))
                 .isPrivate(event.isPrivate())
                 .isFree(event.isFree())
@@ -156,10 +160,18 @@ public class EventMapperImpl implements EventMapper {
                 .eventId(event.getId())
                 .eventPhoto(eventAvatars)
                 .eventName(event.getEventName())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventAddress(EventAddressDTO.builder()
+                        .city(event.getEventAddress().getCity())
+                        .build()
+                )
                 .startTime(event.getStartTime())
                 .isFinished(isEventFinished(event))
+                .isDeleted(isEventDeleted(event))
                 .build();
+    }
+
+    private Boolean isEventDeleted(Event event) {
+        return event.getEventStatus().equals(EventStatus.DELETED);
     }
 
     private List<String> getEventAvatars(Set<EventAvatar> eventAvatars) {
@@ -167,6 +179,7 @@ public class EventMapperImpl implements EventMapper {
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
     }
+
     @Override
     public EventInUserProfileDTO mapToEventInUserProfileDTO(Event event, Long userId) {
         return EventInUserProfileDTO.builder()
@@ -175,7 +188,8 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .city(event.getEventAddress().getCity())
                 .startTime(event.getStartTime())
-                .isViewed(isEventFinished(event))
+                .eventStatus(event.getEventStatus())
+                .isFinished(isEventFinished(event))
                 .build();
     }
 
@@ -229,6 +243,7 @@ public class EventMapperImpl implements EventMapper {
                 .isEighteenYearLimit(dto.getIsEighteenYearLimit())
                 .isPrivate(dto.getIsPrivate())
                 .isPresenceOfAlcohol(dto.getHasAlcohol())
+                .isFree(dto.getIsFree())
                 .eventType(eventType)
                 .build();
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
@@ -256,7 +271,6 @@ public class EventMapperImpl implements EventMapper {
                                     .isParticipant(false)
                                     .isWantToGo(false)
                                     .isFavorite(false)
-                                    .isViewed(false)
                                     .build())
                             .toList());
             invitedUsersAndOrganizerRelationsWithEvent.add(
@@ -267,12 +281,51 @@ public class EventMapperImpl implements EventMapper {
                             .isParticipant(true)
                             .isWantToGo(false)
                             .isFavorite(false)
-                            .isViewed(false)
                             .build()
             );
             event.addEventsRelationsWithUsers(invitedUsersAndOrganizerRelationsWithEvent);
         }
 
+        return event;
+    }
+
+    @Override
+    public Event mapToEvent(
+            KudagoEventDto kudagoEventDto, User organizer, EventAddress eventAddress,
+            EventType eventType, List<Tag> eventTags,
+            UserRelationsWithEvent userRelationsWithEvent, ExternalEventDates externalEventDates,
+            Boolean hasAgeRestriction, Set<EventAvatar> eventImages
+    ) {
+        Long kudaGoEventID = kudagoEventDto.getId();
+        Event event = Event.builder()
+                .organizer(organizer)
+                .eventStatus(EventStatus.PUBLISHED)
+                .eventName(kudagoEventDto.getTitle())
+                .eventDescription(kudagoEventDto.getBodyText())
+                .startTime(externalEventDates.start())
+                .kudaGoId(kudaGoEventID)
+                .isFromKudaGo(true)
+                .externalPublicationDate(externalEventDates.publicationDate())
+                .endTime(externalEventDates.end())
+                .showEventInSearch(true)
+                .sendToAllUsersByInterests(false)
+                .isEighteenYearLimit(kudagoEventDto.getAgeRestriction() != null)
+                .isPrivate(false)
+                .isPresenceOfAlcohol(hasAgeRestriction)
+                .isFree(kudagoEventDto.getIsFree())
+                .eventType(eventType)
+                .build();
+        event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
+        organizer.addEventWhereUserAsOrganizer(event);
+        eventType.addEvent(event);
+
+        if (eventAddress != null) {
+            event.setEventAddress(eventAddress);
+            eventAddress.addEvent(event);
+        }
+        event.addTagList(eventTags);
+        event.addEventRelationsWithUser(userRelationsWithEvent);
+        event.addEventAvatars(eventImages);
         return event;
     }
 
@@ -314,23 +367,59 @@ public class EventMapperImpl implements EventMapper {
                     .findFirst()
                     .map(UserRelationsWithEvent::isInvited)
                     .orElse(false);
+            if (event.isPrivate() && isParticipant) {
+                return makeDetailedEventForParticipantOrNoPrivateEvent(
+                        event, eventAvatars, isFavoriteEvent, isParticipant, isInvited, isWantToGo
+                );
+            }
+            if (event.isPrivate()) {
+                return makeDetailedEventForNoParticipantAndPrivateEvent(
+                        event, eventAvatars, isFavoriteEvent, isParticipant, isInvited, isWantToGo
+                );
+            }
         }
-
         if (event.isPrivate()) {
-            return DetailedEventInSearchDTO.builder()
-                    .eventId(event.getId())
-                    .eventPhoto(eventAvatars)
-                    .favoriteEvent(isFavoriteEvent)
-                    .organizerPhoto(event.getOrganizer().getUserAvatar())
-                    .eventName(event.getEventName())
-                    .description(event.getEventDescription())
-                    .isPrivate(event.isPrivate())
-                    .isFree(event.isFree())
-                    .isParticipant(isParticipant)
-                    .isInvited(isInvited)
-                    .isWantToGo(isWantToGo)
-                    .build();
+            return makeDetailedEventForNoParticipantAndPrivateEvent(
+                    event, eventAvatars, isFavoriteEvent,
+                    isParticipant, isInvited, isWantToGo
+            );
         }
+        return makeDetailedEventForParticipantOrNoPrivateEvent(
+                event, eventAvatars, isFavoriteEvent, isParticipant, isInvited, isWantToGo
+        );
+    }
+
+    private DetailedEventInSearchDTO makeDetailedEventForNoParticipantAndPrivateEvent(
+            Event event, List<String> eventAvatars, boolean isFavoriteEvent,
+            boolean isParticipant, boolean isInvited, boolean isWantToGo
+    ) {
+        return DetailedEventInSearchDTO.builder()
+                .eventId(event.getId())
+                .eventPhoto(eventAvatars)
+                .favoriteEvent(isFavoriteEvent)
+                .organizerPhoto(event.getOrganizer().getUserAvatar())
+                .organizerUsername(event.getOrganizer().getUsername())
+                .organizerId(event.getOrganizer().getId())
+                .eventAddress(
+                        EventAddressDTO.builder()
+                                .city(event.getEventAddress().getCity())
+                                .region(event.getEventAddress().getRegion())
+                                .build()
+                )
+                .eventName(event.getEventName())
+                .description(event.getEventDescription())
+                .isPrivate(event.isPrivate())
+                .isFree(event.isFree())
+                .isParticipant(isParticipant)
+                .isInvited(isInvited)
+                .isWantToGo(isWantToGo)
+                .build();
+    }
+
+    private DetailedEventInSearchDTO makeDetailedEventForParticipantOrNoPrivateEvent(
+            Event event, List<String> eventAvatars, boolean isFavoriteEvent, boolean isParticipant,
+            boolean isInvited, boolean isWantToGo
+    ) {
         var responseDto = DetailedEventInSearchDTO.builder()
                 .eventId(event.getId())
                 .eventPhoto(eventAvatars)
@@ -338,6 +427,7 @@ public class EventMapperImpl implements EventMapper {
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .eventName(event.getEventName())
                 .organizerUsername(event.getOrganizer().getUsername())
+                .organizerId(event.getOrganizer().getId())
                 .startTime(event.getStartTime())
                 .eventDuration(
                         Duration.between(event.getStartTime(), event.getEndTime()).toString())

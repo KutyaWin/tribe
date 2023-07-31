@@ -25,10 +25,6 @@ public class SearchEventDTO implements Serializable {
 
     Boolean favoriteEvent;
 
-    Double latitude;
-
-    Double longitude;
-
     String eventName;
 
     String eventType;

@@ -477,7 +477,6 @@ public class UserController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PreAuthorize("#userId.equals(authentication.getName())")
     @GetMapping("/profile/{user_id}")
     public ResponseEntity<?> getUserProfile(
             @PathVariable(name = "user_id") String userId

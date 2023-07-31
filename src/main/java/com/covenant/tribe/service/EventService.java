@@ -1,5 +1,7 @@
 package com.covenant.tribe.service;
 
+import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface EventService {
@@ -18,11 +21,17 @@ public interface EventService {
 
     Event saveNewEvent(Event event);
 
+    Event saveNewExternalEvent(
+            List<KudagoEventDto> externalEvents,
+            Map<Long, ReverseGeocodingData> reverseGeocodingData,
+            Map<Long, List<String>> images
+    );
+
     Event save(Event event);
 
     Event getEventById(Long eventId);
 
-    List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId);
+    List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId, Long requestUserId);
 
     DetailedEventInSearchDTO getDetailedEventById(Long eventId, Long userId);
 
