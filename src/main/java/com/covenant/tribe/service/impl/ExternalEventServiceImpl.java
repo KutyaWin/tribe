@@ -243,16 +243,20 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             log.error("Event with id: {} has no location", event.getId());
             return false;
         }
+        if ((event.getLocation().getCoords() == null)) {
+            log.error("Event with id: {} has no coords", event.getId());
+            return false;
+        }
+        if (event.getLocation().getCoords().getLat() == null || event.getLocation().getCoords().getLon() == null) {
+            log.error("Event with id: {} has no latitude or longitude", event.getId());
+            return false;
+        }
         if (event.getDates() == null || event.getDates().isEmpty()) {
             log.error("Event with id: {} has no dates", event.getId());
             return false;
         }
         if (event.getBodyText() == null) {
             log.error("Event with id: {} has no boy text", event.getId());
-            return false;
-        }
-        if (event.getLocation().getCoords().getLat() == null || event.getLocation().getCoords().getLon() == null) {
-            log.error("Event with id: {} has no coords", event.getId());
             return false;
         }
         return true;
@@ -270,11 +274,6 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     private List<KudagoEventDto> filterEvents(Map<Long, KudagoEventDto> events) {
         return events.values().stream()
                 .filter(this::checkEventsForRequiredFields)
-                .filter(kudagoEventDto -> {
-                    return kudagoEventDto.getDates() != null && !kudagoEventDto.getDates().isEmpty();
-                })
                 .toList();
     }
-
-
 }

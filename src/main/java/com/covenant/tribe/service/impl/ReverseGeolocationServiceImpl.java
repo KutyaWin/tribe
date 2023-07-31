@@ -48,9 +48,6 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
             if (geolocationDataResponse.getStatusCode().is2xxSuccessful()
                     && geolocationDataResponse.getBody() != null) {
                 List<ReverseGeocodingSuggestions> suggestions = geolocationDataResponse.getBody().getSuggestions();
-                if (suggestions.isEmpty()) {
-                    System.out.println("No suggestions");
-                }
                 ReverseGeocodingData address = suggestions.get(0).getData();
                 externalEventAddresses.put(event.getId(), address);
             }
