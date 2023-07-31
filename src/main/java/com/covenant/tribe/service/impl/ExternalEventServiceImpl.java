@@ -156,7 +156,6 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                     .isInvited(false)
                     .isParticipant(true)
                     .isWantToGo(false)
-                    .isViewed(false)
                     .isFavorite(false)
                     .build();
             ExternalEventDates dates = externalEventDates.get(kudagoEvent.getId());

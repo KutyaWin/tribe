@@ -606,7 +606,6 @@ public class EventServiceImpl implements EventService {
                 .isParticipant(false)
                 .isWantToGo(true)
                 .isFavorite(false)
-                .isViewed(false)
                 .build();
         User user = getUser(userId);
         Event event = getEventById(eventId);
@@ -640,7 +639,6 @@ public class EventServiceImpl implements EventService {
                     .isParticipant(true)
                     .isWantToGo(false)
                     .isFavorite(false)
-                    .isViewed(false)
                     .build();
             User user = getUser(userId);
             userRelationsWithEvent.setEventRelations(event);
@@ -903,7 +901,6 @@ public class EventServiceImpl implements EventService {
                                             .isParticipant(false)
                                             .isWantToGo(false)
                                             .isFavorite(false)
-                                            .isViewed(false)
                                             .build();
                         });
                 userRelationsWithEventRepository.save(userRelationsWithEvent);
