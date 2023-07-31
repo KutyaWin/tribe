@@ -27,6 +27,10 @@ public class KudagoClientRetryer implements Retryer {
         if(attempt++ == retryMaxAttempt){
             throw e;
         }
+        if (e.status()==403) {
+            retryInterval = retryInterval * 2;
+            log.info("Retry interval: " + retryInterval);
+        }
         try {
             Thread.sleep(retryInterval);
         } catch (InterruptedException ignored) {
