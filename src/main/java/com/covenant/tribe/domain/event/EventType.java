@@ -79,19 +79,15 @@ public class EventType {
             this.tagList.add(tag);
             tag.getEventTypesToWhichTagBelong().add(this);
 
-        } else {
-            String message = String.format("Tag with id: %s is already exist in taglist: %s",
-                    tag.getId(),
-                    this.tagList
-                            .stream()
-                            .map(Tag::getId)
-                            .toList()
-            );
-            log.error(message);
-            throw new AlreadyExistArgumentForAddToEntityException(message);
         }
     }
     public void addTags(List<Tag> tags) {
+        if (this.tagList == null) this.tagList = new ArrayList<>();
+
+        tags.forEach(this::addTag);
+    }
+
+    public void addTags(Set<Tag> tags) {
         if (this.tagList == null) this.tagList = new ArrayList<>();
 
         tags.forEach(this::addTag);

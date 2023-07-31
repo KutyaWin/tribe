@@ -28,4 +28,5 @@ public interface TagService {
     boolean isExistTagByName(String tagName);
 
     List<Tag> findAllByIdFetchEventListWithTagAndEventTypesToWhichTagBelong(Set<Long> ids);
+
 }

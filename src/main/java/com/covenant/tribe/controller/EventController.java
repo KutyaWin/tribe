@@ -33,6 +33,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -289,9 +291,15 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @GetMapping("/organisation/{organizer_id}")
-    public ResponseEntity<?> findEventsByOrganizerId(@PathVariable(value = "organizer_id") String organizerId) {
+    public ResponseEntity<?> findEventsByOrganizerId(
+           @PathVariable(value = "organizer_id") String organizerId,
+           Authentication authentication
+    ) {
         log.info("[CONTROLLER] start endpoint findEventsByOrganizerId with param: {}", organizerId);
-        List<EventInUserProfileDTO> organizersEvents = eventService.findEventsByOrganizerId(organizerId);
+        AbstractAuthenticationToken token = (AbstractAuthenticationToken) authentication;
+        Long requestUserId = Long.valueOf(authentication.getName());
+        List<EventInUserProfileDTO> organizersEvents = eventService
+                .findEventsByOrganizerId(organizerId,requestUserId);
 
         log.info("[CONTROLLER] end endpoint findEventsByOrganizerId with response: {}", organizersEvents);
         return ResponseEntity

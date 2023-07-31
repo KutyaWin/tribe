@@ -1,5 +1,7 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
@@ -47,6 +49,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -56,6 +59,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Objects;
 import java.util.Optional;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -312,14 +317,23 @@ public class EventServiceImpl implements EventService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId) {
+    public List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId, Long requestUserId) {
         Long organizerIdLong = Long.parseLong(organizerId);
-        return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
-                        organizerIdLong, EventStatus.DELETED
-                )
-                .stream()
-                .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
-                .toList();
+        if (organizerIdLong.equals(requestUserId)) {
+            return eventRepository.findAllByOrganizerIdAndEventStatusIsNot(
+                            organizerIdLong, EventStatus.DELETED
+                    )
+                    .stream()
+                    .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
+                    .toList();
+        } else {
+            return eventRepository
+                    .findAllByOrganizerIdAndEventStatusIs(organizerIdLong, EventStatus.PUBLISHED)
+                    .stream()
+                    .map(event -> eventMapper.mapToEventInUserProfileDTO(event, organizerIdLong))
+                    .toList();
+        }
+
     }
 
     private void checkEventStatus(Event event) {
@@ -354,6 +368,15 @@ public class EventServiceImpl implements EventService {
                     event.getEventName(), event.getStartTime());
             throw new EventAlreadyExistException(message);
         }
+    }
+
+    @Transactional
+    @Override
+    public Event saveNewExternalEvent(List<KudagoEventDto> externalEvents, Map<Long, ReverseGeocodingData> reverseGeocodingData, Map<Long, List<String>> images) {
+        for (KudagoEventDto externalEvent : externalEvents) {
+
+        }
+        return null;
     }
 
     @Override
@@ -628,7 +651,6 @@ public class EventServiceImpl implements EventService {
                 .isParticipant(false)
                 .isWantToGo(true)
                 .isFavorite(false)
-                .isViewed(false)
                 .build();
         User user = getUser(userId);
         Event event = getEventById(eventId);
@@ -662,7 +684,6 @@ public class EventServiceImpl implements EventService {
                     .isParticipant(true)
                     .isWantToGo(false)
                     .isFavorite(false)
-                    .isViewed(false)
                     .build();
             User user = getUser(userId);
             userRelationsWithEvent.setEventRelations(event);
@@ -752,7 +773,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDto getEvent(Long eventId, Long organizerId) {
+    public EventDto getEvent(Long eventId, Long organizerId) { //TODO Проверить как работае т для приватного события
         Event event = getEventById(eventId);
         EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
                 .mapToEventTypeInfoDto(event.getEventType());
@@ -925,7 +946,6 @@ public class EventServiceImpl implements EventService {
                                             .isParticipant(false)
                                             .isWantToGo(false)
                                             .isFavorite(false)
-                                            .isViewed(false)
                                             .build();
                         });
                 userRelationsWithEventRepository.save(userRelationsWithEvent);
@@ -998,8 +1018,6 @@ public class EventServiceImpl implements EventService {
             e.setPartsOfDay(collect);
             return e;}).toList());
     }
-
-
 
     @Transactional(readOnly = true)
     @Override

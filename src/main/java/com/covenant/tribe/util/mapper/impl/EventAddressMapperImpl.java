@@ -1,5 +1,6 @@
 package com.covenant.tribe.util.mapper.impl;
 
+import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.dto.event.EventAddressDTO;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -47,5 +50,22 @@ public class EventAddressMapperImpl implements EventAddressMapper {
                 dto.getBuilding(),
                 dto.getHouseNumber(),
                 dto.getFloor());
+    }
+
+    @Override
+    public EventAddress matToEventAddress(Map<Long, ReverseGeocodingData> reverseGeocodingData, Long currentEventId) {
+        ReverseGeocodingData geocodingDataForCurrentEvent = reverseGeocodingData.get(currentEventId);
+        return new EventAddress(
+                null,
+                Double.valueOf(geocodingDataForCurrentEvent.getGeoLat()),
+                Double.valueOf(geocodingDataForCurrentEvent.getGeoLon()),
+                geocodingDataForCurrentEvent.getCity(),
+                geocodingDataForCurrentEvent.getRegionWithType(),
+                geocodingDataForCurrentEvent.getStreet(),
+                geocodingDataForCurrentEvent.getCityDistrict(),
+                geocodingDataForCurrentEvent.getBlock(),
+                geocodingDataForCurrentEvent.getHouse(),
+                null
+        );
     }
 }
