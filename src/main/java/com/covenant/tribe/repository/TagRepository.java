@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface TagRepository extends JpaRepository<Tag, Long>, CustomTagRepository {
@@ -16,6 +17,13 @@ public interface TagRepository extends JpaRepository<Tag, Long>, CustomTagReposi
     Tag findByTagName(@Param("tagName") String tagName);
 
     List<Tag> findByIdIn(List<Long> ids);
+
+    @Query(value = """
+                select t.tagName from Tag t where t.tagName in (:tagNames)
+            """)
+    Set<String> findAllByTagNames(Set<String> tagNames);
+
+    Set<Tag> findAllByTagNameIn(Set<String> tagNames);
 
     Optional<Tag> findTagByTagName(String tagName);
 

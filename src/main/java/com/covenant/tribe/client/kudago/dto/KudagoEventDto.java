@@ -17,7 +17,7 @@ import java.util.List;
 public class KudagoEventDto {
     Long id;
     @JsonProperty("publication_date")
-    LocalDate publicationDate;
+    Long publicationDate;
     List<KudagoDate> dates;
     String title;
     @JsonProperty("short_title")
@@ -42,6 +42,6 @@ public class KudagoEventDto {
     Long commentsCount;
     @JsonProperty("site_url")
     String siteUrl;
-    String[] tags;
+    List<String> tags;
 //    String participants;
 }
