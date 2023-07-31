@@ -181,7 +181,7 @@ public class EventMapperImpl implements EventMapper {
                 .city(event.getEventAddress().getCity())
                 .startTime(event.getStartTime())
                 .eventStatus(event.getEventStatus())
-                .isViewed(isEventFinished(event))
+                .isFinished(isEventFinished(event))
                 .build();
     }
 
@@ -263,7 +263,6 @@ public class EventMapperImpl implements EventMapper {
                                     .isParticipant(false)
                                     .isWantToGo(false)
                                     .isFavorite(false)
-                                    .isViewed(false)
                                     .build())
                             .toList());
             invitedUsersAndOrganizerRelationsWithEvent.add(
@@ -274,7 +273,6 @@ public class EventMapperImpl implements EventMapper {
                             .isParticipant(true)
                             .isWantToGo(false)
                             .isFavorite(false)
-                            .isViewed(false)
                             .build()
             );
             event.addEventsRelationsWithUsers(invitedUsersAndOrganizerRelationsWithEvent);

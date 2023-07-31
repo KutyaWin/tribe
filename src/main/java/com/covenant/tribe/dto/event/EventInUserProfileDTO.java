@@ -38,7 +38,6 @@ public class EventInUserProfileDTO implements Serializable {
         @JsonProperty(value = "event_status")
         EventStatus eventStatus;
 
-        @JsonProperty(value = "is_viewed")
-        Boolean isViewed;
-
+        @JsonProperty(value = "is_finished")
+        boolean isFinished;
 }

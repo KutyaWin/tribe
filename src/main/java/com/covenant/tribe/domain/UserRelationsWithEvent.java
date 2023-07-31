@@ -36,9 +36,6 @@ public class UserRelationsWithEvent {
     @Column(name = "is_favorite", nullable = false)
     boolean isFavorite;
 
-    @Column(name = "is_viewed", nullable = false)
-    boolean isViewed;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     @ToString.Exclude
