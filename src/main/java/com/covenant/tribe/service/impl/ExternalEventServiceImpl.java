@@ -17,6 +17,7 @@ import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
 import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.ExternalEventService;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventAvatarMapper;
@@ -33,7 +34,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -47,12 +47,13 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     final TagRepository tagRepository;
     final EventMapper eventMapper;
     final EventAvatarMapper eventAvatarMapper;
+    final EventSearchService eventSearchService;
     Set<String> EXTRA_KUDA_GO_CATEGORIES;
     Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
     String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper) {
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.eventAddressMapper = eventAddressMapper;
@@ -60,6 +61,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         this.tagRepository = tagRepository;
         this.eventMapper = eventMapper;
         this.eventAvatarMapper = eventAvatarMapper;
+        this.eventSearchService = eventSearchService;
     }
 
     @PostConstruct
@@ -165,7 +167,8 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                     kudagoEvent, organizer, eventAddress, eventType,
                     eventTags, userRelationsWithEvent, dates, hasAgeRestriction, eventImages
             );
-            eventRepository.save(newEventFromKudaGo);
+            Event saved = eventRepository.save(newEventFromKudaGo);
+            eventSearchService.create(saved);
         });
 
     }

@@ -37,8 +37,6 @@ public interface EventService {
     List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId, Long requestUserId);
     Page<Event> getByIdIn(List<Long> ids, Pageable pageable);
 
-    List<EventInUserProfileDTO> findEventsByOrganizerId(String organizerId);
-
     Page<Event> getAll(Pageable pageable, Predicate predicate);
 
     List<UserRelationsWithEvent> getUserRelationsWithEvents(Long currentUserId);

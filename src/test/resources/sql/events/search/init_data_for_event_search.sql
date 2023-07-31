@@ -32,8 +32,8 @@ VALUES (1000, now(), now(), now(), 'КУОК. BESKONECHNIY TOUR', 'PUBLISHED', f
         true, 1001, 1001, 1001,
         'Приготовьтесь: INSTASAMKA x MONEYKEN выступят с КУОК большим концертом и специальной программой 13 апреля в "A2 Green Concert"')
 ;
-insert into users_relations_with_events(id, is_favorite, is_invited, is_participant, is_viewed, is_want_to_go,
+insert into users_relations_with_events(id, is_favorite, is_invited, is_participant, is_want_to_go,
                                         event_relations_id, user_relations_id)
-VALUES (1000, false, false, false, true, false, 1000, 1000),
-       (1001, true, true, false, false, false, 1001, 1001);
+VALUES (1000, false, false, false, false, 1000, 1000),
+       (1001, true, true, false, false, 1001, 1001);
 

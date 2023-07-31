@@ -26,7 +26,6 @@ public class UserSearchUnitFactory {
                 .isInvited(relationsWithEvent.isInvited())
                 .isParticipant(relationsWithEvent.isParticipant())
                 .isWantToGo(relationsWithEvent.isWantToGo())
-                .isViewed(relationsWithEvent.isViewed())
                 .build();
     }
 }
