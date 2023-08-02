@@ -1,6 +1,7 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
+import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -84,7 +86,22 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         List<KudagoEventDto> eventsAfterDeletingTooLongEventNames = deleteTooLongEventNames(eventsAfterDeletingExtraCategories);
         List<KudagoEventDto> eventsAfterIsFreeFieldChecking = fillBlankIsFreeFields(eventsAfterDeletingTooLongEventNames);
         List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = deleteRecurringEventNames(eventsAfterIsFreeFieldChecking);
+        List<KudagoEventDto> eventsAfterDeletingExistingInDbEvents = deleteExistingInDbEvents(eventsAfterDeletingRecurringEventNames);
         return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingRecurringEventNames);
+    }
+
+    private List<KudagoEventDto> deleteExistingInDbEvents(List<KudagoEventDto> eventsAfterDeletingRecurringEventNames) {
+        Map<String, List<KudagoDate>> recievedEventNamesWithDates = eventsAfterDeletingRecurringEventNames.stream()
+                .collect(Collectors.toMap(KudagoEventDto::getTitle, KudagoEventDto::getDates));
+        List<Event> eventsWithSameTitleFromDb = eventRepository
+                .findAllByEventNameIn(recievedEventNamesWithDates.keySet());
+        eventsWithSameTitleFromDb.forEach(event -> {
+            OffsetDateTime dbEventStart = event.getStartTime();
+            
+        });
+
+
+        
     }
 
     private List<KudagoEventDto> deleteRecurringEventNames(List<KudagoEventDto> eventsAfterIsFreeFieldChecking) {
