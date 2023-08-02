@@ -27,6 +27,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
 
     Optional<Event> findByOrganizerIdAndId(Long organizerId, Long eventId);
 
+    List<Event> findAllByEventNameIn(Set<String> eventNames);
+
     List<Event> findAllByExternalPublicationDateBetween(LocalDate from, LocalDate to);
 
 
