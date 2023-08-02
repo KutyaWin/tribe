@@ -25,6 +25,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -465,8 +468,14 @@ public class UserController {
     }
 
     @Operation(
-            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Профиль ADMIN, Профиль USRER" +
-                    " Действие: Получение информации о пользователе.",
+            description = """
+                    Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Профиль ADMIN, 
+                    Профиль USRER Действие: Получение информации о пользователе.
+                    followers_count - колличество подписчиков владельца профиля
+                    followings_count - колличество подписок владельца профиля
+                    is_followed - подписан ли пользователь, который запрашивает профиль на его владельца
+                    is_following - подписан ли владелец профиля на пользователя, который запрашивает профиль
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -479,11 +488,14 @@ public class UserController {
     )
     @GetMapping("/profile/{user_id}")
     public ResponseEntity<?> getUserProfile(
-            @PathVariable(name = "user_id") String userId
+            @PathVariable(name = "user_id") String userId,
+            Authentication userWhoRequested
     ) {
         log.info("[CONTROLLER] start endpoint getUserProfile with param: {}", userId);
 
-        ProfileDto profileDto = userService.getProfile(Long.parseLong(userId));
+        AbstractAuthenticationToken principal = (AbstractAuthenticationToken) userWhoRequested;
+        Long userWhoRequestedId = Long.valueOf(principal.getName());
+        ProfileDto profileDto = userService.getProfile(Long.parseLong(userId), userWhoRequestedId);
 
         log.info("[CONTROLLER] end endpoint getUserProfile");
 

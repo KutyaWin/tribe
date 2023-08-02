@@ -115,7 +115,9 @@ public class UserMapperImpl implements UserMapper {
     }
 
     @Override
-    public ProfileDto mapToProfileDto(User user) {
+    public ProfileDto mapToProfileDto(
+            User user, boolean isFollowed, boolean isFollowing
+            ) {
         return ProfileDto.builder()
                 .userId(user.getId())
                 .avatarUrl(user.getUserAvatar())
@@ -129,6 +131,8 @@ public class UserMapperImpl implements UserMapper {
                 )
                 .followersCount(user.getFollowers().size())
                 .followingCount(user.getFollowing().size())
+                .isFollowed(isFollowed)
+                .isFollowing(isFollowing)
                 .interests(
                         user.getInterestingEventType().stream()
                                 .map(EventType::getTypeName)

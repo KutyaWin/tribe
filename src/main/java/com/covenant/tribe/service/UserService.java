@@ -46,7 +46,7 @@ public interface UserService {
 
     void updateUserProfile(UserProfileUpdateDto userProfileUpdateDto);
 
-    ProfileDto getProfile(long userId);
+    ProfileDto getProfile(long profileOwnerId, long userWhoRequestedId);
 
     void sendConfirmationCodeToEmail(UserEmailDto userEmailDto);
 
