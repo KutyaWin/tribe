@@ -31,11 +31,17 @@ public class ProfileDto implements Serializable {
 
     List<String> professions;
 
-    @JsonProperty("subscribers_count")
+    @JsonProperty("followers_count")
     int followersCount;
 
-    @JsonProperty("subscribed_people_count")
+    @JsonProperty("followings_count")
     int followingCount;
+
+    @JsonProperty("is_followed")
+    boolean isFollowed;
+
+    @JsonProperty("is_following")
+    boolean isFollowing;
 
     List<String> interests;
 

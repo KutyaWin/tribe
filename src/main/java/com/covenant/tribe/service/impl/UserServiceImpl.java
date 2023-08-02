@@ -271,9 +271,18 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public ProfileDto getProfile(long userId) {
-        User user = findUserById(userId);
-        return userMapper.mapToProfileDto(user);
+    public ProfileDto getProfile(long profileOwnerId, long userWhoRequestedId) {
+        User profileOwner = findUserById(profileOwnerId);
+        User userWhoRequested = findUserById(userWhoRequestedId);
+        boolean isFollowed = friendshipRepository
+                .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowing(
+                        profileOwner, userWhoRequested
+                );
+        boolean isFollowing = friendshipRepository
+                .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowing(
+                        userWhoRequested, profileOwner
+                );
+        return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing);
     }
 
     @Transactional
@@ -291,7 +300,7 @@ public class UserServiceImpl implements UserService {
         boolean isUserWithNewEmailExist = userRepository
                 .findUserByUserEmail(userEmailDto.getNewEmail())
                 .isPresent();
-        if  (isUserWithNewEmailExist) {
+        if (isUserWithNewEmailExist) {
             String message = String.format(
                     "User with email %s is already exist", userEmailDto.getNewEmail()
             );
@@ -306,7 +315,7 @@ public class UserServiceImpl implements UserService {
             log.error(message);
             throw new UnexpectedDataException(message);
         }
-        if  (userEmailDto.getOldEmail().equals(userEmailDto.getNewEmail())) {
+        if (userEmailDto.getOldEmail().equals(userEmailDto.getNewEmail())) {
             String message = String.format(
                     "New email: %s can't equals with old email: %s",
                     userEmailDto.getNewEmail(),
@@ -368,7 +377,7 @@ public class UserServiceImpl implements UserService {
                     );
                     log.error(message);
                     return new UserNotFoundException(message);
-                }) ;
+                });
         user.setUserEmail(emailConfirmCodeDto.getNewEmail());
         userRepository.save(user);
     }
