@@ -3,6 +3,7 @@ package com.covenant.tribe.util.mapper.impl;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.Profession;
 import com.covenant.tribe.domain.user.Registrant;
+import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.auth.AuthMethodsDto;
 import com.covenant.tribe.dto.auth.ConfirmRegistrationDTO;
@@ -117,7 +118,7 @@ public class UserMapperImpl implements UserMapper {
     @Override
     public ProfileDto mapToProfileDto(
             User user, boolean isFollowed, boolean isFollowing
-            ) {
+    ) {
         return ProfileDto.builder()
                 .userId(user.getId())
                 .avatarUrl(user.getUserAvatar())
@@ -129,8 +130,20 @@ public class UserMapperImpl implements UserMapper {
                                 .map(Profession::getName)
                                 .collect(Collectors.toList())
                 )
-                .followersCount(user.getFollowers().size())
-                .followingCount(user.getFollowing().size())
+                .followersCount(
+                        (int) user.getFollowers().stream()
+                                .filter(
+                                        follower -> follower.getRelationshipStatus() == RelationshipStatus.SUBSCRIBE
+                                )
+                                .count()
+                )
+                .followingCount(
+                        (int) user.getFollowing().stream()
+                                .filter(
+                                        follower -> follower.getRelationshipStatus() == RelationshipStatus.SUBSCRIBE
+                                )
+                                .count()
+                )
                 .isFollowed(isFollowed)
                 .isFollowing(isFollowing)
                 .interests(
