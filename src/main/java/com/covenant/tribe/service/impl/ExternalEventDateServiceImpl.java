@@ -71,6 +71,25 @@ public class ExternalEventDateServiceImpl implements ExternalEventDateService {
         return externalEventDates;
     }
 
+    @Override
+    public OffsetDateTime transformTimestampToOffsetDateTime(KudagoDate kudagoDate, String timezone) {
+        Long timestampStart = kudagoDate.getStart();
+        if (timezone == null) {
+            return OffsetDateTime.of(
+                    LocalDateTime
+                            .ofEpochSecond(
+                                    timestampStart, 0, MOSCOW_TIMEZONE_OFFSET
+                            ),
+                    MOSCOW_TIMEZONE_OFFSET
+            );
+        }
+        ZoneOffset zoneOffset = getZoneOffset(timezone);
+        return OffsetDateTime.of(
+                LocalDateTime.ofEpochSecond(timestampStart, 0, zoneOffset),
+                zoneOffset
+        );
+    }
+
     private ZoneOffset getZoneOffset(String timezone) {
         if (timezone.contains("/")) {
             ZoneId zoneId = ZoneId.of(timezone);
