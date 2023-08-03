@@ -584,6 +584,7 @@ public class EventServiceImpl implements EventService {
 
     }
 
+    @Transactional
     @Override
     public void sendToOrganizerRequestToParticipationInPrivateEvent(Long eventId, String userId) {
         boolean isUserAlreadyInvited = userRelationsWithEventRepository
