@@ -611,12 +611,16 @@ public class EventServiceImpl implements EventService {
             log.error(message);
             throw new UserAlreadySendRequestException(message);
         }
-        UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()
-                .isInvited(false)
-                .isParticipant(false)
-                .isWantToGo(true)
-                .isFavorite(false)
-                .build();
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId)
+                .orElse(
+                        UserRelationsWithEvent.builder()
+                                .isInvited(false)
+                                .isParticipant(false)
+                                .isWantToGo(true)
+                                .isFavorite(false)
+                                .build()
+                );
         User user = getUser(userId);
         Event event = getEventById(eventId);
         if (!event.isPrivate()) {
