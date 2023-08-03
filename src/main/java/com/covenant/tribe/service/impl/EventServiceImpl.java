@@ -374,6 +374,7 @@ public class EventServiceImpl implements EventService {
                     return new EventNotFoundException(String.format("Event with id %s  does not exist", eventId));
                 });
     }
+
     @Transactional(readOnly = true)
     @Override
     public List<EventVerificationDTO> getEventWithVerificationPendingStatus() {
@@ -611,16 +612,20 @@ public class EventServiceImpl implements EventService {
             log.error(message);
             throw new UserAlreadySendRequestException(message);
         }
-        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
-                .findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId)
-                .orElse(
-                        UserRelationsWithEvent.builder()
-                                .isInvited(false)
-                                .isParticipant(false)
-                                .isWantToGo(true)
-                                .isFavorite(false)
-                                .build()
-                );
+        UserRelationsWithEvent userRelationsWithEvent = null;
+        Optional<UserRelationsWithEvent> userRelationsWithEventOptional = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(Long.parseLong(userId), eventId);
+        if (userRelationsWithEventOptional.isPresent()) {
+            userRelationsWithEvent = userRelationsWithEventOptional.get();
+            userRelationsWithEvent.setWantToGo(true);
+        } else {
+            userRelationsWithEvent = UserRelationsWithEvent.builder()
+                    .isInvited(false)
+                    .isParticipant(false)
+                    .isWantToGo(true)
+                    .isFavorite(false)
+                    .build();
+        }
         User user = getUser(userId);
         Event event = getEventById(eventId);
         if (!event.isPrivate()) {
@@ -985,7 +990,8 @@ public class EventServiceImpl implements EventService {
             Set<PartsOfDay> partsOfDay = eventMapper.getPartsOfDay(e);
             Set<EventPartOfDay> collect = partsOfDay.stream().map(eventMapper::partEnumToEntity).collect(Collectors.toSet());
             e.setPartsOfDay(collect);
-            return e;}).toList());
+            return e;
+        }).toList());
     }
 
     @Transactional(readOnly = true)
