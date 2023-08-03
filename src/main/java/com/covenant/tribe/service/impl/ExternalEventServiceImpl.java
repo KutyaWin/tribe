@@ -18,6 +18,7 @@ import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
 import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.service.ExternalEventDateService;
 import com.covenant.tribe.service.ExternalEventService;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventAvatarMapper;
@@ -35,7 +36,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -49,12 +49,13 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     final TagRepository tagRepository;
     final EventMapper eventMapper;
     final EventAvatarMapper eventAvatarMapper;
+    final ExternalEventDateService externalEventDateService;
     Set<String> EXTRA_KUDA_GO_CATEGORIES;
     Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
     String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper) {
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, ExternalEventDateService externalEventDateService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.eventAddressMapper = eventAddressMapper;
@@ -62,6 +63,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         this.tagRepository = tagRepository;
         this.eventMapper = eventMapper;
         this.eventAvatarMapper = eventAvatarMapper;
+        this.externalEventDateService = externalEventDateService;
     }
 
     @PostConstruct
@@ -86,24 +88,27 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         List<KudagoEventDto> eventsAfterDeletingTooLongEventNames = deleteTooLongEventNames(eventsAfterDeletingExtraCategories);
         List<KudagoEventDto> eventsAfterIsFreeFieldChecking = fillBlankIsFreeFields(eventsAfterDeletingTooLongEventNames);
         List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = deleteRecurringEventNames(eventsAfterIsFreeFieldChecking);
-        List<KudagoEventDto> eventsAfterDeletingExistingInDbEvents = deleteExistingInDbEvents(eventsAfterDeletingRecurringEventNames);
-        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingRecurringEventNames);
+        List<KudagoEventDto> eventsAfterDeletingDbEventsWithSameNameAndStartDate =
+                deleteEventsWithSameStartDateAndName(eventsAfterDeletingRecurringEventNames);
+        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingDbEventsWithSameNameAndStartDate);
     }
 
-    private List<KudagoEventDto> deleteExistingInDbEvents(List<KudagoEventDto> eventsAfterDeletingRecurringEventNames) {
-        Map<String, List<KudagoDate>> recievedEventNamesWithDates = eventsAfterDeletingRecurringEventNames.stream()
-                .collect(Collectors.toMap(KudagoEventDto::getTitle, KudagoEventDto::getDates));
-        List<Event> eventsWithSameTitleFromDb = eventRepository
-                .findAllByEventNameIn(recievedEventNamesWithDates.keySet());
-        eventsWithSameTitleFromDb.forEach(event -> {
-            OffsetDateTime dbEventStart = event.getStartTime();
-            
+    private List<KudagoEventDto> deleteEventsWithSameStartDateAndName(List<KudagoEventDto> eventsAfterIsFreeFieldChecking) {
+        ArrayList<KudagoEventDto> eventsAfterDeletingDbEventsWithSameNameAndStartDate = new ArrayList<>();
+        eventsAfterIsFreeFieldChecking.forEach(event -> {
+            String eventName = event.getTitle();
+            String timezone = event.getLocation().getTimezone();
+            KudagoDate eventDate = event.getDates().get(0);
+            OffsetDateTime offsetStartTime = externalEventDateService.transformTimestampToOffsetDateTime(
+                    eventDate, timezone
+            );
+            Optional<Event> eventFromDb = eventRepository.findByEventNameAndStartTime(eventName, offsetStartTime);
+            if (eventFromDb.isEmpty()) {
+                eventsAfterDeletingDbEventsWithSameNameAndStartDate.add(event);
+            }
         });
-
-
-        
+        return eventsAfterDeletingDbEventsWithSameNameAndStartDate;
     }
-
     private List<KudagoEventDto> deleteRecurringEventNames(List<KudagoEventDto> eventsAfterIsFreeFieldChecking) {
         Set<String> alreadyCheckEventNames = new HashSet<>();
         List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = new ArrayList<>();
