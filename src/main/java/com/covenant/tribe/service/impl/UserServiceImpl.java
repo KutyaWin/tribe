@@ -275,12 +275,12 @@ public class UserServiceImpl implements UserService {
         User profileOwner = findUserById(profileOwnerId);
         User userWhoRequested = findUserById(userWhoRequestedId);
         boolean isFollowed = friendshipRepository
-                .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowing(
-                        profileOwner, userWhoRequested
+                .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
+                        profileOwner, userWhoRequested, RelationshipStatus.SUBSCRIBE
                 );
         boolean isFollowing = friendshipRepository
-                .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowing(
-                        userWhoRequested, profileOwner
+                .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
+                        userWhoRequested, profileOwner, RelationshipStatus.SUBSCRIBE
                 );
         return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing);
     }

@@ -22,8 +22,8 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             User follower, User following
     );
 
-    Boolean existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowing(
-            User userWhoGetFollower, User userWhoMadeFollowing
+    Boolean existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
+            User userWhoGetFollower, User userWhoMadeFollowing, RelationshipStatus relationshipStatus
     );
 
     @Modifying
