@@ -454,6 +454,32 @@ public class EventController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+    @Operation(
+            description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Экран карточки. Кнопка: Отменить. Действие: Отзыв запроса на " +
+                    "посещение приватного мероприятия",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/participant/request/private/decline/{event_id}/{user_id}")
+    public ResponseEntity<?> withdrawalRequestToParticipateInPrivateEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+        eventService.withdrawalRequestToParticipateInPrivateEvent(eventId, Long.parseLong(userId));
+
+        log.info("[CONTROLLER] end endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
 
     @Operation(
             description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
@@ -467,7 +493,7 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
-    @PostMapping("/participant/request/private/{event_id}/{user_id}")
+    @PatchMapping("/participant/request/private/{event_id}/{user_id}")
     public ResponseEntity<?> sendToOrganizerARequestToParticipationInPrivateEvent(
             @PathVariable(value = "event_id") Long eventId,
             @PathVariable(value = "user_id") String userId
@@ -495,7 +521,7 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
-    @PostMapping("/participant/request/public/{event_id}/{user_id}")
+    @PatchMapping("/participant/request/public/{event_id}/{user_id}")
     public ResponseEntity<?> sendRequestToParticipationInPublicEvent(
             @PathVariable(value = "event_id") Long eventId,
             @PathVariable(value = "user_id") String userId

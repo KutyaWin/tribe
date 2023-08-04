@@ -10,6 +10,7 @@ import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.UserStatus;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
+import com.covenant.tribe.exeption.UnexpectedDataException;
 import com.covenant.tribe.exeption.event.*;
 import com.covenant.tribe.exeption.scheduling.BroadcastNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
@@ -992,6 +993,41 @@ public class EventServiceImpl implements EventService {
             e.setPartsOfDay(collect);
             return e;
         }).toList());
+    }
+
+    @Transactional
+    @Override
+    public void withdrawalRequestToParticipateInPrivateEvent(Long eventId, Long userId) {
+        log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
+
+        Optional<UserRelationsWithEvent> userRelationsWithEventOptional = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(userId, eventId);
+        if (userRelationsWithEventOptional.isEmpty() || !userRelationsWithEventOptional.get().isWantToGo()) {
+            String erMessage = """
+                    User with id: %s is don't have a request to go in event with id: %s
+                    """.formatted(userId, eventId);
+            log.error(erMessage);
+            throw new UnexpectedDataException(erMessage);
+        }
+        UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventOptional.get();
+        if (userRelationsWithEvent.isParticipant()) {
+            String erMessage = """
+                    User with id: %s is already participant in event with id: %s
+                    """.formatted(userId, eventId);
+            log.error(erMessage);
+            throw new UserAlreadyParticipantException(erMessage);
+        }
+        if (userRelationsWithEvent.isInvited()) {
+            String erMessage = """
+                    User with id: %s is already invited in event with id: %s
+                    """.formatted(userId, eventId);
+            log.error(erMessage);
+            throw new UserAlreadyInvitedException(erMessage);
+        }
+        userRelationsWithEvent.setWantToGo(false);
+        userRelationsWithEventRepository.save(userRelationsWithEvent);
+
+        log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
     }
 
     @Transactional(readOnly = true)

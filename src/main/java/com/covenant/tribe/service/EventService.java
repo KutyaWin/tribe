@@ -75,4 +75,5 @@ public interface EventService {
 
     void updatePartsOfDay();
 
+    void withdrawalRequestToParticipateInPrivateEvent(Long eventId, Long userId);
 }
