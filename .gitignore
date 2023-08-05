@@ -3,10 +3,11 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*.sh
 
 ### Configuration ###
 .env
-.run
+/.run/Tribe.run.xml
 /src/main/resources/keys
 /${SPRING_PARENT_DIRECTORY}tribe
 

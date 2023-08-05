@@ -1,6 +1,7 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
+import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
@@ -18,6 +19,7 @@ import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
 import com.covenant.tribe.repository.UserRepository;
 import com.covenant.tribe.service.EventSearchService;
+import com.covenant.tribe.service.ExternalEventDateService;
 import com.covenant.tribe.service.ExternalEventService;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import com.covenant.tribe.util.mapper.EventAvatarMapper;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,12 +51,13 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     final EventMapper eventMapper;
     final EventAvatarMapper eventAvatarMapper;
     final EventSearchService eventSearchService;
+    final ExternalEventDateService externalEventDateService;
     Set<String> EXTRA_KUDA_GO_CATEGORIES;
     Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
     String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService) {
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService, ExternalEventDateService externalEventDateService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.eventAddressMapper = eventAddressMapper;
@@ -62,6 +66,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         this.eventMapper = eventMapper;
         this.eventAvatarMapper = eventAvatarMapper;
         this.eventSearchService = eventSearchService;
+        this.externalEventDateService = externalEventDateService;
     }
 
     @PostConstruct
@@ -86,9 +91,27 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         List<KudagoEventDto> eventsAfterDeletingTooLongEventNames = deleteTooLongEventNames(eventsAfterDeletingExtraCategories);
         List<KudagoEventDto> eventsAfterIsFreeFieldChecking = fillBlankIsFreeFields(eventsAfterDeletingTooLongEventNames);
         List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = deleteRecurringEventNames(eventsAfterIsFreeFieldChecking);
-        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingRecurringEventNames);
+        List<KudagoEventDto> eventsAfterDeletingDbEventsWithSameNameAndStartDate =
+                deleteEventsWithSameStartDateAndName(eventsAfterDeletingRecurringEventNames);
+        return changeKudaGoCategoriesToTribeCategories(eventsAfterDeletingDbEventsWithSameNameAndStartDate);
     }
 
+    private List<KudagoEventDto> deleteEventsWithSameStartDateAndName(List<KudagoEventDto> eventsAfterIsFreeFieldChecking) {
+        ArrayList<KudagoEventDto> eventsAfterDeletingDbEventsWithSameNameAndStartDate = new ArrayList<>();
+        eventsAfterIsFreeFieldChecking.forEach(event -> {
+            String eventName = event.getTitle();
+            String timezone = event.getLocation().getTimezone();
+            KudagoDate eventDate = event.getDates().get(0);
+            OffsetDateTime offsetStartTime = externalEventDateService.transformTimestampToOffsetDateTime(
+                    eventDate, timezone
+            );
+            Optional<Event> eventFromDb = eventRepository.findByEventNameAndStartTime(eventName, offsetStartTime);
+            if (eventFromDb.isEmpty()) {
+                eventsAfterDeletingDbEventsWithSameNameAndStartDate.add(event);
+            }
+        });
+        return eventsAfterDeletingDbEventsWithSameNameAndStartDate;
+    }
     private List<KudagoEventDto> deleteRecurringEventNames(List<KudagoEventDto> eventsAfterIsFreeFieldChecking) {
         Set<String> alreadyCheckEventNames = new HashSet<>();
         List<KudagoEventDto> eventsAfterDeletingRecurringEventNames = new ArrayList<>();
@@ -167,8 +190,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                     kudagoEvent, organizer, eventAddress, eventType,
                     eventTags, userRelationsWithEvent, dates, hasAgeRestriction, eventImages
             );
-            Event saved = eventRepository.save(newEventFromKudaGo);
-            eventSearchService.create(saved);
+            eventRepository.save(newEventFromKudaGo);
         });
 
     }

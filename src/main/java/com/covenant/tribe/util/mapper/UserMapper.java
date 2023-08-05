@@ -35,5 +35,5 @@ public interface UserMapper {
             List<EventTypeInfoDto> eventTypeInfoDtoList
     );
 
-    ProfileDto mapToProfileDto(User user);
+    ProfileDto mapToProfileDto(User user, boolean isFollowed, boolean isFollowing);
 }

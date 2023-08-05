@@ -1,11 +1,11 @@
 version: '3.8'
+
 services:
+
   app:
-    image: docker-spring-boot-postgres:latest
+    image: tribe:latest
     user: "${UID}:${GID}"
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile
+    network_mode: bridge
     container_name: "app"
     depends_on:
       tribe_elasticsearch:
@@ -43,6 +43,7 @@ services:
 
   db:
     image: postgis/postgis
+    network_mode: bridge
     container_name: "db"
     restart: always
     volumes:
@@ -86,6 +87,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  elasticsearch-data:
-    driver: local
   pg_data:
