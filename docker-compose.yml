@@ -32,6 +32,7 @@ services:
       APP_PORT: ${APP_PORT}
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    restart: always
     volumes:
       - ~/tribe:/tribe
       - ~/tribe/logs:/tribe/logs
