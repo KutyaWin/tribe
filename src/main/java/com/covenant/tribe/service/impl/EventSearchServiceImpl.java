@@ -87,7 +87,7 @@ public class EventSearchServiceImpl implements EventSearchService {
         NativeQueryBuilder query = NativeQuery.builder().withQuery(q -> q.bool(allTokens -> {
             for (String token : tokens) {
                 allTokens.must(perTokenQ -> perTokenQ.bool(b -> {
-                    b.minimumShouldMatch(String.valueOf(1));
+                    b.minimumShouldMatch(String.valueOf(2));
                     for (SearchFunctionParam param : searchFunctionParams) {
                         b.should(m -> m.functionScore(getFunctionScore(token, param)));
                     }

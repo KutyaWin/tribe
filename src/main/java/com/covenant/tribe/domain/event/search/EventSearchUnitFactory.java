@@ -3,6 +3,7 @@ package com.covenant.tribe.domain.event.search;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.search.UserSearchUnit;
 import com.covenant.tribe.domain.user.search.UserSearchUnitFactory;
 import lombok.AccessLevel;
@@ -22,7 +23,7 @@ public class EventSearchUnitFactory {
 
     public EventSearchUnit create(Event event) {
         List<UserRelationsWithEvent> eventRelationsWithUser = event.getEventRelationsWithUser();
-        List<UserSearchUnit> userSearchUnits = getUserSearchUnitList(eventRelationsWithUser);
+        List<UserSearchUnit> userSearchUnits = getUserSearchUnitList(eventRelationsWithUser, event);
         EventAddressSearchUnit addressSearchUnit = addressSearchUnitFactory.create(event);
         return EventSearchUnit.builder()
                 .id(event.getId())
@@ -35,7 +36,7 @@ public class EventSearchUnitFactory {
                 .build();
     }
 
-    private List<UserSearchUnit> getUserSearchUnitList(List<UserRelationsWithEvent> eventRelationsWithUser) {
-        return eventRelationsWithUser.stream().map(UserRelationsWithEvent::getUserRelations).toList().stream().map(userSearchUnitFactory::create).toList();
+    private List<UserSearchUnit> getUserSearchUnitList(List<UserRelationsWithEvent> eventRelationsWithUser, Event event) {
+        return eventRelationsWithUser.stream().map(UserRelationsWithEvent::getUserRelations).toList().stream().map((User user) -> userSearchUnitFactory.create(user, event)).toList();
     }
 }
