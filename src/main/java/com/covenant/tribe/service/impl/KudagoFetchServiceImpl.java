@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,7 +74,12 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
                 log.info("Current page has {} events", events.size());
             }
         }
-        Map<Long, KudagoEventDto> map = events.stream().collect(Collectors.toMap(KudagoEventDto::getId, e -> e));
+        Map<Long, KudagoEventDto> map = new HashMap<>();
+        events.forEach(event -> {
+            if (!map.containsKey(event.getId())) {
+                map.put(event.getId(), event);
+            }
+        });
         return map;
     }
 
