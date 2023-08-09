@@ -20,7 +20,6 @@ public class EventAddressMapperImpl implements EventAddressMapper {
 
     @Override
     public EventAddressDTO mapToEventAddressDTO(EventAddress eventAddress) {
-        log.debug("map EventAddress to EventAddressDTO. Passed eventAddress: {}", eventAddress);
 
         return EventAddressDTO.builder()
                 .eventLatitude(eventAddress.getEventLatitude())
@@ -37,7 +36,6 @@ public class EventAddressMapperImpl implements EventAddressMapper {
 
     @Override
     public EventAddress mapToEventAddress(EventAddressDTO dto) {
-        log.debug("map EventAddressDTO to EventAddress. Passed eventAddressDTO: {}", dto);
 
         return new EventAddress(
                 null,
