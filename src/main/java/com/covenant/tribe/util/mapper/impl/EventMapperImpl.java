@@ -41,8 +41,6 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, List<UserRelationsWithEvent> relationsWithEventCurrentUserId) {
-        log.info("map List<Event> to List<SearchEventDTO>");
-        log.debug("Passed List<Event>: {}", filteredEvents);
 
         return filteredEvents.stream()
                 .map(event -> mapToSearchEventDTO(event, relationsWithEventCurrentUserId))
@@ -51,8 +49,6 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public SearchEventDTO mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId) {
-        log.info("map Event to SearchEventDTO");
-        log.debug("Passed Event: {}", event);
 
         if (event.isPrivate()) {
             return SearchEventDTO.builder()
@@ -101,8 +97,6 @@ public class EventMapperImpl implements EventMapper {
     }
 
     public SearchEventDTO mapToSearchEventDTO(Event event) {
-        log.info("map Event to SearchEventDTO");
-        log.debug("Passed Event: {}", event);
 
         if (event.isPrivate()) {
             return SearchEventDTO.builder()
@@ -151,7 +145,6 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public EventInFavoriteDTO mapToEventInFavoriteDTO(Event event) {
-        log.info("map Event to EventInFavoriteDTO. Passed event: {}", event);
         List<String> eventAvatars = event.getEventAvatars().stream()
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
@@ -229,8 +222,6 @@ public class EventMapperImpl implements EventMapper {
                             @Nullable List<Tag> alreadyExistEventTags,
                             @Nullable List<Tag> createdEventTagsByRequest,
                             @Nullable List<User> invitedUserByRequest) {
-        log.debug("map RequestTemplateForCreatingEventDTO to Event. Passed param: {},\n {},\n {},\n {},\n {},\n {},\n {}",
-                dto, organizer, eventType, eventAddress, alreadyExistEventTags, createdEventTagsByRequest, invitedUserByRequest);
 
         Event event = Event.builder()
                 .organizer(organizer)
@@ -331,7 +322,6 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public DetailedEventInSearchDTO mapToDetailedEvent(Event event, User currentUserWhoSendRequest) {
-        log.debug("map Event to DetailedEventInSearchDTO. Event: {}", event);
 
         List<String> eventAvatars = event.getEventAvatars().stream()
                 .map(EventAvatar::getAvatarUrl)
@@ -452,7 +442,6 @@ public class EventMapperImpl implements EventMapper {
     }
 
     private Set<UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {
-        log.debug("map Users to UsersWhoParticipantsOfEventDTO. Passed users: {}", users);
 
         return users.stream()
                 .map(user -> UsersWhoParticipantsOfEventDTO.builder()
