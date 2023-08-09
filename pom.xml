@@ -214,16 +214,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>build-image</id>
-                        <goals>
-                            <goal>
-                                build-image
-                            </goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <executable>true</executable>
                     <image>

@@ -6,6 +6,9 @@ services:
     image: tribe:latest
     user: "${UID}:${GID}"
     container_name: "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       tribe_elasticsearch:
         condition: service_healthy

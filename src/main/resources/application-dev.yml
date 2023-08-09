@@ -42,6 +42,7 @@ spring:
     driverClassName: org.postgresql.Driver
     hikari:
       maximum-pool-size: 30
+      max-lifetime: 60000
   jpa:
     show_sql: true
     open-in-view: false #lock auto start transactional anywhere
