@@ -27,7 +27,7 @@ public class ProfileDto implements Serializable {
     @JsonProperty("full_name")
     String fullName;
 
-    int age;
+    Integer age;
 
     List<String> professions;
 
