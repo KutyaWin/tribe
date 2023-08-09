@@ -312,9 +312,9 @@ public class User {
         return this.firstName + " " + this.lastName;
     }
 
-    public int getAge() {
+    public Integer getAge() {
         if (birthday == null) {
-            return 0;
+            return null;
         }
         return Period.between(birthday, LocalDate.now()).getYears();
     }
