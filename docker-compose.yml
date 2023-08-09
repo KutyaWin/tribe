@@ -30,7 +30,7 @@ services:
       SPRING_WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
       SPRING_DADATA_TOKEN: ${DADATA_API_KEY}
       APP_PORT: ${APP_PORT}
-      JAVA_TOOL_OPTIONS: "-Xmx3072m -Xms512m -XX:MaxDirectMemorySize=64m"
+      JAVA_TOOL_OPTIONS: "-XX:MaxDirectMemorySize=256m"
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     restart: always
