@@ -1,7 +1,14 @@
 server:
   port: ${APP_PORT}
   forward-headers-strategy: framework
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "metrics, health, info"
+  endpoint:
+    env:
+      show-values: when_authorized
 spring:
   cloud:
     openfeign:
@@ -26,6 +33,8 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
   jpa:
     show_sql: true
     open-in-view: false #lock auto start transactional anywhere

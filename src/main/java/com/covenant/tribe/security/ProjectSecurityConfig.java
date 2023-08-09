@@ -64,7 +64,9 @@ public class ProjectSecurityConfig {
         );
         http.cors();
         http.csrf(csrfConf -> csrfConf.ignoringRequestMatchers("/api/**"));
-        http.securityMatcher(new AntPathRequestMatcher("/api/**"))
+//        http.securityMatcher(new AntPathRequestMatcher(""))
+//                .authorizeHttpRequests()
+        http.securityMatcher("/api/**", "/actuator/**")
                 .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
                 .requestMatchers("api/v1/auth/login/**").permitAll()
@@ -78,6 +80,7 @@ public class ProjectSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "api/v1/user/username/check/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/email/check/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "api/v1/user/avatar/**").permitAll()
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .anyRequest().authenticated();
 
         return http.build();
