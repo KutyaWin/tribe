@@ -21,7 +21,6 @@ public class EventTypeMapperIml implements EventTypeMapper {
 
     @Override
     public List<EventTypeDTO> mapToLightRectangleEventTypeDTOList(List<EventType> eventTypeList) {
-        log.debug("map LightRectangleEventTypeList to LightRectangleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
 
         return eventTypeList.stream()
                 .map(eventType -> EventTypeDTO.builder()
@@ -34,7 +33,6 @@ public class EventTypeMapperIml implements EventTypeMapper {
 
     @Override
     public List<EventTypeDTO> mapToLightCircleEventTypeDTOList(List<EventType> eventTypeList) {
-        log.debug("map LightCircleEventTypeList to LightCircleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
 
         return eventTypeList.stream()
                 .map(eventType -> EventTypeDTO.builder()
@@ -47,7 +45,6 @@ public class EventTypeMapperIml implements EventTypeMapper {
 
     @Override
     public List<EventTypeDTO> mapToDarkRectangleEventTypeDTOList(List<EventType> eventTypeList) {
-        log.debug("map DarkRectangleEventTypeList to DarkRectangleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
 
         return eventTypeList.stream()
                 .map(eventType -> EventTypeDTO.builder()
@@ -68,7 +65,6 @@ public class EventTypeMapperIml implements EventTypeMapper {
 
     @Override
     public List<EventTypeDTO> maptoDarkCircleEventTypeDTOList(List<EventType> eventTypeList) {
-        log.debug("map DarkCircleEventTypeList to DarkCircleEventTypeDTOList. Passed eventTypeList: {}", eventTypeList);
 
         return eventTypeList.stream()
                 .map(eventType -> EventTypeDTO.builder()
@@ -81,7 +77,6 @@ public class EventTypeMapperIml implements EventTypeMapper {
 
     @Override
     public EventTypeInfoDto mapToEventTypeInfoDto(EventType eventType) {
-        log.debug("map EventType to EventTypeInfoDto. Passed eventType: {}", eventType);
         return EventTypeInfoDto.builder()
                 .id(eventType.getId())
                 .typeName(eventType.getTypeName())

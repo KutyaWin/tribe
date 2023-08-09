@@ -202,7 +202,10 @@
             <artifactId>unirest-java</artifactId>
             <version>1.4.9</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -222,7 +225,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skip></skip>
+                    <executable>true</executable>
                     <image>
                         <name>tribe:latest</name>
                     </image>

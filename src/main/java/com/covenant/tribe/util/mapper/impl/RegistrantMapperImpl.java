@@ -20,7 +20,6 @@ public class RegistrantMapperImpl implements RegistrantMapper {
     PasswordEncoder bCryptPasswordEncoder;
     @Override
     public Registrant mapToRegistrant(RegistrantRequestDTO registrantRequestDTO, int verificationCode) {
-        log.debug("map registrantRequestDTO to Registrant. RegistrantRequestDTO: {}", registrantRequestDTO);
         return Registrant.builder()
                 .email(registrantRequestDTO.getEmail())
                 .password(bCryptPasswordEncoder.encode(registrantRequestDTO.getPassword()))

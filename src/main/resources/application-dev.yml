@@ -1,8 +1,14 @@
 server:
   port: ${APP_PORT}
   forward-headers-strategy: framework
-
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "metrics, health, info"
+  endpoint:
+    env:
+      show-values: when_authorized
 spring:
   autoconfigure:
     exclude:
@@ -34,6 +40,8 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
   jpa:
     show_sql: true
     open-in-view: false #lock auto start transactional anywhere
@@ -104,8 +112,6 @@ verification:
     email:
       min: 1000
       max: 9999
-
-#custom
 
 scheduler:
   enabled: false

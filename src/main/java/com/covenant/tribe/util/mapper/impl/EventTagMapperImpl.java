@@ -13,7 +13,6 @@ import java.util.List;
 public class EventTagMapperImpl implements EventTagMapper {
 
     public EventTagDTO mapEventTagToEventTagDTO(Tag eventTag) {
-        log.debug("map EventTag to EventTagDTO. Passed Tag: {}", eventTag);
         return EventTagDTO.builder()
                 .id(eventTag.getId())
                 .name(eventTag.getTagName())

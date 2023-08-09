@@ -33,6 +33,7 @@ services:
       SPRING_DADATA_TOKEN: ${DADATA_API_KEY}
       APP_PORT: ${APP_PORT}
       ELASTIC_URI: tribe_elasticsearch:9200
+      JAVA_TOOL_OPTIONS: "-XX:MaxDirectMemorySize=256m"
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
     restart: always
@@ -42,6 +43,7 @@ services:
 
   db:
     image: postgis/postgis
+    network_mode: bridge
     container_name: "db"
     restart: always
     volumes:
