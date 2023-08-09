@@ -7,6 +7,9 @@ services:
     user: "${UID}:${GID}"
     network_mode: bridge
     container_name: "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       db:
         condition: service_healthy
