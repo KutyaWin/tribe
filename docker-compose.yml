@@ -46,7 +46,6 @@ services:
 
   db:
     image: postgis/postgis
-    network_mode: bridge
     container_name: "db"
     restart: always
     volumes:
