@@ -8,6 +8,7 @@ import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.EventTypeService;
 import com.covenant.tribe.service.UserService;
+import com.covenant.tribe.service.facade.impl.EventFacadeImpl;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Test;

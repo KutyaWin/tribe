@@ -18,6 +18,7 @@ import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.repository.EventTypeRepository;
 import com.covenant.tribe.repository.TagRepository;
 import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.ExternalEventDateService;
 import com.covenant.tribe.service.ExternalEventService;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
@@ -49,13 +50,14 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     final TagRepository tagRepository;
     final EventMapper eventMapper;
     final EventAvatarMapper eventAvatarMapper;
+    final EventSearchService eventSearchService;
     final ExternalEventDateService externalEventDateService;
     Set<String> EXTRA_KUDA_GO_CATEGORIES;
     Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
     String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, ExternalEventDateService externalEventDateService) {
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService, ExternalEventDateService externalEventDateService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.eventAddressMapper = eventAddressMapper;
@@ -63,6 +65,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         this.tagRepository = tagRepository;
         this.eventMapper = eventMapper;
         this.eventAvatarMapper = eventAvatarMapper;
+        this.eventSearchService = eventSearchService;
         this.externalEventDateService = externalEventDateService;
     }
 

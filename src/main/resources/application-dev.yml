@@ -10,6 +10,13 @@ management:
     env:
       show-values: when_authorized
 spring:
+  autoconfigure:
+    exclude:
+  elasticsearch:
+    rest:
+      uris: ${ELASTIC_URI}
+      username:
+      password:
   cloud:
     openfeign:
       client:
@@ -109,3 +116,8 @@ verification:
 
 scheduler:
   enabled: false
+elastic:
+  enabled: true
+event:
+  message:
+    strategy: FIREBASE
