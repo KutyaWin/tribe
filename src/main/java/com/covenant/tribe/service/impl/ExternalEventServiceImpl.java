@@ -190,7 +190,8 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                     kudagoEvent, organizer, eventAddress, eventType,
                     eventTags, userRelationsWithEvent, dates, hasAgeRestriction, eventImages
             );
-            eventRepository.save(newEventFromKudaGo);
+            Event save = eventRepository.save(newEventFromKudaGo);
+            eventSearchService.create(save);
         });
 
     }
