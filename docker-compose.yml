@@ -3,18 +3,20 @@ version: '3.8'
 services:
 
   app:
-    image: docker-spring-boot-postgres:latest
+    image: tribe:latest
     user: "${UID}:${GID}"
-    network_mode: bridge
+    container_name: "app"
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
-    container_name: "app"
+      dockerfile: Dockerfile
     depends_on:
+      tribe_elasticsearch:
+        condition: service_healthy
       db:
         condition: service_healthy
     links:
       - db
+      - tribe_elasticsearch
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tribe
@@ -33,15 +35,17 @@ services:
       SPRING_WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
       SPRING_DADATA_TOKEN: ${DADATA_API_KEY}
       APP_PORT: ${APP_PORT}
+      ELASTIC_URI: tribe_elasticsearch:9200
+      JAVA_TOOL_OPTIONS: "-XX:MaxDirectMemorySize=256m"
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    restart: always
     volumes:
       - ~/tribe:/tribe
       - ~/tribe/logs:/tribe/logs
 
   db:
     image: postgis/postgis
-    network_mode: bridge
     container_name: "db"
     restart: always
     volumes:
@@ -58,5 +62,41 @@ services:
       timeout: 4s
       retries: 4
 
+  tribe_elasticsearch:
+    container_name: "tribe_elasticsearch"
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=2gb
+      - cluster.routing.allocation.disk.watermark.high=1gb
+      - cluster.routing.allocation.disk.watermark.flood_stage=512mb
+    restart: unless-stopped
+    healthcheck:
+      interval: 10s
+      retries: 80
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.2
+    depends_on:
+      - tribe_elasticsearch
+    ports:
+      - "5601:5601"
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=http://tribe_elasticsearch:9200
+      - XPACK_SECURITY_ENABLED=false
+    restart: unless-stopped
+
 volumes:
+  elasticsearch-data:
+    driver: local
   pg_data:

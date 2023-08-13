@@ -7,11 +7,13 @@ import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.user.UserFavoriteEventDTO;
 import com.covenant.tribe.security.JwtProvider;
-import com.covenant.tribe.service.EventFacade;
+import com.covenant.tribe.service.facade.EventFacade;
 import com.covenant.tribe.service.EventService;
 import com.covenant.tribe.service.PhotoStorageService;
+import com.covenant.tribe.service.facade.EventSearchFacade;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,7 +28,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -55,6 +56,7 @@ public class EventController {
     PhotoStorageService storageService;
     EventMapper eventMapper;
     EventFacade eventFacade;
+    EventSearchFacade eventSearchFacade;
 
     JwtProvider jwtProvider;
 
@@ -454,6 +456,32 @@ public class EventController {
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+    @Operation(
+            description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
+                    "Экран: Экран карточки. Кнопка: Отменить. Действие: Отзыв запроса на " +
+                    "посещение приватного мероприятия",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @PatchMapping("/participant/request/private/decline/{event_id}/{user_id}")
+    public ResponseEntity<?> withdrawalRequestToParticipateInPrivateEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+        eventService.withdrawalRequestToParticipateInPrivateEvent(eventId, Long.parseLong(userId));
+
+        log.info("[CONTROLLER] end endpoint sendToOrganizerARequestToParticipationInPrivateEvent");
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .build();
+    }
 
     @Operation(
             description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
@@ -467,7 +495,7 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
-    @PostMapping("/participant/request/private/{event_id}/{user_id}")
+    @PatchMapping("/participant/request/private/{event_id}/{user_id}")
     public ResponseEntity<?> sendToOrganizerARequestToParticipationInPrivateEvent(
             @PathVariable(value = "event_id") Long eventId,
             @PathVariable(value = "user_id") String userId
@@ -495,7 +523,7 @@ public class EventController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
-    @PostMapping("/participant/request/public/{event_id}/{user_id}")
+    @PatchMapping("/participant/request/public/{event_id}/{user_id}")
     public ResponseEntity<?> sendRequestToParticipationInPublicEvent(
             @PathVariable(value = "event_id") Long eventId,
             @PathVariable(value = "user_id") String userId
@@ -596,7 +624,7 @@ public class EventController {
             @RequestParam(value = "size", defaultValue = "100") Integer size,
             EventFilter eventFilter,
             HttpServletRequest token
-    ) {
+    ) throws JsonProcessingException {
         log.info("[CONTROLLER] start endpoint getAllEventByFilter");
         log.debug("With data: {}", eventFilter);
 
@@ -606,7 +634,8 @@ public class EventController {
         }
 
         PageResponse<SearchEventDTO> response = PageResponse.of(
-                eventService.getEventsByFilter(eventFilter, currentUserId, page, size));
+                eventSearchFacade.getEventsByFilter(eventFilter, currentUserId, page, size)
+        );
 
         log.info("[CONTROLLER] end endpoint getAllEventByFilter");
         log.debug("With response: {}", response);

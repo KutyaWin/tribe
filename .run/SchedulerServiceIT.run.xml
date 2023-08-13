@@ -21,8 +21,8 @@
       <env name="SPRING_DATASOURCE_URL" value="jdbc:postgresql://localhost:5435/tribe" />
       <env name="SPRING_DATASOURCE_USERNAME" value="tribe" />
       <env name="SPRING_GOOGLE_CLIENT_ID" value="381983393501-ghpr59ftu2t32898o4rb9pmmbtrnjemk.apps.googleusercontent.com" />
-      <env name="SPRING_LOG_DIRECTORY" value="C:\Java_Projects\Log\" />
-      <env name="SPRING_PARENT_DIRECTORY" value="C:\Java_Projects\Parent\" />
+      <env name="SPRING_LOG_DIRECTORY" value="$USER_HOME$/tribe/logs" />
+      <env name="SPRING_PARENT_DIRECTORY" value="$USER_HOME$/" />
       <env name="SPRING_PROFILES_ACTIVE" value="dev" />
       <env name="SPRING_VK_API_VERSION" value="5.131" />
       <env name="SPRING_VK_CLIENT_ID" value="51617420" />

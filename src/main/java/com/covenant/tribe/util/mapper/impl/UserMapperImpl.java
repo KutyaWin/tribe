@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 public class UserMapperImpl implements UserMapper {
 
     public User mapToUserFromUserGoogleRegistration(UserForSignInUpDTO userForSignInUpDTO, String googleUserId) {
-        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
         return User.builder()
                 .googleId(googleUserId)
                 .hasGoogleAuthentication(true)
@@ -40,7 +39,6 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId) {
-        log.debug("map UserForSignInUpDTO to User. UserForSignInUpDTO: {}", userForSignInUpDTO);
         return User.builder()
                 .vkId(vkUserId)
                 .hasVkAuthentication(true)
@@ -54,8 +52,6 @@ public class UserMapperImpl implements UserMapper {
     public User buildUserFromConfirmRegistrationDTORegistrantAndUserInterests(
             ConfirmRegistrationDTO confirmRegistrationDTO, Set<EventType> userInterests, Registrant registrant
     ) {
-        log.debug("map confirmRegistrationDTO to User. confirmRegistrationDTO: {}, " +
-                "registrant: {}, userInterests: {}", confirmRegistrationDTO, registrant, userInterests);
         return User.builder()
                 .hasEmailAuthentication(true)
                 .firebaseId(confirmRegistrationDTO.getFirebaseId())
@@ -70,7 +66,6 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public UserSubscriberDto mapToUserSubscriberDto(User subscriber, Set<Long> userIds) {
-        log.debug("map User to UserSubscriberDto. User: {}", subscriber);
         return UserSubscriberDto.builder()
                 .username(subscriber.getUsername())
                 .userId(subscriber.getId())
@@ -156,7 +151,6 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user) {
-        log.debug("map User to UserToSendInvitationDTO. User: {}", user);
 
         return UserToSendInvitationDTO.builder()
                 .userId(user.getId())

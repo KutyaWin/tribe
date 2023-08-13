@@ -1,6 +1,7 @@
 package com.covenant.tribe.exeption.event;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
+import com.covenant.tribe.exeption.event.search.EventSearchUnitNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -129,11 +130,21 @@ public class EventExceptionHandler {
 
     @ExceptionHandler(EventSortingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseErrorDTO handleBadSortingRequest(EventSortingException notPublicEventException) {
+    public ResponseErrorDTO handleBadSortingRequest(EventSortingException badSortingEx) {
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.BAD_REQUEST)
-                .errorMessage(List.of(notPublicEventException.getMessage()))
+                .errorMessage(List.of(badSortingEx.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(EventSearchUnitNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleSearchUnitException(RuntimeException exception) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .errorMessage(List.of(exception.getMessage()))
                 .build();
     }
 }

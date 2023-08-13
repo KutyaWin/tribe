@@ -1,8 +1,22 @@
 server:
   port: ${APP_PORT}
   forward-headers-strategy: framework
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "metrics, health, info"
+  endpoint:
+    env:
+      show-values: when_authorized
 spring:
+  autoconfigure:
+    exclude:
+  elasticsearch:
+    rest:
+      uris: ${ELASTIC_URI}
+      username:
+      password:
   cloud:
     openfeign:
       client:
@@ -26,6 +40,9 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driverClassName: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      max-lifetime: 60000
   jpa:
     show_sql: true
     open-in-view: false #lock auto start transactional anywhere
@@ -99,3 +116,8 @@ verification:
 
 scheduler:
   enabled: false
+elastic:
+  enabled: true
+event:
+  message:
+    strategy: FIREBASE
