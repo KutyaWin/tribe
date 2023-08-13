@@ -35,6 +35,11 @@ public class MockEventSearchService implements EventSearchService {
     }
 
     @Override
+    public void delete(Event event) {
+
+    }
+
+    @Override
     public void deleteAll() {
 
     }

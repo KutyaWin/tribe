@@ -100,6 +100,13 @@ public class EventSearchServiceImpl implements EventSearchService {
 
     }
 
+    @Override
+    @Transactional
+    public void delete(Event event) {
+        EventSearchUnit safe = getSafe(event);
+        eventSearchUnitRepository.delete(safe);
+    }
+
     @NotNull
     private NativeQuery getRequest(String text, List<EventIdView> ids, Pageable pageable) {
         Map<String, List<String>> terms = new HashMap<>();
