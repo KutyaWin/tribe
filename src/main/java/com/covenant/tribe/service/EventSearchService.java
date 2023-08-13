@@ -15,9 +15,9 @@ public interface EventSearchService {
 
     EventSearchUnit update(Event event);
 
-    List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable) throws JsonProcessingException;
+    List<EventSearchUnit> findByText(String text, Pageable pageable) throws JsonProcessingException;
 
-    List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable, List<EventIdView> ids) throws JsonProcessingException;
+    List<EventSearchUnit> findByText(String text, Pageable pageable, List<EventIdView> ids) throws JsonProcessingException;
 
     void deleteAll();
 }

@@ -25,12 +25,12 @@ public class MockEventSearchService implements EventSearchService {
     }
 
     @Override
-    public List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable) {
+    public List<EventSearchUnit> findByText(String text, Pageable pageable) {
         return null;
     }
 
     @Override
-    public List<EventSearchUnit> findByTextAndIds(String text, Pageable pageable, List<EventIdView> ids) {
+    public List<EventSearchUnit> findByText(String text, Pageable pageable, List<EventIdView> ids) {
         return null;
     }
 
