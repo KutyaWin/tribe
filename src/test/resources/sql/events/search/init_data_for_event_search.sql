@@ -24,14 +24,26 @@ VALUES (1000, now(), now(), now(), 'КУОК. BESKONECHNIY TOUR', 'PUBLISHED', f
         'Больше шоу, больше рейва, специальные гости и презентация нового альбома — это 13 только часть того, что вас ждет.'),
        (1001, now(), now(), now(), 'INSTASAMKA & MONEYKEN', 'PUBLISHED', false, true, false, true, true,
         true, 1003, 1001, 1001,
-        'Приготовьтесь: INSTASAMKA x MONEYKEN выступят с КУОК большим концертом и специальной программой 13 апреля в "A2 Green Concert"'),
+        'Приготовьтесь: INSTASAMKA x MONEYKEN выступят с КУОК большим концертом и специальной программой 13 апреля в A2 Plaza beq"'),
        (1002, now(), now(), now(), 'Скриптонит', 'PUBLISHED', false, false, false, true, true,
         true, 1001, 1001, 1001,
-        'Приготовьтесь: КУОК INSTASAMKA "A2 Green Concert"'),
+        'Приготовьтесь: КУОК INSTASAMKA A2 Green'),
        (1003, now(), now(), now(), 'INSTASAMKA', 'PUBLISHED', false, false, false, true, true,
         true, 1001, 1001, 1001,
         'Приготовьтесь: INSTASAMKA x MONEYKEN выступят с КУОК большим концертом и специальной программой 13 апреля в "A2 Green Concert"')
 ;
+
+insert into tags(id, tag_name, tag_name_en)
+VALUES (1000, 'пивец', 'singer'),
+       (1001, 'пивица', 'singer_girl');
+
+insert into events_tags(event_id, tag_id)
+VALUES (1000, 1000),
+       (1001, 1001),
+       (1002, 1000),
+       (1002, 1001),
+       (1003, 1000);
+
 insert into users_relations_with_events(id, is_favorite, is_invited, is_participant, is_want_to_go,
                                         event_relations_id, user_relations_id)
 VALUES (1000, false, false, false, false, 1000, 1000),
