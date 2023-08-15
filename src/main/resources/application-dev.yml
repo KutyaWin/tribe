@@ -15,8 +15,8 @@ spring:
   elasticsearch:
     rest:
       uris: ${ELASTIC_URI}
-      username:
-      password:
+      username: ${ELASTICSEARCH_USERNAME}
+      password: ${ELASTIC_PASSWORD}
   cloud:
     openfeign:
       client:
