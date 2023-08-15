@@ -16,6 +16,7 @@ import java.util.List;
 @TypeAlias("Event")
 @Getter
 @Setter
+@ToString
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode

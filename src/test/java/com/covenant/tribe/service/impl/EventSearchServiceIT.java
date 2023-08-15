@@ -1,6 +1,5 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.AbstractTestcontainers;
 import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.search.EventSearchUnit;
 import com.covenant.tribe.service.EventSearchService;
@@ -20,21 +19,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -82,8 +72,20 @@ public class EventSearchServiceIT extends ElasticContainer {
     @Test
     public void event_found() throws JsonProcessingException {
         PageRequest of = PageRequest.of(0, 100);
-        List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds("INSTASAMKA", of);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("INSTASAMKA", of);
         assertThat(byTextAndIds.get(0).getId(), is(equalTo(1003L)));
+    }
+
+    /**
+     * Checks that results ranked by best fields
+     */
+    @Test
+    public void event_found_and_ranked_by_number_of_words_matching() throws JsonProcessingException {
+        PageRequest of = PageRequest.of(0, 100);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("INSTASAMKA MONEYKEN", of);
+        List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
+        assertThat(list.get(0), is(equalTo(1001L)));
+        assertThat(list, hasItems(1002L, 1003L));
     }
 
     /**
@@ -92,7 +94,7 @@ public class EventSearchServiceIT extends ElasticContainer {
     @Test
     public void found_by_name_fuzzy() throws JsonProcessingException {
         PageRequest of = PageRequest.of(0, 100);
-        List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds("ENSTOSAMKA ", of);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("ENSTOSAMKA ", of);
         assertThat(byTextAndIds.get(0).getId(), is(equalTo(1003L)));
     }
 
@@ -102,7 +104,7 @@ public class EventSearchServiceIT extends ElasticContainer {
     @Test
     public void found_most_relevant_and_others() throws JsonProcessingException {
         PageRequest of = PageRequest.of(0, 100);
-        List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds("INSTASAMKA", of);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("INSTASAMKA", of);
         assertThat(byTextAndIds.get(0).getId(), is(equalTo(1003L)));
         assertThat(byTextAndIds.get(1).getId(), is(equalTo(1001L)));
     }
@@ -112,8 +114,12 @@ public class EventSearchServiceIT extends ElasticContainer {
      */
     @Test
     public void found_by_name_and_city() throws JsonProcessingException {
+        //given
         PageRequest of = PageRequest.of(0, 100);
-        List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds("INSTASAMKA Воронеж", of);
+        String text = "INSTASAMKA Воронеж";
+        //when
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText(text, of);
+        //then
         assertThat(byTextAndIds.get(0).getId(), is(equalTo(1001L)));
     }
 
@@ -122,9 +128,12 @@ public class EventSearchServiceIT extends ElasticContainer {
      */
     @Test
     public void found_by_ids_in() throws JsonProcessingException {
+        //given
         PageRequest of = PageRequest.of(0, 100);
         List<EventIdView> eventIdViews = getEventIdViews();
-        List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds("INSTASAMKA", of, eventIdViews);
+        //when
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("INSTASAMKA", of, eventIdViews);
+        //then
         List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
         assertThat(1003L, is(not(in(list))));
     }
@@ -134,11 +143,72 @@ public class EventSearchServiceIT extends ElasticContainer {
      */
     @Test
     public void found_by_ids_in_with_result() throws JsonProcessingException {
+        //given
         PageRequest of = PageRequest.of(0, 100);
-        List<EventIdView> eventIdViews =  getEventIdViewsAll();
-        List<EventSearchUnit> byTextAndIds = eventSearchService.findByTextAndIds("INSTASAMKA", of, eventIdViews);
+        //when
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("INSTASAMKA", of);
+        //then
         List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
         assertThat(1003L, is(in(list)));
+    }
+
+    /**
+     * Check if search returns results by tags
+     */
+    @Test
+    public void found_by_tags_in_with_result() throws JsonProcessingException {
+        PageRequest of = PageRequest.of(0, 100);
+        List<EventIdView> eventIdViews =  getEventIdViewsAll();
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("пивица", of, eventIdViews);
+        List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
+        assertThat(list, hasItems(1001L, 1002L));
+    }
+
+    /**
+     * Check if search returns results by tags with relevance
+     */
+    @Test
+    public void found_by_tags_with_more_tags_more_relevance() throws JsonProcessingException {
+        PageRequest of = PageRequest.of(0, 100);
+        List<EventIdView> eventIdViews =  getEventIdViewsAll();
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("пивица пивец", of, eventIdViews);
+        List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
+        assertThat(list.get(0), equalTo(1002L));
+    }
+
+    /**
+     * Check if search returns results with tags and name
+     */
+    @Test
+    public void found_by_tags_with_name() throws JsonProcessingException {
+        PageRequest of = PageRequest.of(0, 100);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("пивица instasamka", of);
+        List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
+        assertThat(list.get(0), equalTo(1001L));
+    }
+
+
+    /**
+     * Check if search returns results containing only one word
+     */
+    @Test
+    public void found_all_containing_both_words() throws JsonProcessingException {
+        PageRequest of = PageRequest.of(0, 100);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("Green Plaza", of);
+        List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
+        assertThat(list, hasItems(1001L, 1002L));
+    }
+
+    /**
+     * Check if search ranks results with two words higher than with only one
+     */
+    @Test
+    public void found_all_containing_both_words_and_ranking_correct() throws JsonProcessingException {
+        PageRequest of = PageRequest.of(0, 100);
+        List<EventSearchUnit> byTextAndIds = eventSearchService.findByText("MONEYKEN КУОК", of);
+        List<Long> list = byTextAndIds.stream().map(EventSearchUnit::getId).toList();
+        assertThat(list.get(0), equalTo(1001L));
+        assertThat(list, hasItems(1000L, 1003L));
     }
 
     @NotNull

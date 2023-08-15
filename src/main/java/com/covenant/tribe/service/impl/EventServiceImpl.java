@@ -361,7 +361,6 @@ public class EventServiceImpl implements EventService {
         if (eventRepository.findByEventNameAndStartTimeAndOrganizerId(
                 event.getEventName(), event.getStartTime(), event.getOrganizer().getId()).isEmpty()) {
             Event save = eventRepository.save(event);
-            eventSearchService.create(save);
             return save;
         } else {
             String message = String.format(
@@ -436,8 +435,8 @@ public class EventServiceImpl implements EventService {
             throw new EventAlreadyVerifiedException(message);
         }
         event.setEventStatus(EventStatus.PUBLISHED);
-        eventRepository.save(event);
-        eventSearchService.update(event);
+        Event save = eventRepository.save(event);
+        eventSearchService.create(save);
         sendNecessaryNotification(event);
         OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
         MessageStrategyName messageStrategyName = MessageStrategyName.valueOf(eventMessageStrategy);
@@ -607,11 +606,10 @@ public class EventServiceImpl implements EventService {
                     return new EventNotFoundException(message);
                 });
         event.setEventStatus(EventStatus.DELETED);
-        eventRepository.save(event);
-
+        Event save = eventRepository.save(event);
+        eventSearchService.delete(save);
         Optional<BroadcastEntity> broadcastEntityOpt = broadcastRepository
                 .findBySubjectIdAndStatusNot(eventId, BroadcastStatuses.COMPLETE_SUCCESSFULLY);
-
         if (broadcastEntityOpt.isPresent()) {
             BroadcastEntity broadcastEntity = broadcastEntityOpt.get();
             broadcastEntity.setStatus(BroadcastStatuses.CANCELLED);
@@ -619,7 +617,6 @@ public class EventServiceImpl implements EventService {
             schedulerService.unschedule(triggerKey);
             broadcastRepository.save(broadcastEntity);
         }
-
     }
 
     @Transactional
