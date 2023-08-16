@@ -10,8 +10,6 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      tribe_elasticsearch:
-        condition: service_healthy
       db:
         condition: service_healthy
     links:
@@ -36,6 +34,8 @@ services:
       SPRING_DADATA_TOKEN: ${DADATA_API_KEY}
       APP_PORT: ${APP_PORT}
       ELASTIC_URI: tribe_elasticsearch:9200
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
       JAVA_TOOL_OPTIONS: "-XX:MaxDirectMemorySize=256m"
     ports:
       - "127.0.0.1:${APP_PORT}:${APP_PORT}"
@@ -73,6 +73,7 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - xpack.security.enabled=true
+      - ELASTICSEARCH_USERNAME=$ELASTICSEARCH_USERNAME
       - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
       - discovery.type=single-node
       - cluster.routing.allocation.disk.threshold_enabled=true
@@ -83,7 +84,7 @@ services:
     healthcheck:
       interval: 10s
       retries: 80
-      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:9200/
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.8.2
@@ -94,7 +95,7 @@ services:
     environment:
       - SERVERNAME=kibana
       - ELASTICSEARCH_HOSTS=http://tribe_elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=kibana_system
+      - KIBANA_USERNAME=${KIBANA_USERNAME}
       - ELASTICSEARCH_PASSWORD=$ELASTIC_PASSWORD
       - XPACK_SECURITY_ENABLED=false
     restart: unless-stopped
