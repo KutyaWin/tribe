@@ -644,6 +644,28 @@ public class EventController {
     }
 
     @Operation(
+            description = "Категория: Фильтр  Экран: Фильтр расширенный. Действие: доставка количества " +
+"отфильтрованных событий, для отображения на кнопке - Показать",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = FilteredEventQuantityDto.class)))}
+                    )
+    @GetMapping("/search/quantity")
+    public ResponseEntity<?> getFilteredEventQuantity(EventFilter eventFilter) {
+        log.info("[CONTROLLER] start endpoint getFilteredEventQuantity");
+
+        FilteredEventQuantityDto filteredEventQuantity = eventService.getFilteredEventQuantity(eventFilter);
+
+        log.info("[CONTROLLER] end endpoint getFilteredEventQuantity");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(filteredEventQuantity);
+    }
+
+    @Operation(
             description = "Категория: Splash/Фид/Cards/, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
                     " Экран: Фильтр, главный экран приложения, Экран карточки. Кнопка: сердце. Действие: " +
                     "Добавляет выбранное событие в избранное пользователя",

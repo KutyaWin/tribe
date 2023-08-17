@@ -91,4 +91,6 @@ public interface EventService {
 
     List<Event> getByIdIn(List<Long> collect);
     void withdrawalRequestToParticipateInPrivateEvent(Long eventId, Long userId);
+
+    FilteredEventQuantityDto getFilteredEventQuantity(EventFilter eventFilter);
 }
