@@ -88,7 +88,6 @@ public class EventServiceImpl implements EventService {
     EventTagMapper eventTagMapper;
     UserMapper userMapper;
     EventAddressMapper eventAddressMapper;
-    Environment environment;
     EventSearchService eventSearchService;
 
     @NonFinal
@@ -100,7 +99,6 @@ public class EventServiceImpl implements EventService {
         return eventRepository.save(event);
     }
 
-    @Transactional(readOnly = true)
     public Pair<Predicate, Pageable> getPredicateForFilters(EventFilter filter, Long currentUserId, Integer page, Integer pageSize) {
         if (filter.getStrictEventSort() == null) filter.setStrictEventSort(false);
         QPredicates qPredicates = QPredicates.builder();
@@ -118,6 +116,19 @@ public class EventServiceImpl implements EventService {
         Predicate predicate = qPredicates.build();
         Pair<Predicate, Pageable> pair = new ImmutablePair<>(predicate, pageable);
         return pair;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public FilteredEventQuantityDto getFilteredEventQuantity(EventFilter eventFilter) {
+        Pair<Predicate, Pageable> predicatesAndPageable = getPredicateForFilters(
+                eventFilter, null, 0, 1
+        );
+        Predicate predicate = predicatesAndPageable.getLeft();
+        Long eventsQuantity = eventRepository.count(predicate);
+        return FilteredEventQuantityDto.builder()
+                .eventQuantity(eventsQuantity)
+                .build();
     }
 
     @Override
