@@ -35,7 +35,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -186,7 +185,7 @@ public class EventController {
                             content = @Content(
                                     schema = @Schema(implementation = DetailedEventInSearchDTO.class)))})
     @GetMapping("/{event_id}")
-    public ResponseEntity<?> getEventById(
+    public ResponseEntity<?> getEventForUpdating(
             @PathVariable("event_id") String eventId,
             HttpServletRequest token
     ) {
@@ -731,15 +730,15 @@ public class EventController {
     )
     @PreAuthorize("#organizerId.equals(authentication.getName())")
     @GetMapping("/update/{event_id}/{organizer_id}")
-    public ResponseEntity<?> getEventById(
+    public ResponseEntity<?> getEventForUpdating(
             @PathVariable(value = "event_id") Long eventId,
             @PathVariable(value = "organizer_id") String organizerId
     ) {
-        log.info("[CONTROLLER] start endpoint getEventById with param: {}, {}", eventId, organizerId);
+        log.info("[CONTROLLER] start endpoint getEventForUpdating with param: {}, {}", eventId, organizerId);
 
-        EventDto event = eventService.getEvent(eventId, Long.valueOf(organizerId));
+        EventDto event = eventService.getEventForUpdating(eventId, Long.valueOf(organizerId));
 
-        log.info("[CONTROLLER] end endpoint getEventById with response: {}", event);
+        log.info("[CONTROLLER] end endpoint getEventForUpdating with response: {}", event);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

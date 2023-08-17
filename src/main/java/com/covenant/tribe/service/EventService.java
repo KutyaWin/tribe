@@ -83,7 +83,7 @@ public interface EventService {
 
     boolean isFavoriteEventForUser(Long userId, Long eventId);
 
-    EventDto getEvent(Long eventId, Long organizerId);
+    EventDto getEventForUpdating(Long eventId, Long organizerId);
 
     DetailedEventInSearchDTO updateEvent(UpdateEventDto updateEventDto) throws IOException;
 

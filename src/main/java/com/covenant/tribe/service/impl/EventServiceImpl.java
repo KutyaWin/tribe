@@ -780,8 +780,9 @@ public class EventServiceImpl implements EventService {
                 .orElse(false);
     }
 
+    @Transactional
     @Override
-    public EventDto getEvent(Long eventId, Long organizerId) { //TODO Проверить как работае т для приватного события
+    public EventDto getEventForUpdating(Long eventId, Long organizerId) { //TODO Проверить как работае т для приватного события
         Event event = getEventById(eventId);
         EventTypeInfoDto eventTypeInfoDto = eventTypeMapper
                 .mapToEventTypeInfoDto(event.getEventType());
