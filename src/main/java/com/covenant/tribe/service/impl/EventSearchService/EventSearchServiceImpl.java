@@ -74,15 +74,20 @@ public class EventSearchServiceImpl implements EventSearchService {
     @Override
     @Transactional
     public EventSearchUnit update(Event event) {
-        EventSearchUnit oldUnit = getSafe(event);
+        Optional<EventSearchUnit> oldUnit = getSafe(event);
         EventSearchUnit newUnit = eventSearchUnitFactory.create(event);
-        UpdateUtil.updateEntity(oldUnit, newUnit);
-        UpdateUtil.updateEntity(newUnit.getEventAddress(), newUnit.getEventAddress());
-        return eventSearchUnitRepository.save(oldUnit);
+        if (oldUnit.isPresent()) {
+            UpdateUtil.updateEntity(oldUnit, newUnit);
+            UpdateUtil.updateEntity(newUnit.getEventAddress(), newUnit.getEventAddress());
+            return eventSearchUnitRepository.save(oldUnit.get());
+        }
+        String erMessage = "Event search unit with id %s not found".formatted(event.getId());
+        log.error(erMessage);
+        throw new EventSearchUnitNotFoundException(erMessage);
     }
 
-    private EventSearchUnit getSafe(Event event) {
-        return eventSearchUnitRepository.findById(String.valueOf(event.getId())).orElseThrow(() -> new EventSearchUnitNotFoundException("Event search unit not found"));
+    private Optional<EventSearchUnit> getSafe(Event event) {
+        return eventSearchUnitRepository.findById(String.valueOf(event.getId()));
     }
 
     @Override
@@ -103,8 +108,8 @@ public class EventSearchServiceImpl implements EventSearchService {
     @Override
     @Transactional
     public void delete(Event event) {
-        EventSearchUnit safe = getSafe(event);
-        eventSearchUnitRepository.delete(safe);
+        Optional<EventSearchUnit> safe = getSafe(event);
+        safe.ifPresent(eventSearchUnitRepository::delete);
     }
 
     @NotNull
