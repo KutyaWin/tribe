@@ -53,4 +53,10 @@ public class EventDto implements Serializable {
     @JsonProperty("is_eighteen_year_limit")
     boolean isEighteenYearLimit;
 
+    @JsonProperty("has_alcohol")
+    boolean hasAlcohol;
+
+    @JsonProperty("is_free")
+    boolean isFree;
+
 }

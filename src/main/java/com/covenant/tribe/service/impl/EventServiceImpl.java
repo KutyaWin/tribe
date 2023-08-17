@@ -818,6 +818,8 @@ public class EventServiceImpl implements EventService {
                 .isShowInSearch(event.isShowEventInSearch())
                 .isSendByInterests(event.isSendToAllUsersByInterests())
                 .isEighteenYearLimit(event.isEighteenYearLimit())
+                .isFree(event.isFree())
+                .hasAlcohol(event.isPresenceOfAlcohol())
                 .build();
     }
 
