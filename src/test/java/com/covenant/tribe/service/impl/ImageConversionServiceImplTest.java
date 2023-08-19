@@ -1,7 +1,6 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.service.ImageConversionService;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -13,9 +12,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,7 +30,7 @@ class ImageConversionServiceImplTest {
     }
 
     @Test
-    void convertToWebpWithLosslessCompression_shouldThrowExceptionIfBadData() throws IOException {
+    void convertToWebpWithLosslessCompression_shouldThrowExceptionIfBadData() {
         // Given
         byte[] inputData = {0, 1};
 
@@ -149,14 +146,14 @@ class ImageConversionServiceImplTest {
     }
 
     private byte[] generateImage(int width, int height, String format) throws IOException {
-        // creates output image
+        // Creates output image
         BufferedImage outputImage = new BufferedImage(width,
                 height, BufferedImage.TYPE_INT_RGB);
-        // scales the input image to the output image
+        // Scales the input image to the output image
         Graphics2D g2d = outputImage.createGraphics();
         g2d.draw(new Rectangle(0, 0, width, height));
         g2d.dispose();
-        // writes to output byte array
+        // Writes to output byte array
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ImageOutputStream ios =  ImageIO.createImageOutputStream(bos);
         ImageIO.write(outputImage, format, ios);
@@ -166,23 +163,11 @@ class ImageConversionServiceImplTest {
     }
 
     private Dimension getImageDimension (byte[] data) throws IOException {
-        // reads input image
+        // Reads input image
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         BufferedImage inputImage = ImageIO.read(bis);
 
         return new Dimension(inputImage.getWidth(), inputImage.getHeight());
     }
 
-    // TODO: убрать
-    @Test
-    void drawRectangleToFile() throws IOException {
-        int width = 500;
-        int height = 200;
-        String fileName = "rectangle.webp";
-        String format = fileName.split("\\.")[1];
-        File fileToDraw = new File(fileName);
-        byte[] fileContent = generateImage(width, height, format);
-        // writes output data to file
-        FileUtils.writeByteArrayToFile(fileToDraw, fileContent);
-    }
 }

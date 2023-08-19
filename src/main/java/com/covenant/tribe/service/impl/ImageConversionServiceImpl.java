@@ -48,7 +48,7 @@ public class ImageConversionServiceImpl implements ImageConversionService {
     @Override
     public byte[] resize(byte[] data, String format, int scaledWidth, int scaledHeight, boolean maintainAspectRatio)
             throws IOException {
-        // reads input image
+        // Reads input image
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         BufferedImage inputImage = ImageIO.read(bis);
 
@@ -60,16 +60,16 @@ public class ImageConversionServiceImpl implements ImageConversionService {
             scaledHeight = (int)scaledDimension.getHeight();
         }
 
-        // creates output image
+        // Creates output image
         BufferedImage outputImage = new BufferedImage(scaledWidth,
                 scaledHeight, inputImage.getType());
 
-        // scales the input image to the output image
+        // Scales the input image to the output image
         Graphics2D g2d = outputImage.createGraphics();
         g2d.drawImage(inputImage, 0, 0, scaledWidth, scaledHeight, null);
         g2d.dispose();
 
-        // writes to output byte array
+        // Writes to output byte array
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ImageOutputStream ios =  ImageIO.createImageOutputStream(bos);
         ImageIO.write(outputImage, format, ios);
@@ -108,7 +108,7 @@ public class ImageConversionServiceImpl implements ImageConversionService {
     }
 
     private Dimension getImageDimension (byte[] data) throws IOException {
-        // reads input image
+        // Reads input image
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         BufferedImage inputImage = ImageIO.read(bis);
 
@@ -124,19 +124,19 @@ public class ImageConversionServiceImpl implements ImageConversionService {
         int new_width = original_width;
         int new_height = original_height;
 
-        // first check if we need to scale width
+        // First check if we need to scale width
         if (original_width > bound_width) {
-            //scale width to fit
+            // Scale width to fit
             new_width = bound_width;
-            //scale height to maintain aspect ratio
+            // Scale height to maintain aspect ratio
             new_height = (new_width * original_height) / original_width;
         }
 
-        // then check if we need to scale even with the new height
+        // Then check if we need to scale even with the new height
         if (new_height > bound_height) {
-            //scale height to fit instead
+            // Scale height to fit instead
             new_height = bound_height;
-            //scale width to maintain aspect ratio
+            // Scale width to maintain aspect ratio
             new_width = (new_height * original_width) / original_height;
         }
 
