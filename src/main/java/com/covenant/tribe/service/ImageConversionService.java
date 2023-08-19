@@ -10,5 +10,4 @@ public interface ImageConversionService {
     byte[] resize(byte[] data, String format, int scaledWidth, int scaledHeight,
                   boolean maintainAspectRatio) throws IOException;
     byte[] process(byte[] inputData, String mimeType) throws IOException;
-
 }

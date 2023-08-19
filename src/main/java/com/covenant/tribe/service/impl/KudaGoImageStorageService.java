@@ -26,6 +26,7 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
     ImageDownloadService imageDownloadService;
     ImageConversionService imageConversionService;
 
+
     @Override
     public Map<Long, List<String>> saveExternalImages(List<KudagoEventDto> events) {
         Map<Long, List<String>> eventImages = new HashMap<>();

@@ -24,7 +24,6 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
     @Override
     public String saveFileToTmpDir(String contentType, byte[] image) {
         byte[] processedImage;
-
         try {
             processedImage = imageConversionService.process(image, contentType);
         } catch (IOException e) {
@@ -32,7 +31,6 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
             log.error(message, e);
             throw new FilesNotHandleException(message);
         }
-
         return fileStorageRepository.saveFileToTmpDir(contentType, processedImage);
     }
 
