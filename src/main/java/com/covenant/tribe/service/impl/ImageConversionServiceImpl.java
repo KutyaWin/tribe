@@ -143,3 +143,4 @@ public class ImageConversionServiceImpl implements ImageConversionService {
         return new Dimension(new_width, new_height);
     }
 }
+

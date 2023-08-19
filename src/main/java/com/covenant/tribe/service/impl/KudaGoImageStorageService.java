@@ -50,6 +50,7 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
         return eventImages;
     }
 
+
     private ImageDto processImageDto(ImageDto dto) {
         ImageDto processedDto = new ImageDto();
         processedDto.setContentType(dto.getContentType());
