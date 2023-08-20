@@ -3,6 +3,7 @@ package com.covenant.tribe.service.impl;
 import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.exeption.storage.FilesNotHandleException;
 import com.covenant.tribe.repository.FileStorageRepository;
+import com.covenant.tribe.service.ImageConversionService;
 import com.covenant.tribe.service.PhotoStorageService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +19,19 @@ import java.util.List;
 public class PhotoStorageServiceImpl implements PhotoStorageService {
 
     FileStorageRepository fileStorageRepository;
+    ImageConversionService imageConversionService;
 
     @Override
     public String saveFileToTmpDir(String contentType, byte[] image) {
-        return fileStorageRepository.saveFileToTmpDir(contentType, image);
+        byte[] processedImage;
+        try {
+            processedImage = imageConversionService.process(image, contentType);
+        } catch (IOException e) {
+            String message = String.format("[EXCEPTION] IOException with message: %s", e.getMessage());
+            log.error(message, e);
+            throw new FilesNotHandleException(message);
+        }
+        return fileStorageRepository.saveFileToTmpDir(contentType, processedImage);
     }
 
     @Override
