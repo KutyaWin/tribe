@@ -269,11 +269,11 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             log.error("Event with id: {} has no location", event.getId());
             return false;
         }
-        if ((event.getLocation().getCoords() == null)) {
-            log.error("Event with id: {} has no coords", event.getId());
+        if ((event.getPlace() == null)) {
+            log.error("Event with id: {} has no places", event.getId());
             return false;
         }
-        if (event.getLocation().getCoords().getLat() == null || event.getLocation().getCoords().getLon() == null) {
+        if (event.getPlace().getCoords().getLat() == null || event.getPlace().getCoords().getLon() == null) {
             log.error("Event with id: {} has no latitude or longitude", event.getId());
             return false;
         }
