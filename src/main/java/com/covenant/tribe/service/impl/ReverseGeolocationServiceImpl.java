@@ -35,8 +35,8 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
     ) {
         Map<Long, ReverseGeocodingData> externalEventAddresses = new HashMap<>();
         events.forEach(event -> {
-            Double latitude = event.getLocation().coords.getLat();
-            Double longitude = event.getLocation().coords.getLon();
+            Double latitude = event.getPlace().getCoords().getLat();
+            Double longitude = event.getPlace().getCoords().getLon();
             ReverseGeocodingRequest reverseGeocodingRequest =
                     ReverseGeocodingRequest.builder()
                             .count(DADATA_ADDRESS_SUGGESTIONS_COUNT)
@@ -48,8 +48,12 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
             if (geolocationDataResponse.getStatusCode().is2xxSuccessful()
                     && geolocationDataResponse.getBody() != null) {
                 List<ReverseGeocodingSuggestions> suggestions = geolocationDataResponse.getBody().getSuggestions();
-                ReverseGeocodingData address = suggestions.get(0).getData();
-                externalEventAddresses.put(event.getId(), address);
+                if (suggestions.isEmpty()) {
+                    log.error("No suggestions for latitude: {} and longitude: {}", latitude, longitude);
+                } else {
+                    ReverseGeocodingData address = suggestions.get(0).getData();
+                    externalEventAddresses.put(event.getId(), address);
+                }
             }
             try {
                 Thread.sleep(20);
