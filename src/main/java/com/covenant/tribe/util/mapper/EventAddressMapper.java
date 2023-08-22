@@ -8,12 +8,14 @@ import java.util.Map;
 
 public interface EventAddressMapper {
 
-    EventAddressDTO mapToEventAddressDTO(EventAddress eventAddress);
+    EventAddressDTO mapToEventAddressDto(EventAddress eventAddress);
 
     EventAddress mapToEventAddress(EventAddressDTO dto);
 
-    EventAddress matToEventAddress(
+    EventAddress mapToEventAddress(
             Map<Long, ReverseGeocodingData> reverseGeocodingData,
             Long currentEventId
     );
+
+    EventAddressDTO mapToEventAddressDto(ReverseGeocodingData reverseGeocodingData);
 }

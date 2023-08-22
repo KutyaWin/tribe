@@ -12,4 +12,6 @@ public interface ReverseGeolocationService {
 
     Map<Long, ReverseGeocodingData> getExternalEventAddresses(List<KudagoEventDto> events);
 
+    ReverseGeocodingData getExternalEventAddress(KudagoEventDto event);
+
 }

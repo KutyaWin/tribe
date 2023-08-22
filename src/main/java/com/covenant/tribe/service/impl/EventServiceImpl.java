@@ -40,7 +40,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,7 +49,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -58,9 +56,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Objects;
 import java.util.Optional;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -800,7 +796,7 @@ public class EventServiceImpl implements EventService {
         List<String> avatarUrlList = event.getEventAvatars().stream()
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
-        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDTO(
+        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDto(
                 event.getEventAddress()
         );
         List<EventTagDTO> eventTagDtoList = eventTagMapper.mapEventTagListToEventTagDtoList(

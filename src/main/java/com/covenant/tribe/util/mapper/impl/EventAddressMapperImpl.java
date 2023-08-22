@@ -19,7 +19,7 @@ import java.util.Map;
 public class EventAddressMapperImpl implements EventAddressMapper {
 
     @Override
-    public EventAddressDTO mapToEventAddressDTO(EventAddress eventAddress) {
+    public EventAddressDTO mapToEventAddressDto(EventAddress eventAddress) {
 
         return EventAddressDTO.builder()
                 .eventLatitude(eventAddress.getEventLatitude())
@@ -51,7 +51,7 @@ public class EventAddressMapperImpl implements EventAddressMapper {
     }
 
     @Override
-    public EventAddress matToEventAddress(Map<Long, ReverseGeocodingData> reverseGeocodingData, Long currentEventId) {
+    public EventAddress mapToEventAddress(Map<Long, ReverseGeocodingData> reverseGeocodingData, Long currentEventId) {
         ReverseGeocodingData geocodingDataForCurrentEvent = reverseGeocodingData.get(currentEventId);
         return new EventAddress(
                 null,
@@ -65,5 +65,19 @@ public class EventAddressMapperImpl implements EventAddressMapper {
                 geocodingDataForCurrentEvent.getHouse(),
                 null
         );
+    }
+
+    @Override
+    public EventAddressDTO mapToEventAddressDto(ReverseGeocodingData reverseGeocodingData) {
+        return EventAddressDTO.builder()
+                .eventLatitude(Double.valueOf(reverseGeocodingData.getGeoLat()))
+                .eventLongitude(Double.valueOf(reverseGeocodingData.getGeoLon()))
+                .district(reverseGeocodingData.getCityDistrict())
+                .houseNumber(reverseGeocodingData.getHouse())
+                .street(reverseGeocodingData.getStreet())
+                .city(reverseGeocodingData.getCity())
+                .building(reverseGeocodingData.getBlock())
+                .region(reverseGeocodingData.getRegionWithType())
+                .build();
     }
 }

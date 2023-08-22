@@ -168,7 +168,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     ) {
         kudaGoEvents.forEach(kudagoEvent -> {
             User organizer = getExternalEventOrganizer();
-            EventAddress eventAddress = eventAddressMapper.matToEventAddress(
+            EventAddress eventAddress = eventAddressMapper.mapToEventAddress(
                     reverseGeocodingData, kudagoEvent.getId()
             );
             Set<EventAvatar> eventImages = eventAvatarMapper.mapToEventAvatars(
