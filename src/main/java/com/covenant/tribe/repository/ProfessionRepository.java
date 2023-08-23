@@ -16,4 +16,6 @@ import java.util.Set;
 @Repository
 public interface ProfessionRepository extends JpaRepository<Profession, Long> {
     Set<Profession> findAllByIdNotIn(List<Long> professionIds);
+
+    boolean existsProfessionByName(String profession);
 }
