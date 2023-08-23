@@ -76,6 +76,8 @@ public class EventMapperImpl implements EventMapper {
                 .avatarUrl(event.getEventAvatars().stream()
                         .map(EventAvatar::getAvatarUrl).toList())
                 .eventName(event.getEventName())
+                .description(event.getEventDescription())
+                .organizerUsername(event.getOrganizer().getUsername())
                 .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
