@@ -229,7 +229,15 @@ public class UserServiceImpl implements UserService {
         user.addInterestingEventTypes(newEventTypes);
 
         if (!userProfileUpdateDto.getProfessionIds().isEmpty()) {
-            List<String> afterHandlingProfessionNames = userProfileUpdateDto.getNewProfessions().stream()
+
+            Set<Profession> professionsForUpdate = new HashSet<>(
+                    professionRepository.findAllById(userProfileUpdateDto.getProfessionIds())
+            );
+            user.addNewProfessions(professionsForUpdate);
+        }
+
+        if (!userProfileUpdateDto.getNewProfessions().isEmpty()) {
+            Set<String> afterHandlingProfessionNames = userProfileUpdateDto.getNewProfessions().stream()
                     .map(professionName -> {
                         String lowerCaseProfessionName = professionName.toLowerCase();
                         return lowerCaseProfessionName
@@ -237,7 +245,7 @@ public class UserServiceImpl implements UserService {
                                 .toUpperCase() +
                                 lowerCaseProfessionName.substring(1);
                     })
-                    .toList();
+                    .collect(Collectors.toSet());
             Set<Profession> newProfessions = afterHandlingProfessionNames.stream()
                     .map(professionName -> {
                         return Profession.builder()
@@ -246,11 +254,7 @@ public class UserServiceImpl implements UserService {
                     })
                     .collect(Collectors.toSet());
             professionRepository.saveAll(newProfessions);
-            Set<Profession> professionsForUpdate = new HashSet<>(
-                    professionRepository.findAllById(userProfileUpdateDto.getProfessionIds())
-            );
-            professionsForUpdate.addAll(newProfessions);
-            user.addNewProfessions(professionsForUpdate);
+            user.addNewProfessions(newProfessions);
         }
 
         if (userProfileUpdateDto.isGeolocationAvailable() != user.isEnableGeolocation()) {

@@ -147,7 +147,7 @@ public class User {
     @Builder.Default
     Set<EventType> interestingEventType = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinTable(name = "user_profession",
             joinColumns = @JoinColumn(name = "user_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "profession_id", nullable = false)
@@ -179,7 +179,6 @@ public class User {
         if (this.userProfessions == null) {
             this.userProfessions = professions;
         } else {
-            this.userProfessions.retainAll(professions);
             this.userProfessions.addAll(professions);
         }
     }
