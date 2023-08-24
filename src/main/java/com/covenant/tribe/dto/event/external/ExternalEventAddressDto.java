@@ -14,6 +14,6 @@ import lombok.experimental.FieldDefaults;
 public class ExternalEventAddressDto {
 
     EventAddressDTO eventAddressDTO;
-    Boolean isEventExistInDb;
+    Boolean isAddressExistInDb;
 
 }

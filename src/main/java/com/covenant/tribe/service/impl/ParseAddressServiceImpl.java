@@ -24,7 +24,7 @@ public class ParseAddressServiceImpl implements ParseAddressService {
 
     @Override
     public ParsedAddressDto parseAddress(KudagoEventDto kudagoEventDto) {
-        String address = kudagoEventDto.getLocation().getName() + ", " + kudagoEventDto.getPlace().getAddress();
+        String address = kudagoEventDto.getPlace().getAddress();
         TextAddress textAddress = AddressService.processSingleAddressText(address, null);
         ParsedAddressDto parsedAddressDto = new ParsedAddressDto();
         textAddress.items.forEach(item -> {
@@ -47,6 +47,10 @@ public class ParseAddressServiceImpl implements ParseAddressService {
             }
 
         });
+        if (parsedAddressDto.getStreet() == null || parsedAddressDto.getHouseNumber() == null) {
+            String erMessage = "Cannot parse address: %s".formatted(address);
+            return null;
+        }
         return parsedAddressDto;
     }
 }
