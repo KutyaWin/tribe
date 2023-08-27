@@ -62,7 +62,7 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
                 && geolocationDataResponse.getBody() != null) {
             List<ReverseGeocodingSuggestions> suggestions = geolocationDataResponse.getBody().getSuggestions();
             if (suggestions.isEmpty()) {
-                log.error("No suggestions for event {}", event);
+                log.error("Dadata doesn't know address of event: {}", event.getPlace());
             } else {
                 return suggestions.get(0).getData();
             }

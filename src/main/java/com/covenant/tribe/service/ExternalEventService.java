@@ -2,6 +2,8 @@ package com.covenant.tribe.service;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.dto.event.EventAddressDTO;
+import com.covenant.tribe.dto.event.external.ExternalEventAddressDto;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +19,7 @@ public interface ExternalEventService {
 
     void saveNewExternalEvents(
             List<KudagoEventDto> kudaGoEvents,
-            Map<Long, ReverseGeocodingData> reverseGeocodingData,
+            Map<Long, EventAddressDTO> reverseGeocodingData,
             Map<Long, List<String>> imageFileNames,
             Map<Long, List<Long>> eventTagIds,
             Map<Long, ExternalEventDates> externalEventDates

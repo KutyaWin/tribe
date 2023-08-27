@@ -1,8 +1,11 @@
 package com.covenant.tribe.util.mapper.impl;
 
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
+import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.event.EventAddress;
 import com.covenant.tribe.dto.event.EventAddressDTO;
+import com.covenant.tribe.dto.event.external.ExternalEventAddressDto;
+import com.covenant.tribe.dto.event.external.ParsedAddressDto;
 import com.covenant.tribe.util.mapper.EventAddressMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,24 @@ public class EventAddressMapperImpl implements EventAddressMapper {
     }
 
     @Override
+    public EventAddressDTO mapToEventAddressDto(ParsedAddressDto parsedAddressDto, KudagoEventDto kudagoEventDto) {
+        EventAddressDTO address = EventAddressDTO.builder()
+                .eventLatitude(kudagoEventDto.getPlace().getCoords().getLat())
+                .eventLongitude(kudagoEventDto.getPlace().getCoords().getLon())
+                .city(parsedAddressDto.getCity())
+                .street(parsedAddressDto.getStreet())
+                .houseNumber(parsedAddressDto.getHouseNumber())
+                .build();
+        if (parsedAddressDto.getBuilding() != null) {
+            address.setBuilding(parsedAddressDto.getBuilding());
+        }
+        if (parsedAddressDto.getConstruction() != null) {
+            address.setBuilding(parsedAddressDto.getConstruction());
+        }
+        return address;
+    }
+
+    @Override
     public EventAddress mapToEventAddress(EventAddressDTO dto) {
 
         return new EventAddress(
@@ -51,18 +72,18 @@ public class EventAddressMapperImpl implements EventAddressMapper {
     }
 
     @Override
-    public EventAddress mapToEventAddress(Map<Long, ReverseGeocodingData> reverseGeocodingData, Long currentEventId) {
-        ReverseGeocodingData geocodingDataForCurrentEvent = reverseGeocodingData.get(currentEventId);
+    public EventAddress mapToEventAddress(Map<Long, EventAddressDTO> reverseGeocodingData, Long currentEventId) {
+        EventAddressDTO eventAddressDTO = reverseGeocodingData.get(currentEventId);
         return new EventAddress(
                 null,
-                Double.valueOf(geocodingDataForCurrentEvent.getGeoLat()),
-                Double.valueOf(geocodingDataForCurrentEvent.getGeoLon()),
-                geocodingDataForCurrentEvent.getCity(),
-                geocodingDataForCurrentEvent.getRegionWithType(),
-                geocodingDataForCurrentEvent.getStreet(),
-                geocodingDataForCurrentEvent.getCityDistrict(),
-                geocodingDataForCurrentEvent.getBlock(),
-                geocodingDataForCurrentEvent.getHouse(),
+                eventAddressDTO.getEventLatitude(),
+                eventAddressDTO.getEventLongitude(),
+                eventAddressDTO.getCity(),
+                eventAddressDTO.getRegion(),
+                eventAddressDTO.getStreet(),
+                eventAddressDTO.getDistrict(),
+                eventAddressDTO.getBuilding(),
+                eventAddressDTO.getHouseNumber(),
                 null
         );
     }

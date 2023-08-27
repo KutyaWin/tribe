@@ -4,6 +4,7 @@ import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.repository.ImageDownloadRepository;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class KudaGoImageDownloadService implements ImageDownloadService {
 
@@ -31,7 +33,12 @@ public class KudaGoImageDownloadService implements ImageDownloadService {
         List<ImageDto> images = new ArrayList<>();
 
         for (int i = 0; i < urls.size(); i++) {
-            if (i == 3) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
+            }
+            if (i == 1) {
                 break;
             }
             String url = urls.get(i);

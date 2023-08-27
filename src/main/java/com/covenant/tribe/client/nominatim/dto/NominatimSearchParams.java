@@ -17,7 +17,8 @@ public class NominatimSearchParams {
 
     String street;
 
-    String format;
+    @Builder.Default
+    String format = "json";
 
     @JsonProperty(value = "address_details")
     @Builder.Default

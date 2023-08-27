@@ -27,6 +27,9 @@ public class ParseAddressServiceImpl implements ParseAddressService {
         String address = kudagoEventDto.getPlace().getAddress();
         TextAddress textAddress = AddressService.processSingleAddressText(address, null);
         ParsedAddressDto parsedAddressDto = new ParsedAddressDto();
+        if (textAddress.items.isEmpty()) {
+            return null;
+        }
         textAddress.items.forEach(item -> {
 
             if (item.level.equals(AddrLevel.CITY)) {
@@ -34,9 +37,34 @@ public class ParseAddressServiceImpl implements ParseAddressService {
                 parsedAddressDto.setCity(areaAttributes.names.get(0));
             }
 
+            if (item.level.equals(AddrLevel.TERRITORY)) {
+                AreaAttributes areaAttributes = (AreaAttributes) item.attrs;
+                StringBuilder street = new StringBuilder();
+                if (!areaAttributes.types.isEmpty()) {
+                    street.append(areaAttributes.types.get(0))
+                            .append(" ");
+                }
+                if (!areaAttributes.names.isEmpty()) {
+                    street.append(areaAttributes.names.get(0));
+                }
+                parsedAddressDto.setStreet(street.toString());
+            }
+
             if (item.level.equals(AddrLevel.STREET)) {
                 AreaAttributes areaAttributes = (AreaAttributes) item.attrs;
-                parsedAddressDto.setStreet(areaAttributes.names.get(0));
+                StringBuilder street = new StringBuilder(parsedAddressDto.getStreet());
+                if (!areaAttributes.number.isEmpty()) {
+                    street.append(" ")
+                            .append(areaAttributes.number);
+                }
+                if (!areaAttributes.types.isEmpty()) {
+                    street.append(" ")
+                            .append(areaAttributes.types.get(0));
+                }
+                if (!areaAttributes.names.isEmpty()) {
+                    street.append(areaAttributes.names.get(0));
+                }
+                parsedAddressDto.setStreet(street.toString());
             }
 
             if (item.level.equals(AddrLevel.BUILDING)) {
@@ -50,6 +78,9 @@ public class ParseAddressServiceImpl implements ParseAddressService {
         if (parsedAddressDto.getStreet() == null || parsedAddressDto.getHouseNumber() == null) {
             String erMessage = "Cannot parse address: %s".formatted(address);
             return null;
+        }
+        if (parsedAddressDto.getCity() == null) {
+            parsedAddressDto.setCity(kudagoEventDto.getLocation().name);
         }
         return parsedAddressDto;
     }
