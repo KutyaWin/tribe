@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -31,9 +32,7 @@ public class EventInUserProfileDTO implements Serializable {
         String city;
 
         @JsonProperty(value = "start_time")
-        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-        @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
-        OffsetDateTime startTime;
+        LocalDateTime startTime;
 
         @JsonProperty(value = "event_status")
         EventStatus eventStatus;

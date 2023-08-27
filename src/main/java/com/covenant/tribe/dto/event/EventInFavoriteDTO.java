@@ -37,9 +37,7 @@ public class EventInFavoriteDTO {
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
-    OffsetDateTime startTime;
+    LocalDateTime startTime;
 
     @JsonProperty(value = "is_finished")
     @NotNull(message = "is_finished should not be null")
