@@ -38,7 +38,7 @@ public class KudaGoImageDownloadService implements ImageDownloadService {
             } catch (InterruptedException e) {
                 log.error(e.getMessage());
             }
-            if (i == 1) {
+            if (i == 3) {
                 break;
             }
             String url = urls.get(i);
