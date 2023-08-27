@@ -171,17 +171,19 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             User organizer = getExternalEventOrganizer();
             EventAddressDTO eventAddressDTO = eventAddresses.get(kudagoEvent.getId());
             EventAddress eventAddress;
-            eventAddress = eventAddressRepository.findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
+            List<EventAddress> addressesInDb =  eventAddressRepository.findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
                     eventAddressDTO.getEventLatitude(),
                     eventAddressDTO.getEventLongitude(),
                     eventAddressDTO.getHouseNumber(),
                     eventAddressDTO.getBuilding()
             );
-            if (eventAddress == null) {
+            if (addressesInDb.isEmpty()) {
                 eventAddress = eventAddressMapper.mapToEventAddress(
                         eventAddresses, kudagoEvent.getId()
                 );
                 eventAddress = eventAddressRepository.save(eventAddress);
+            } else {
+                eventAddress = addressesInDb.get(0);
             }
 
             Set<EventAvatar> eventImages = eventAvatarMapper.mapToEventAvatars(

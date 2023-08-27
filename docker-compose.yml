@@ -81,10 +81,6 @@ services:
       - cluster.routing.allocation.disk.watermark.high=1gb
       - cluster.routing.allocation.disk.watermark.flood_stage=512mb
     restart: unless-stopped
-    healthcheck:
-      interval: 10s
-      retries: 80
-      test: ["CMD", "curl", "-f", "http://localhost:9200"]
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.8.2

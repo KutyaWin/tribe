@@ -78,14 +78,16 @@ public class EventFacadeImpl implements EventFacade {
 
         EventAddress eventAddress = null;
         if (requestTemplateForCreatingEvent.getEventAddress() != null) {
-            eventAddress = eventAddressRepository.findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
+            List<EventAddress> eventAddresses = eventAddressRepository.findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
                     requestTemplateForCreatingEvent.getEventAddress().getEventLatitude(),
                     requestTemplateForCreatingEvent.getEventAddress().getEventLongitude(),
                     requestTemplateForCreatingEvent.getEventAddress().getHouseNumber(),
                     requestTemplateForCreatingEvent.getEventAddress().getBuilding()
             );
-            if (eventAddress == null) {
+            if (eventAddresses.isEmpty()) {
                 eventAddress = eventAddressMapper.mapToEventAddress(requestTemplateForCreatingEvent.getEventAddress());
+            } else {
+                eventAddress = eventAddresses.get(0); //TODO Сделать адреса уникальными в бд
             }
         }
 
