@@ -161,7 +161,7 @@ public class EventMapperImpl implements EventMapper {
                         .city(event.getEventAddress().getCity())
                         .build()
                 )
-                .startTime(event.getStartTime())
+                .startTime(event.getStartTime().toLocalDateTime())
                 .isFinished(isEventFinished(event))
                 .isDeleted(isEventDeleted(event))
                 .build();
@@ -184,7 +184,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventPhotoUrl(getEventAvatars(event.getEventAvatars()))
                 .eventName(event.getEventName())
                 .city(event.getEventAddress().getCity())
-                .startTime(event.getStartTime())
+                .startTime(event.getStartTime().toLocalDateTime())
                 .eventStatus(event.getEventStatus())
                 .isFinished(isEventFinished(event))
                 .build();
@@ -422,7 +422,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .organizerUsername(event.getOrganizer().getUsername())
                 .organizerId(event.getOrganizer().getId())
-                .startTime(event.getStartTime())
+                .startTime(event.getStartTime().toLocalDateTime())
                 .eventDuration(
                         Duration.between(event.getStartTime(), event.getEndTime()).toString())
                 .description(event.getEventDescription())
