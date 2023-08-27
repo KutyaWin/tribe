@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,8 +44,8 @@ public class Event {
     User organizer;
 
     @Builder.Default
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = false)
-    OffsetDateTime createdAt = OffsetDateTime.now();
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP", nullable = false)
+    LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "event_address_id")
@@ -58,10 +59,10 @@ public class Event {
     String eventDescription;
 
     @Column(name = "start_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    OffsetDateTime startTime;
+    LocalDateTime startTime;
 
     @Column(name = "end_time", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    OffsetDateTime endTime;
+    LocalDateTime endTime;
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @ToString.Exclude
@@ -111,6 +112,9 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false)
     EventStatus eventStatus = EventStatus.VERIFICATION_PENDING;
+
+    @Column(name = "time_zone")
+    String timeZone;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "events_tags",

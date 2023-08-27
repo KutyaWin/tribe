@@ -1,0 +1,23 @@
+ALTER TABLE events
+    ALTER COLUMN created_at TYPE TIMESTAMP USING created_at::TIMESTAMP;
+
+ALTER TABLE events
+    ALTER COLUMN start_time TYPE TIMESTAMP USING start_time::TIMESTAMP;
+
+ALTER TABLE events
+    ALTER COLUMN end_time TYPE TIMESTAMP USING end_time::TIMESTAMP;
+
+ALTER TABLE events
+    ADD COLUMN time_zone VARCHAR;
+
+ALTER TABLE broadcasts
+    ALTER COLUMN start_time TYPE TIMESTAMP USING start_time::TIMESTAMP;
+
+ALTER TABLE broadcasts
+    ALTER COLUMN end_time TYPE TIMESTAMP USING end_time::TIMESTAMP;
+
+ALTER TABLE broadcasts
+    ALTER COLUMN repeat_time TYPE TIMESTAMP USING repeat_time::TIMESTAMP;
+
+ALTER TABLE notifications
+    ALTER COLUMN sent_date TYPE TIMESTAMP USING sent_date::TIMESTAMP;
