@@ -3,8 +3,11 @@ package com.covenant.tribe.service.impl;
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
+import com.covenant.tribe.dto.event.EventAddressDTO;
+import com.covenant.tribe.dto.event.external.ExternalEventAddressDto;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.service.*;
+import com.covenant.tribe.service.facade.ExternalEventAddressHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -20,9 +23,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
     KudagoFetchService kudagoFetchService;
     ExternalEventService externalEventService;
     ReverseGeolocationService reverseGeolocationService;
+    ExternalEventAddressHandler externalEventAddressHandler;
     ExternalImageStorageService externalImageStorageService;
     ExternalEventTagService externalEventTagService;
     ExternalEventDateService externalEventDateService;
@@ -62,25 +64,34 @@ public class KudaGoEventHandlerFacadeImpl implements ExternalEventHandlerFacade 
             eventsAfterDeletingExiting = externalEventService.prepareEventsForCreating(
                     kudaGoEvents, minPublicationDate.minusDays(1)
             );
+        } else {
+            eventsAfterDeletingExiting = new ArrayList<>();
         }
-        Map<Long, ReverseGeocodingData> reverseGeocodingData = reverseGeolocationService.getExternalEventAddresses(
-                eventsAfterDeletingExiting
-        );
+
+        Map<Long, EventAddressDTO> addresses = new HashMap<>();
+        eventsAfterDeletingExiting.forEach(event -> {
+            EventAddressDTO externalEventAddressDto =
+                    externalEventAddressHandler.handleExternalEventAddress(event);
+            addresses.put(event.getId(), externalEventAddressDto);
+        });
+        List<KudagoEventDto> eventsAfterDeletingNullAddresses = eventsAfterDeletingExiting.stream()
+                .filter(event -> addresses.get(event.getId()) != null)
+                .toList();
 
         Map<Long, List<String>> images = externalImageStorageService.saveExternalImages(
-                eventsAfterDeletingExiting
+                eventsAfterDeletingNullAddresses
         );
 
         Map<Long, List<Long>> eventTagIds = externalEventTagService
-                .handleNewExternalTags(eventsAfterDeletingExiting);
+                .handleNewExternalTags(eventsAfterDeletingNullAddresses);
 
 
         Map<Long, ExternalEventDates> externalEventDates = externalEventDateService
-                .handleExternalEventDates(eventsAfterDeletingExiting);
+                .handleExternalEventDates(eventsAfterDeletingNullAddresses);
 
         externalEventService.saveNewExternalEvents(
-                eventsAfterDeletingExiting,
-                reverseGeocodingData,
+                eventsAfterDeletingNullAddresses,
+                addresses,
                 images,
                 eventTagIds,
                 externalEventDates

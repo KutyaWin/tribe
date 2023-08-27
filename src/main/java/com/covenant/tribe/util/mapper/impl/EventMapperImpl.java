@@ -78,7 +78,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .description(event.getEventDescription())
                 .organizerUsername(event.getOrganizer().getUsername())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()))
                 .startTime(event.getStartTime().toLocalDateTime())
                 .eventType(event.getEventType().getTypeName())
                 .favoriteEvent(relationsWithEventCurrentUserId.stream()
@@ -142,7 +142,7 @@ public class EventMapperImpl implements EventMapper {
                                 .collect(Collectors.toSet())))
                 .build();
         if (event.getEventAddress() != null) {
-            eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
+            eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()));
         }
         return eventDto;
     }
@@ -197,7 +197,7 @@ public class EventMapperImpl implements EventMapper {
                 .organizerId(event.getOrganizer().getId())
                 .eventPhotos(getAvatars(event))
                 .createdAt(event.getCreatedAt())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()))
                 .eventName(event.getEventName())
                 .eventDescription(event.getEventDescription())
                 .startTime(event.getStartTime())
@@ -440,7 +440,7 @@ public class EventMapperImpl implements EventMapper {
                 .isWantToGo(isWantToGo)
                 .build();
         if (event.getEventAddress() != null) {
-            responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
+            responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()));
         }
         return responseDto;
     }

@@ -1,6 +1,5 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
@@ -11,13 +10,11 @@ import com.covenant.tribe.domain.event.EventAvatar;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.EventCategory;
+import com.covenant.tribe.dto.event.EventAddressDTO;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.exeption.event.EventTypeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
-import com.covenant.tribe.repository.EventRepository;
-import com.covenant.tribe.repository.EventTypeRepository;
-import com.covenant.tribe.repository.TagRepository;
-import com.covenant.tribe.repository.UserRepository;
+import com.covenant.tribe.repository.*;
 import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.ExternalEventDateService;
 import com.covenant.tribe.service.ExternalEventService;
@@ -52,12 +49,14 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     final EventAvatarMapper eventAvatarMapper;
     final EventSearchService eventSearchService;
     final ExternalEventDateService externalEventDateService;
+
+    final EventAddressRepository eventAddressRepository;
     Set<String> EXTRA_KUDA_GO_CATEGORIES;
     Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
     String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService, ExternalEventDateService externalEventDateService) {
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService, ExternalEventDateService externalEventDateService, EventAddressRepository eventAddressRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.eventAddressMapper = eventAddressMapper;
@@ -67,6 +66,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         this.eventAvatarMapper = eventAvatarMapper;
         this.eventSearchService = eventSearchService;
         this.externalEventDateService = externalEventDateService;
+        this.eventAddressRepository = eventAddressRepository;
     }
 
     @PostConstruct
@@ -157,20 +157,33 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         return eventsAfterDeletingStartDates;
     }
 
+
     @Transactional
     @Override
     public void saveNewExternalEvents(
             List<KudagoEventDto> kudaGoEvents,
-            Map<Long, ReverseGeocodingData> reverseGeocodingData,
+            Map<Long, EventAddressDTO> eventAddresses,
             Map<Long, List<String>> imageFileNames,
             Map<Long, List<Long>> eventTagIds,
             Map<Long, ExternalEventDates> externalEventDates
     ) {
         kudaGoEvents.forEach(kudagoEvent -> {
             User organizer = getExternalEventOrganizer();
-            EventAddress eventAddress = eventAddressMapper.matToEventAddress(
-                    reverseGeocodingData, kudagoEvent.getId()
+            EventAddressDTO eventAddressDTO = eventAddresses.get(kudagoEvent.getId());
+            EventAddress eventAddress;
+            eventAddress = eventAddressRepository.findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
+                    eventAddressDTO.getEventLatitude(),
+                    eventAddressDTO.getEventLongitude(),
+                    eventAddressDTO.getHouseNumber(),
+                    eventAddressDTO.getBuilding()
             );
+            if (eventAddress == null) {
+                eventAddress = eventAddressMapper.mapToEventAddress(
+                        eventAddresses, kudagoEvent.getId()
+                );
+                eventAddress = eventAddressRepository.save(eventAddress);
+            }
+
             Set<EventAvatar> eventImages = eventAvatarMapper.mapToEventAvatars(
                     imageFileNames.get(kudagoEvent.getId())
             );
@@ -195,7 +208,6 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         });
 
     }
-
     private Boolean hasAgeRestriction(String ageRestriction) {
         if (ageRestriction == null) {
             return false;
@@ -269,11 +281,11 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             log.error("Event with id: {} has no location", event.getId());
             return false;
         }
-        if ((event.getLocation().getCoords() == null)) {
-            log.error("Event with id: {} has no coords", event.getId());
+        if ((event.getPlace() == null)) {
+            log.error("Event with id: {} has no places", event.getId());
             return false;
         }
-        if (event.getLocation().getCoords().getLat() == null || event.getLocation().getCoords().getLon() == null) {
+        if (event.getPlace().getCoords().getLat() == null || event.getPlace().getCoords().getLon() == null) {
             log.error("Event with id: {} has no latitude or longitude", event.getId());
             return false;
         }

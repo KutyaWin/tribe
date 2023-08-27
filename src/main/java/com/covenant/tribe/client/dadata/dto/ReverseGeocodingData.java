@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Builder
 @Getter
 @NoArgsConstructor
@@ -273,7 +275,7 @@ public class ReverseGeocodingData {
     private String qcHouse;
 
     @JsonProperty("history_values")
-    private String historyValues;
+    private List<String> historyValues;
 
     @JsonProperty("unparsed_parts")
     private String unparsedParts;

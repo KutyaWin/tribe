@@ -28,6 +28,15 @@ spring:
               Authorization: ${SPRING_DADATA_TOKEN}
             connectTimeout: 100000
             readTimeout: 100000
+          nominatim-client:
+            url: "https://nominatim.openstreetmap.org"
+            defaultRequestHeaders:
+              Content-Type: application/json
+              Accept: application/json
+            connectTimeout: 100000
+            readTimeout: 100000
+            error-decoder: com.covenant.tribe.client.kudago.decoder.KudagoDecoder
+            retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
           kudago-image-client:
             url: "https://media.kudago.com/"
             connectTimeout: 50000

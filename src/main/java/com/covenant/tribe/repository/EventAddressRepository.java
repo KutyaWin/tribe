@@ -9,4 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface EventAddressRepository extends JpaRepository<EventAddress, Long> {
+
+    boolean existsByEventLongitudeAndEventLatitude(Double longitude, Double latitude);
+
+    EventAddress findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
+            Double latitude, Double longitude, String houseNumber, String building
+    );
+
 }
