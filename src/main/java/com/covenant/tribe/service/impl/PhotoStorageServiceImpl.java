@@ -31,7 +31,7 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
             log.error(message, e);
             throw new FilesNotHandleException(message);
         }
-        return fileStorageRepository.saveFileToTmpDir(contentType, processedImage);
+        return fileStorageRepository.saveFileToTmpDir("image/webp", processedImage);
     }
 
     @Override

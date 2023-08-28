@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 @Service
 @AllArgsConstructor
@@ -35,12 +36,12 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
                 List<String> imageUrls = event.getImages().stream()
                         .map(KudagoImageDto::getImage)
                         .toList();
-                List<ImageDto> images = imageDownloadService.downloadImages(imageUrls);
-                List<ImageDto> processedImages = images
+                List<ImageDto> images = imageDownloadService.downloadImages(imageUrls)
                         .stream()
                         .map(this::processImageDto)
                         .toList();
-                List<String> imagePaths = fileStorageRepository.saveExternalEventImages(processedImages);
+
+                List<String> imagePaths = fileStorageRepository.saveExternalEventImages(images);
                 eventImages.put(event.getId(), imagePaths);
                 Thread.sleep(20);
             }
@@ -54,7 +55,7 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
 
     private ImageDto processImageDto(ImageDto dto) {
         ImageDto processedDto = new ImageDto();
-        processedDto.setContentType(dto.getContentType());
+        processedDto.setContentType("image/webp");
         byte[] processedImage;
         try {
             processedImage = imageConversionService.process(dto.getImage(), dto.getContentType());
@@ -66,4 +67,5 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
         processedDto.setImage(processedImage);
         return processedDto;
     }
+
 }
