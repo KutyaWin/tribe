@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -102,7 +101,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             String eventName = event.getTitle();
             String timezone = event.getLocation().getTimezone();
             KudagoDate eventDate = event.getDates().get(0);
-            OffsetDateTime offsetStartTime = externalEventDateService.transformTimestampToOffsetDateTime(
+            LocalDateTime offsetStartTime = externalEventDateService.transformTimestampToLocalDateTime(
                     eventDate, timezone
             );
             Optional<Event> eventFromDb = eventRepository.findByEventNameAndStartTime(eventName, offsetStartTime);

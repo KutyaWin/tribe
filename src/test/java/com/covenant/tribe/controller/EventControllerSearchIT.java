@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -183,8 +184,8 @@ public class EventControllerSearchIT extends ElasticContainer {
         return RequestTemplateForCreatingEventDTO.builder()
                 .eventTypeId(1000L)
                 .eventName(eventName)
-                .startTime(OffsetDateTime.now())
-                .endTime(OffsetDateTime.now().plus(5, ChronoUnit.HOURS))
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(5))
                 .showEventInSearch(true)
                 .isPrivate(false)
                 .sendToAllUsersByInterests(false)

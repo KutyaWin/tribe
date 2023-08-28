@@ -1,20 +1,12 @@
 package com.covenant.tribe.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.UniqueElements;
-import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Builder
 @Data
@@ -33,7 +25,7 @@ public class EventVerificationDTO {
     List<String> eventPhotos;
 
     @JsonProperty(value = "created_at")
-    OffsetDateTime createdAt;
+    LocalDateTime createdAt;
 
     @JsonProperty(value = "event_address")
     EventAddressDTO eventAddress;
@@ -45,10 +37,10 @@ public class EventVerificationDTO {
     String eventDescription;
 
     @JsonProperty(value = "start_time")
-    OffsetDateTime startTime;
+    LocalDateTime startTime;
 
     @JsonProperty(value = "end_time")
-    OffsetDateTime endTime;
+    LocalDateTime endTime;
 
     @JsonProperty(value = "eighteen_year_limit")
     boolean eighteenYearLimit;

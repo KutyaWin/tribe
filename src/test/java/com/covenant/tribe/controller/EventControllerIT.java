@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -106,8 +107,8 @@ public class EventControllerIT extends AbstractTestcontainers {
         RequestTemplateForCreatingEventDTO requestEvent = RequestTemplateForCreatingEventDTO.builder()
                 .eventTypeId(1000L)
                 .eventName(nameForEvent)
-                .startTime(OffsetDateTime.now())
-                .endTime(OffsetDateTime.now().plus(5, ChronoUnit.HOURS))
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(5))
                 .showEventInSearch(true)
                 .isPrivate(false)
                 .sendToAllUsersByInterests(false)
@@ -364,8 +365,8 @@ public class EventControllerIT extends AbstractTestcontainers {
                 .avatarsForAdding(new ArrayList<>())
                 .name(name)
                 .addressDTO(eventAddressDTO)
-                .startDateTime(OffsetDateTime.now())
-                .endDateTime(OffsetDateTime.now().plus(FAKER.number().randomDigitNotZero(), ChronoUnit.HOURS))
+                .startDateTime(LocalDateTime.now())
+                .endDateTime(LocalDateTime.now().plusHours(FAKER.number().randomDigitNotZero()))
                 .tagIdsForDeleting(new ArrayList<>())
                 .tagIdsForAdding(new ArrayList<>())
                 .newTags(new HashSet<>())
