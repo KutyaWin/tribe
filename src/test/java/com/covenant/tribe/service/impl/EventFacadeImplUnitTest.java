@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -51,8 +52,8 @@ class EventFacadeImplUnitTest {
                 .eventTypeId(FAKER.number().randomNumber())
                 .eventName(FAKER.funnyName().name())
                 .eventAddress(null)
-                .startTime(OffsetDateTime.now())
-                .endTime(OffsetDateTime.now().plus(5, ChronoUnit.HOURS))
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(5))
                 .newEventTagNames(null)
                 .eventTagIds(null)
                 .description(null)

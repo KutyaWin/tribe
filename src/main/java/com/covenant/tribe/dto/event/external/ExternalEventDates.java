@@ -1,11 +1,11 @@
 package com.covenant.tribe.dto.event.external;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 public record ExternalEventDates(
-        OffsetDateTime start,
-        OffsetDateTime end,
+        LocalDateTime start,
+        LocalDateTime end,
         LocalDate publicationDate
 ) {
 }

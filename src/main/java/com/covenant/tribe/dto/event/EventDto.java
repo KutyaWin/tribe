@@ -7,7 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
@@ -29,10 +29,10 @@ public class EventDto implements Serializable {
     EventAddressDTO addressDTO;
 
     @JsonProperty("event_start_date_time")
-    OffsetDateTime startDateTime;
+    LocalDateTime startDateTime;
 
     @JsonProperty("event_end_date_time")
-    OffsetDateTime endDateTime;
+    LocalDateTime endDateTime;
 
     @JsonProperty("event_tags")
     List<EventTagDTO> tags;

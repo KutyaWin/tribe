@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -37,8 +37,8 @@ public class SchedulerServiceIT {
     @Test
     public void whenTaskIsScheduledThenItWillBeExecutedInTime() throws SchedulerException, InterruptedException {
         Broadcast bro = new Broadcast(1000L,
-                OffsetDateTime.now().plus(2, ChronoUnit.SECONDS),
-                OffsetDateTime.now().plus(7, ChronoUnit.SECONDS),
+                LocalDateTime.now().plusSeconds(2),
+                LocalDateTime.now().plusSeconds(7),
                 NotificationStrategyName.EVENT);
         System.out.println(bro);
         Broadcast broadcast = schedulerService.schedule(bro);
@@ -60,13 +60,13 @@ public class SchedulerServiceIT {
     public void whenTwoTasksScheduledThenTheyWillBeCompletedInTime() throws SchedulerException, InterruptedException {
 //        given
         Broadcast bro = new Broadcast(1000L,
-                OffsetDateTime.now().plus(3, ChronoUnit.SECONDS),
-                OffsetDateTime.now().plus(4, ChronoUnit.SECONDS),
+                LocalDateTime.now().plusSeconds(3),
+                LocalDateTime.now().plusSeconds(4),
                 NotificationStrategyName.EVENT);
         Broadcast a = schedulerService.schedule(bro);
         Broadcast bro2 = new Broadcast(1001L,
-                OffsetDateTime.now().plus(4, ChronoUnit.SECONDS),
-                OffsetDateTime.now().plus(6, ChronoUnit.SECONDS),
+                LocalDateTime.now().plusSeconds(4),
+                LocalDateTime.now().plusSeconds(6),
                 NotificationStrategyName.EVENT);
         Broadcast b = schedulerService.schedule(bro2);
 

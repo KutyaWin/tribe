@@ -5,11 +5,8 @@ import com.covenant.tribe.scheduling.message.MessageStrategyName;
 import com.covenant.tribe.scheduling.notifications.NotificationStrategyName;
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Entity

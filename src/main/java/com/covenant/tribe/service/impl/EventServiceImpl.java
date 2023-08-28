@@ -49,9 +49,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -172,8 +170,8 @@ public class EventServiceImpl implements EventService {
     }
 
     private QSort handleTime(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {
-        DateTimePath<OffsetDateTime> startTime = QEvent.event.startTime;
-        DateTimePath<OffsetDateTime> endTime = QEvent.event.endTime;
+        DateTimePath<LocalDateTime> startTime = QEvent.event.startTime;
+        DateTimePath<LocalDateTime> endTime = QEvent.event.endTime;
         if (filterPresent && filter.getSort().equals(EventSort.DATE)) {
             orders = getOrder(filter, startTime);
         }
@@ -181,8 +179,8 @@ public class EventServiceImpl implements EventService {
             qPredicates.add(filter.getEventTypeId(), QEvent.event.eventType.id::in);
         }
         if (filter.getStartDate() != null && filter.getEndDate() != null) {
-            OffsetDateTime startDateTime = filter.getStartDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
-            OffsetDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+            LocalDateTime startDateTime = filter.getStartDate().atTime(LocalTime.MIN);
+            LocalDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX);
 
             qPredicates.add(startDateTime, startTime::after);
             qPredicates.add(endDateTime, endTime::before);
@@ -445,12 +443,17 @@ public class EventServiceImpl implements EventService {
         Event save = eventRepository.save(event);
         eventSearchService.create(save);
         sendNecessaryNotification(event);
-        OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
+        ZonedDateTime eventStartTimeWithZone = ZonedDateTime.of(event.getStartTime(), ZoneId.of(event.getTimeZone()));
+        ZonedDateTime eventEndTimeWithZone = ZonedDateTime.of(event.getEndTime(), ZoneId.of(event.getTimeZone()));
+        ZonedDateTime eventStartTimeInServerTimeZone = eventStartTimeWithZone.withZoneSameInstant(ZoneId.systemDefault());
+        LocalDateTime eventEndTimeInServerTimeZone = eventEndTimeWithZone.withZoneSameInstant(ZoneId.systemDefault())
+                .toLocalDateTime();
+        LocalDateTime hourNotificationSendTime = eventStartTimeInServerTimeZone.toLocalDateTime().minusHours(1);
         MessageStrategyName messageStrategyName = MessageStrategyName.valueOf(eventMessageStrategy);
         Broadcast broadcast = Broadcast.builder()
                 .subjectId(event.getId())
                 .repeatDate(hourNotificationSendTime)
-                .endDate(event.getEndTime())
+                .endDate(eventEndTimeInServerTimeZone)
                 .notificationStrategyName(NotificationStrategyName.EVENT)
                 .status(BroadcastStatuses.NEW)
                 .messageStrategyName(messageStrategyName)

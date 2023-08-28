@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.UniqueElements;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -33,15 +33,15 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
-    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    @Schema(pattern = "2023-04-18T20:15:30.356")
     @NotNull
-    OffsetDateTime startTime;
+    LocalDateTime startTime;
 
     @JsonProperty(value = "end_time")
     @Future(message = "end_time must be future")
-    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
+    @Schema(pattern = "2023-04-18T20:15:30.356")
     @NotNull
-    OffsetDateTime endTime;
+    LocalDateTime endTime;
 
     @JsonProperty(value = "new_event_tags_names")
     @UniqueElements(message = "All elements in event_tags_names must be unique")
@@ -93,4 +93,9 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @JsonProperty(value = "is_free")
     @NotNull(message = "is_free should not be null")
     Boolean isFree;
+
+    @JsonProperty(value = "time_zone")
+    @NotNull(message = "time_zone should not be null")
+    @Schema(pattern = "GMT+03:00")
+    String timeZone;
 }
