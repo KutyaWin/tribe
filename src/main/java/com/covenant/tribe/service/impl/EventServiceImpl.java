@@ -808,7 +808,8 @@ public class EventServiceImpl implements EventService {
 
         List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream()
                 .filter(userRelationsWithEvent -> {
-                    return userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant();
+                    return (userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant())
+                            && !userRelationsWithEvent.getUserRelations().getId().equals(organizerId);
                 })
                 .map(UserRelationsWithEvent::getUserRelations)
                 .map(userMapper::mapToUserToSendInvitationDTO)
@@ -824,6 +825,7 @@ public class EventServiceImpl implements EventService {
                 .tags(eventTagDtoList)
                 .description(event.getEventDescription())
                 .invitations(invitedAndParticipatedUserList)
+                .timezone(event.getTimeZone())
                 .isPrivate(event.isPrivate())
                 .isShowInSearch(event.isShowEventInSearch())
                 .isSendByInterests(event.isSendToAllUsersByInterests())
@@ -918,6 +920,11 @@ public class EventServiceImpl implements EventService {
             eventForUpdate.setStartTimeUpdated(true);
             eventForUpdate.setStartTime(updateEventDto.getStartDateTime());
             eventForUpdate.setPartsOfDay(eventMapper.partEnumSetToEntity(eventMapper.getPartsOfDay(eventForUpdate)));
+        }
+
+        if (!updateEventDto.getTimezone().equals(eventForUpdate.getTimeZone())) {
+            eventForUpdate.setTimeZone(updateEventDto.getTimezone());
+            eventForUpdate.setStartTimeUpdated(true);
         }
 
         if (!updateEventDto.getEndDateTime().isEqual(eventForUpdate.getEndTime())) {

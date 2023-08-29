@@ -41,6 +41,8 @@ public class EventDto implements Serializable {
 
     List<UserToSendInvitationDTO> invitations;
 
+    String timezone;
+
     @JsonProperty("is_private")
     boolean isPrivate;
 

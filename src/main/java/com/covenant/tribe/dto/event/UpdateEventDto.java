@@ -70,6 +70,9 @@ public class UpdateEventDto implements Serializable {
     @JsonProperty("participant_ids_for_deleting")
     List<Long> participantIdsForDeleting;
 
+    @NotNull(message = "timezone is required")
+    String timezone;
+
     @JsonProperty("is_private")
     boolean isPrivate;
 
