@@ -485,8 +485,8 @@ public class EventServiceImpl implements EventService {
 
             firebaseService.sendNotificationsToUsers(allUsersIdWhoInterestingEventType,
                     event.isEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    "Tribe приветствует тебя!",
+                    "Добавлено событие подходящее твоим интересам",
                     event.getId());
         }
         List<Long> invitedUserIds = event.getEventRelationsWithUser().stream()
@@ -501,8 +501,8 @@ public class EventServiceImpl implements EventService {
 
             firebaseService.sendNotificationsToUsers(usersWhoInvited,
                     event.isEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    "Tribe на связи!",
+                    "Вы приглашены на событие, подробности в приложении",
                     event.getId());
         }
     }
