@@ -170,5 +170,4 @@ class ImageConversionServiceImplTest {
 
         return new Dimension(inputImage.getWidth(), inputImage.getHeight());
     }
-
 }

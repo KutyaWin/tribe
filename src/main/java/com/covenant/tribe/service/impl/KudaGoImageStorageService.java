@@ -55,7 +55,7 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
 
     private ImageDto processImageDto(ImageDto dto) {
         ImageDto processedDto = new ImageDto();
-        processedDto.setContentType("image/webp");
+        processedDto.setContentType(dto.getContentType());
         byte[] processedImage;
         try {
             processedImage = imageConversionService.process(dto.getImage(), dto.getContentType());
