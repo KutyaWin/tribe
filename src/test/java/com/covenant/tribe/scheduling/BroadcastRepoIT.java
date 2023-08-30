@@ -13,15 +13,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.cloud.commons.util.IdUtils;
 
-import java.sql.Date;
-import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -37,14 +32,14 @@ public class BroadcastRepoIT {
 
     @BeforeAll
     void init() {
-        OffsetDateTime now = OffsetDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         User user = User.builder().firebaseId(String.valueOf(23131))
                 .userEmail("wow").username("e").status(UserStatus.ENABLED).build();
 
         var bro = BroadcastEntity.builder()
                 .startTime(now)
                 .repeatTime(now)
-                .endTime(now.plus(4, ChronoUnit.SECONDS))
+                .endTime(now.plusSeconds(4))
                 .status(BroadcastStatuses.NEW)
                 .notificationsCreated(false).build();
 

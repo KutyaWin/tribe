@@ -48,6 +48,9 @@ public class EventType {
     @Column(length = 50, name = "dark_rectangle_animation_path")
     String darkRectangleAnimation;
 
+    @Column(name = "priority", nullable = false)
+    Long priority;
+
     @OneToMany(mappedBy = "eventType", fetch = FetchType.LAZY)
     @ToString.Exclude
     @Setter(AccessLevel.PRIVATE)

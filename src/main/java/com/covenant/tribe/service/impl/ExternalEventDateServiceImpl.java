@@ -34,31 +34,19 @@ public class ExternalEventDateServiceImpl implements ExternalEventDateService {
             if (kudagoEvent.getLocation().getTimezone() != null) {
                 zoneOffset = getZoneOffset(kudagoEvent.getLocation().getTimezone());
             }
-            OffsetDateTime eventStart = null;
-            OffsetDateTime eventEnd = null;
+            LocalDateTime eventStart = null;
+            LocalDateTime eventEnd = null;
             LocalDate publicationDate = null;
             if (zoneOffset != null) {
-                eventStart = OffsetDateTime.of(
-                        LocalDateTime.ofEpochSecond(dates.get(0).getStart(), 0, zoneOffset),
-                        zoneOffset
-                );
-                eventEnd = OffsetDateTime.of(
-                        LocalDateTime.ofEpochSecond(dates.get(dates.size() - 1).getEnd(), 0, zoneOffset),
-                        zoneOffset
-                );
+                eventStart = LocalDateTime.ofEpochSecond(dates.get(0).getStart(), 0, zoneOffset);
+                eventEnd = LocalDateTime.ofEpochSecond(dates.get(dates.size() - 1).getEnd(), 0, zoneOffset);
                 publicationDate = LocalDateTime
                         .ofEpochSecond(kudagoEvent.getPublicationDate(), 0, zoneOffset).toLocalDate();
             } else {
-                eventStart = OffsetDateTime.of(
-                        LocalDateTime.ofEpochSecond(dates.get(0).getStart(), 0, MOSCOW_TIMEZONE_OFFSET),
-                        MOSCOW_TIMEZONE_OFFSET
-                );
-                eventEnd = OffsetDateTime.of(
-                        LocalDateTime
-                                .ofEpochSecond(
-                                        dates.get(dates.size() - 1).getEnd(), 0, MOSCOW_TIMEZONE_OFFSET
-                                ),
-                        MOSCOW_TIMEZONE_OFFSET
+                eventStart = LocalDateTime.ofEpochSecond(
+                        dates.get(0).getStart(), 0, MOSCOW_TIMEZONE_OFFSET);
+                eventEnd = LocalDateTime.ofEpochSecond(
+                        dates.get(dates.size() - 1).getEnd(), 0, MOSCOW_TIMEZONE_OFFSET
                 );
                 publicationDate = LocalDateTime
                         .ofEpochSecond(kudagoEvent.getPublicationDate(), 0, MOSCOW_TIMEZONE_OFFSET)
@@ -72,22 +60,14 @@ public class ExternalEventDateServiceImpl implements ExternalEventDateService {
     }
 
     @Override
-    public OffsetDateTime transformTimestampToOffsetDateTime(KudagoDate kudagoDate, String timezone) {
+    public LocalDateTime transformTimestampToLocalDateTime(KudagoDate kudagoDate, String timezone) {
         Long timestampStart = kudagoDate.getStart();
         if (timezone == null) {
-            return OffsetDateTime.of(
-                    LocalDateTime
-                            .ofEpochSecond(
-                                    timestampStart, 0, MOSCOW_TIMEZONE_OFFSET
-                            ),
-                    MOSCOW_TIMEZONE_OFFSET
-            );
+            return LocalDateTime.ofEpochSecond(
+                    timestampStart, 0, MOSCOW_TIMEZONE_OFFSET);
         }
         ZoneOffset zoneOffset = getZoneOffset(timezone);
-        return OffsetDateTime.of(
-                LocalDateTime.ofEpochSecond(timestampStart, 0, zoneOffset),
-                zoneOffset
-        );
+        return LocalDateTime.ofEpochSecond(timestampStart, 0, zoneOffset);
     }
 
     private ZoneOffset getZoneOffset(String timezone) {

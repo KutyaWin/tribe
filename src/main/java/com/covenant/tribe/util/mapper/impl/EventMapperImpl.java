@@ -78,8 +78,8 @@ public class EventMapperImpl implements EventMapper {
                 .eventName(event.getEventName())
                 .description(event.getEventDescription())
                 .organizerUsername(event.getOrganizer().getUsername())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
-                .startTime(event.getStartTime().toLocalDateTime())
+                .eventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()))
+                .startTime(event.getStartTime())
                 .eventType(event.getEventType().getTypeName())
                 .favoriteEvent(relationsWithEventCurrentUserId.stream()
                         .filter(UserRelationsWithEvent::isFavorite)
@@ -97,7 +97,13 @@ public class EventMapperImpl implements EventMapper {
     }
 
     private Boolean isEventFinished(Event event) {
-        return event.getEndTime().isBefore(OffsetDateTime.now());
+        return event.getEndTime().isBefore(
+                ZonedDateTime.now()
+                        .withZoneSameInstant(
+                                ZoneId.of(event.getTimeZone())
+                        )
+                        .toLocalDateTime()
+        );
     }
 
     public SearchEventDTO mapToSearchEventDTO(Event event) {
@@ -129,7 +135,7 @@ public class EventMapperImpl implements EventMapper {
                 .description(event.getEventDescription())
                 .organizerUsername(event.getOrganizer().getUsername())
                 .eventName(event.getEventName())
-                .startTime(event.getStartTime().toLocalDateTime())
+                .startTime(event.getStartTime())
                 .eventType(event.getEventType().getTypeName())
                 .isFinished(isEventFinished(event))
                 .isPrivate(event.isPrivate())
@@ -142,7 +148,7 @@ public class EventMapperImpl implements EventMapper {
                                 .collect(Collectors.toSet())))
                 .build();
         if (event.getEventAddress() != null) {
-            eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
+            eventDto.setEventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()));
         }
         return eventDto;
     }
@@ -197,7 +203,7 @@ public class EventMapperImpl implements EventMapper {
                 .organizerId(event.getOrganizer().getId())
                 .eventPhotos(getAvatars(event))
                 .createdAt(event.getCreatedAt())
-                .eventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()))
+                .eventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()))
                 .eventName(event.getEventName())
                 .eventDescription(event.getEventDescription())
                 .startTime(event.getStartTime())
@@ -240,6 +246,7 @@ public class EventMapperImpl implements EventMapper {
                 .isPresenceOfAlcohol(dto.getHasAlcohol())
                 .isFree(dto.getIsFree())
                 .eventType(eventType)
+                .timeZone(dto.getTimeZone())
                 .build();
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
         organizer.addEventWhereUserAsOrganizer(event);
@@ -309,6 +316,7 @@ public class EventMapperImpl implements EventMapper {
                 .isPresenceOfAlcohol(hasAgeRestriction)
                 .isFree(kudagoEventDto.getIsFree())
                 .eventType(eventType)
+                .timeZone(kudagoEventDto.getLocation().timezone)
                 .build();
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
         organizer.addEventWhereUserAsOrganizer(event);
@@ -440,7 +448,7 @@ public class EventMapperImpl implements EventMapper {
                 .isWantToGo(isWantToGo)
                 .build();
         if (event.getEventAddress() != null) {
-            responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDTO(event.getEventAddress()));
+            responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()));
         }
         return responseDto;
     }
@@ -468,14 +476,14 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public Set<PartsOfDay> getPartsOfDay(Event event) {
-        OffsetDateTime startTime = event.getStartTime();
-        OffsetDateTime trunc = startTime.truncatedTo(ChronoUnit.DAYS);
-        OffsetDateTime endTime = event.getEndTime();
+        LocalDateTime startTime = event.getStartTime();
+        LocalDateTime trunc = startTime.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime endTime = event.getEndTime();
         Set<PartsOfDay> newParts = new HashSet<>();
         int passedDays = 0;
         while (trunc.isBefore(endTime) && newParts.size() < 4 && passedDays < 3) {
             if (passedDays == 0) {
-                trunc = trunc.minus(1, ChronoUnit.DAYS); //to check yesterday 23 - today 06
+                trunc = trunc.minusDays(1); //to check yesterday 23 - today 06
             }
             for (PartsOfDay part : PartsOfDay.values()) {
                 int cur = Integer.parseInt(part.getHour());
@@ -483,8 +491,8 @@ public class EventMapperImpl implements EventMapper {
                 if (next < cur) {
                     next += 24;
                 }
-                OffsetDateTime lb = trunc.plus(cur, ChronoUnit.HOURS);
-                OffsetDateTime hb = trunc.plus(next, ChronoUnit.HOURS);
+                LocalDateTime lb = trunc.plusHours(cur);
+                LocalDateTime hb = trunc.plusHours(next);
                 if (((lb.isBefore(startTime) || lb.isEqual(startTime)) && startTime.isBefore(hb))  //time period and dates are crossing
                         || (lb.isBefore(endTime) && (endTime.isBefore(hb) || endTime.isEqual(hb))) //
                         || (startTime.isBefore(lb) && hb.isBefore(endTime)) //time period is between events start and end time
@@ -492,7 +500,7 @@ public class EventMapperImpl implements EventMapper {
                     newParts.add(part);
                 }
             }
-            trunc = trunc.plus(1, ChronoUnit.DAYS); //to check today 23 - today + n days 06
+            trunc = trunc.plusDays(1); //to check today 23 - today + n days 06
             passedDays += 1;
         }
 

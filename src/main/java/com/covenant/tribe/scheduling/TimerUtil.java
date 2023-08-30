@@ -3,8 +3,7 @@ package com.covenant.tribe.scheduling;
 import com.covenant.tribe.scheduling.model.Broadcast;
 import org.quartz.*;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
@@ -24,11 +23,11 @@ public class TimerUtil {
     }
 
     public static Optional<Trigger> buildTrigger(final Broadcast broadcast) {
-        OffsetDateTime now = OffsetDateTime.now();
-        OffsetDateTime repeatDate = broadcast.getRepeatDate();
-        OffsetDateTime startTime = repeatDate.isAfter(now) ? repeatDate : now;
-        Date offsetStartTime = Date.from(Instant.from(startTime.plus(50, ChronoUnit.MILLIS)));
-        Date endTime = Date.from(broadcast.getEndDate().toInstant());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime repeatDate = broadcast.getRepeatDate();
+        LocalDateTime startTime = repeatDate.isAfter(now) ? repeatDate : now;
+        Date offsetStartTime = Date.from(startTime.plus(50, ChronoUnit.MILLIS).atZone(ZoneId.systemDefault()).toInstant());
+        Date endTime = Date.from(broadcast.getEndDate().atZone(ZoneId.systemDefault()).toInstant());
         if (!endTime.after(offsetStartTime)) return Optional.empty();
         String s = String.valueOf(UUID.randomUUID());
         return Optional.of(TriggerBuilder

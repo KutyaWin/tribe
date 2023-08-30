@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -96,6 +97,7 @@ public class EventTypeServiceImpl implements EventTypeService {
     public List<EventTypeDTO> getAllCircleEventTypes(boolean isDark) {
         List<EventType> eventTypes = eventTypeRepository.findAll();
         return eventTypes.stream()
+                .sorted(Comparator.comparing(EventType::getPriority))
                 .map(eventType -> {
                     String fileName = isDark ?
                             eventType.getDarkCircleAnimation() : eventType.getLightCircleAnimation();

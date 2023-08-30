@@ -40,7 +40,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerKey;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,17 +49,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Objects;
 import java.util.Optional;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -176,8 +170,8 @@ public class EventServiceImpl implements EventService {
     }
 
     private QSort handleTime(EventFilter filter, QPredicates qPredicates, QSort orders, boolean filterPresent) {
-        DateTimePath<OffsetDateTime> startTime = QEvent.event.startTime;
-        DateTimePath<OffsetDateTime> endTime = QEvent.event.endTime;
+        DateTimePath<LocalDateTime> startTime = QEvent.event.startTime;
+        DateTimePath<LocalDateTime> endTime = QEvent.event.endTime;
         if (filterPresent && filter.getSort().equals(EventSort.DATE)) {
             orders = getOrder(filter, startTime);
         }
@@ -185,8 +179,8 @@ public class EventServiceImpl implements EventService {
             qPredicates.add(filter.getEventTypeId(), QEvent.event.eventType.id::in);
         }
         if (filter.getStartDate() != null && filter.getEndDate() != null) {
-            OffsetDateTime startDateTime = filter.getStartDate().atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
-            OffsetDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+            LocalDateTime startDateTime = filter.getStartDate().atTime(LocalTime.MIN);
+            LocalDateTime endDateTime = filter.getEndDate().atTime(LocalTime.MAX);
 
             qPredicates.add(startDateTime, startTime::after);
             qPredicates.add(endDateTime, endTime::before);
@@ -449,12 +443,17 @@ public class EventServiceImpl implements EventService {
         Event save = eventRepository.save(event);
         eventSearchService.create(save);
         sendNecessaryNotification(event);
-        OffsetDateTime hourNotificationSendTime = event.getStartTime().minusHours(1);
+        ZonedDateTime eventStartTimeWithZone = ZonedDateTime.of(event.getStartTime(), ZoneId.of(event.getTimeZone()));
+        ZonedDateTime eventEndTimeWithZone = ZonedDateTime.of(event.getEndTime(), ZoneId.of(event.getTimeZone()));
+        ZonedDateTime eventStartTimeInServerTimeZone = eventStartTimeWithZone.withZoneSameInstant(ZoneId.systemDefault());
+        LocalDateTime eventEndTimeInServerTimeZone = eventEndTimeWithZone.withZoneSameInstant(ZoneId.systemDefault())
+                .toLocalDateTime();
+        LocalDateTime hourNotificationSendTime = eventStartTimeInServerTimeZone.toLocalDateTime().minusHours(1);
         MessageStrategyName messageStrategyName = MessageStrategyName.valueOf(eventMessageStrategy);
         Broadcast broadcast = Broadcast.builder()
                 .subjectId(event.getId())
                 .repeatDate(hourNotificationSendTime)
-                .endDate(event.getEndTime())
+                .endDate(eventEndTimeInServerTimeZone)
                 .notificationStrategyName(NotificationStrategyName.EVENT)
                 .status(BroadcastStatuses.NEW)
                 .messageStrategyName(messageStrategyName)
@@ -486,8 +485,8 @@ public class EventServiceImpl implements EventService {
 
             firebaseService.sendNotificationsToUsers(allUsersIdWhoInterestingEventType,
                     event.isEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    "Tribe приветствует тебя!",
+                    "Добавлено событие подходящее твоим интересам",
                     event.getId());
         }
         List<Long> invitedUserIds = event.getEventRelationsWithUser().stream()
@@ -502,8 +501,8 @@ public class EventServiceImpl implements EventService {
 
             firebaseService.sendNotificationsToUsers(usersWhoInvited,
                     event.isEighteenYearLimit(),
-                    "Some title",
-                    "Текст приглашения нужно придумать, id мероприятия лежит в поле data",
+                    "Tribe на связи!",
+                    "Вы приглашены на событие, подробности в приложении",
                     event.getId());
         }
     }
@@ -800,7 +799,7 @@ public class EventServiceImpl implements EventService {
         List<String> avatarUrlList = event.getEventAvatars().stream()
                 .map(EventAvatar::getAvatarUrl)
                 .toList();
-        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDTO(
+        EventAddressDTO eventAddressDTO = eventAddressMapper.mapToEventAddressDto(
                 event.getEventAddress()
         );
         List<EventTagDTO> eventTagDtoList = eventTagMapper.mapEventTagListToEventTagDtoList(
@@ -809,7 +808,8 @@ public class EventServiceImpl implements EventService {
 
         List<UserToSendInvitationDTO> invitedAndParticipatedUserList = event.getEventRelationsWithUser().stream()
                 .filter(userRelationsWithEvent -> {
-                    return userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant();
+                    return (userRelationsWithEvent.isInvited() || userRelationsWithEvent.isParticipant())
+                            && !userRelationsWithEvent.getUserRelations().getId().equals(organizerId);
                 })
                 .map(UserRelationsWithEvent::getUserRelations)
                 .map(userMapper::mapToUserToSendInvitationDTO)
@@ -825,6 +825,7 @@ public class EventServiceImpl implements EventService {
                 .tags(eventTagDtoList)
                 .description(event.getEventDescription())
                 .invitations(invitedAndParticipatedUserList)
+                .timezone(event.getTimeZone())
                 .isPrivate(event.isPrivate())
                 .isShowInSearch(event.isShowEventInSearch())
                 .isSendByInterests(event.isSendToAllUsersByInterests())
@@ -919,6 +920,11 @@ public class EventServiceImpl implements EventService {
             eventForUpdate.setStartTimeUpdated(true);
             eventForUpdate.setStartTime(updateEventDto.getStartDateTime());
             eventForUpdate.setPartsOfDay(eventMapper.partEnumSetToEntity(eventMapper.getPartsOfDay(eventForUpdate)));
+        }
+
+        if (!updateEventDto.getTimezone().equals(eventForUpdate.getTimeZone())) {
+            eventForUpdate.setTimeZone(updateEventDto.getTimezone());
+            eventForUpdate.setStartTimeUpdated(true);
         }
 
         if (!updateEventDto.getEndDateTime().isEqual(eventForUpdate.getEndTime())) {

@@ -1,16 +1,13 @@
 package com.covenant.tribe.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Builder
@@ -37,9 +34,7 @@ public class EventInFavoriteDTO {
     EventAddressDTO eventAddress;
 
     @JsonProperty(value = "start_time")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Schema(pattern = "2023-04-18T20:15:30.356+03:00")
-    OffsetDateTime startTime;
+    LocalDateTime startTime;
 
     @JsonProperty(value = "is_finished")
     @NotNull(message = "is_finished should not be null")

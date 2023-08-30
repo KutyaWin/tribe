@@ -1,24 +1,17 @@
 package com.covenant.tribe.dto.event.external;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import com.covenant.tribe.dto.event.EventAddressDTO;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
 public class ExternalEventAddressDto {
 
-    Double latitude;
-    Double longitude;
-    String city;
-    String region;
-    String street;
-    String district;
-    String building;
-    String houseNumber;
+    EventAddressDTO eventAddressDTO;
+    Boolean isAddressExistInDb;
 
 }

@@ -27,9 +27,9 @@ public class FirebaseMessageStrategy implements MessageStrategy {
                     return notification.getUserById().getFirebaseId();
                 })
                 .toList();
-        String title = "Скоро начало";
+        String title = "Tribe напоминает!";
         Long eventId = notifications.get(0).getBroadcastEntity().getSubjectId();
-        String messageText = notifications.get(0).getText();
+        String messageText = "Скоро начнётся событие, которые вы планировали посетить";
         firebaseService.sendNotificationsByFirebaseIds(firebaseIds, title, messageText, eventId);
         notifications.forEach(
                 notification -> notification.setStatus(NotificationStatus.SUCCESSFULLY_SENT)

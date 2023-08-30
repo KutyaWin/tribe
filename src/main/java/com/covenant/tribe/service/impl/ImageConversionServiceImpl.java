@@ -93,6 +93,7 @@ public class ImageConversionServiceImpl implements ImageConversionService {
         }
 
         byte[] data = inputData;
+
         Dimension imageDimension = getImageDimension(data);
 
         if (imageDimension.width <= MAXIMUM_WIDTH && imageDimension.height <= MAXIMUM_HEIGHT) {

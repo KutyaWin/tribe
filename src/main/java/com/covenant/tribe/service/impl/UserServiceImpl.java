@@ -233,7 +233,9 @@ public class UserServiceImpl implements UserService {
             Set<Profession> professionsForUpdate = new HashSet<>(
                     professionRepository.findAllById(userProfileUpdateDto.getProfessionIds())
             );
-            user.addNewProfessions(professionsForUpdate);
+            user.retainProfessions(professionsForUpdate);
+        } else {
+            user.setUserProfessions(new HashSet<>());
         }
 
         if (!userProfileUpdateDto.getNewProfessions().isEmpty()) {

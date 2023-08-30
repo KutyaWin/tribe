@@ -9,13 +9,11 @@ import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.SchedulerException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -51,7 +49,7 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
             );
             log.error(message);
         }
-        broadcast.setRepeatDate(OffsetDateTime.now().plus(repeatRate, ChronoUnit.SECONDS));
+        broadcast.setRepeatDate(LocalDateTime.now().plusSeconds(repeatRate));
 
     }
 
@@ -65,7 +63,7 @@ public class RetryingExecuteBroadcastService implements ExecuteBroadcastService{
     private void execForInProgress(BroadcastEntity broadcast) {
         List<Notification> messagesForBroadcast = notificationService
                 .getMessagesForBroadcastWithStatus(broadcast, NotificationStatus.NEW);
-        if (messagesForBroadcast.size()==0) {
+        if (messagesForBroadcast.isEmpty()) {
             broadcast.setStatus(BroadcastStatuses.COMPLETE_SUCCESSFULLY);
         } else {
             executeForMessages(messagesForBroadcast, broadcast);

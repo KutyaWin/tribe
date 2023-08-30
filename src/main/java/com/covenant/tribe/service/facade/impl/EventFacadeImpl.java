@@ -8,6 +8,7 @@ import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
+import com.covenant.tribe.repository.EventAddressRepository;
 import com.covenant.tribe.service.*;
 import com.covenant.tribe.service.facade.EventFacade;
 import com.covenant.tribe.service.impl.pojo.CollectedDataForMappingToEvent;
@@ -32,6 +33,7 @@ public class EventFacadeImpl implements EventFacade {
 
     UserService userService;
     EventAddressMapper eventAddressMapper;
+    EventAddressRepository eventAddressRepository;
     EventTypeService eventTypeService;
     TagService tagService;
     EventMapper eventMapper;
@@ -76,7 +78,17 @@ public class EventFacadeImpl implements EventFacade {
 
         EventAddress eventAddress = null;
         if (requestTemplateForCreatingEvent.getEventAddress() != null) {
-            eventAddress = eventAddressMapper.mapToEventAddress(requestTemplateForCreatingEvent.getEventAddress());
+            List<EventAddress> eventAddresses = eventAddressRepository.findByEventLatitudeAndEventLongitudeAndHouseNumberAndBuilding(
+                    requestTemplateForCreatingEvent.getEventAddress().getEventLatitude(),
+                    requestTemplateForCreatingEvent.getEventAddress().getEventLongitude(),
+                    requestTemplateForCreatingEvent.getEventAddress().getHouseNumber(),
+                    requestTemplateForCreatingEvent.getEventAddress().getBuilding()
+            );
+            if (eventAddresses.isEmpty()) {
+                eventAddress = eventAddressMapper.mapToEventAddress(requestTemplateForCreatingEvent.getEventAddress());
+            } else {
+                eventAddress = eventAddresses.get(0); //TODO Сделать адреса уникальными в бд
+            }
         }
 
         List<Tag> alreadyExistEventTags = null;

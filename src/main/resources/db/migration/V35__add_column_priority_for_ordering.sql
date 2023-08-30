@@ -1,0 +1,2 @@
+ALTER TABLE event_types
+    ADD COLUMN priority INT NOT NULL DEFAULT 0;

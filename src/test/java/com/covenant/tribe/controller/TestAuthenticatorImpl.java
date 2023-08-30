@@ -13,8 +13,6 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 
 public class TestAuthenticatorImpl implements TestAuthenticator{
 

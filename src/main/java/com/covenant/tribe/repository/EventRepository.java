@@ -1,7 +1,6 @@
 package com.covenant.tribe.repository;
 
 import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.EventStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -20,9 +18,9 @@ import java.util.Set;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
 
-    Optional<Event> findByEventNameAndStartTimeAndOrganizerId(String eventName, OffsetDateTime startTime, Long organizerId);
+    Optional<Event> findByEventNameAndStartTimeAndOrganizerId(String eventName, LocalDateTime startTime, Long organizerId);
 
-    Optional<Event> findByEventNameAndStartTime(String eventName, OffsetDateTime startTime);
+    Optional<Event> findByEventNameAndStartTime(String eventName, LocalDateTime startTime);
 
     List<Event> findAllByOrganizerIdAndEventStatusIsNot(Long organizerId, EventStatus eventStatus);
 

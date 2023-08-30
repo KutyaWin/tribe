@@ -183,6 +183,15 @@ public class User {
         }
     }
 
+    public void retainProfessions(Set<Profession> professions) {
+        if (this.userProfessions == null) {
+            this.userProfessions = professions;
+        } else {
+            this.userProfessions.retainAll(professions);
+            this.userProfessions.addAll(professions);
+        }
+    }
+
     public void addUserRelationsWithEvent(UserRelationsWithEvent userRelationsWithEvent) {
         if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
 

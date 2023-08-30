@@ -36,10 +36,12 @@ public class KudaGoImageStorageService implements ExternalImageStorageService {
                 List<String> imageUrls = event.getImages().stream()
                         .map(KudagoImageDto::getImage)
                         .toList();
-                List<ImageDto> images = imageDownloadService.downloadImages(imageUrls)
+
+              List<ImageDto> images = imageDownloadService.downloadImages(imageUrls)
                         .stream()
                         .map(this::processImageDto)
                         .toList();
+
 
                 List<String> imagePaths = fileStorageRepository.saveExternalEventImages(images);
                 eventImages.put(event.getId(), imagePaths);

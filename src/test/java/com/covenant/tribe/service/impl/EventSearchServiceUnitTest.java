@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -78,11 +79,11 @@ public class EventSearchServiceUnitTest {
                 .eventType(null)
                 .eventName("name")
                 .eventAddress(eventAddress)
-                .startTime(OffsetDateTime.now())
-                .endTime(OffsetDateTime.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now())
                 .isPrivate(false)
                 .showEventInSearch(true)
-                .createdAt(OffsetDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
         return build;
     }
@@ -95,11 +96,11 @@ public class EventSearchServiceUnitTest {
                 .eventType(null)
                 .eventName("name2")
                 .eventAddress(eventAddress)
-                .startTime(OffsetDateTime.now())
-                .endTime(OffsetDateTime.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now())
                 .isPrivate(true)
                 .showEventInSearch(false)
-                .createdAt(OffsetDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
         return build;
     }

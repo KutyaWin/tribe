@@ -35,22 +35,8 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
     ) {
         Map<Long, ReverseGeocodingData> externalEventAddresses = new HashMap<>();
         events.forEach(event -> {
-            Double latitude = event.getLocation().coords.getLat();
-            Double longitude = event.getLocation().coords.getLon();
-            ReverseGeocodingRequest reverseGeocodingRequest =
-                    ReverseGeocodingRequest.builder()
-                            .count(DADATA_ADDRESS_SUGGESTIONS_COUNT)
-                            .lat(latitude)
-                            .lon(longitude)
-                            .build();
-            ResponseEntity<ReverseGeocodingResponse> geolocationDataResponse
-                    = daDataClient.getGeolocationData(reverseGeocodingRequest);
-            if (geolocationDataResponse.getStatusCode().is2xxSuccessful()
-                    && geolocationDataResponse.getBody() != null) {
-                List<ReverseGeocodingSuggestions> suggestions = geolocationDataResponse.getBody().getSuggestions();
-                ReverseGeocodingData address = suggestions.get(0).getData();
-                externalEventAddresses.put(event.getId(), address);
-            }
+            ReverseGeocodingData externalEventAddress = getExternalEventAddress(event);
+            externalEventAddresses.put(event.getId(), externalEventAddress);
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
@@ -58,5 +44,29 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
             }
         });
         return externalEventAddresses;
+    }
+
+    @Override
+    public ReverseGeocodingData getExternalEventAddress(KudagoEventDto event) {
+        Double latitude = event.getPlace().getCoords().getLat();
+        Double longitude = event.getPlace().getCoords().getLon();
+        ReverseGeocodingRequest reverseGeocodingRequest =
+                ReverseGeocodingRequest.builder()
+                        .count(DADATA_ADDRESS_SUGGESTIONS_COUNT)
+                        .lat(latitude)
+                        .lon(longitude)
+                        .build();
+        ResponseEntity<ReverseGeocodingResponse> geolocationDataResponse
+                = daDataClient.getGeolocationData(reverseGeocodingRequest);
+        if (geolocationDataResponse.getStatusCode().is2xxSuccessful()
+                && geolocationDataResponse.getBody() != null) {
+            List<ReverseGeocodingSuggestions> suggestions = geolocationDataResponse.getBody().getSuggestions();
+            if (suggestions.isEmpty()) {
+                log.error("Dadata doesn't know address of event: {}", event.getPlace());
+            } else {
+                return suggestions.get(0).getData();
+            }
+        }
+        return null;
     }
 }

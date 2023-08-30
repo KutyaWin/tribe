@@ -8,7 +8,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -46,11 +46,11 @@ public class UpdateEventDto implements Serializable {
 
     @NotNull(message = "start_date_time is required")
     @JsonProperty("event_start_date_time")
-    OffsetDateTime startDateTime;
+    LocalDateTime startDateTime;
 
     @NotNull(message = "end_date_time is required")
     @JsonProperty("event_end_date_time")
-    OffsetDateTime endDateTime;
+    LocalDateTime endDateTime;
 
     @JsonProperty("tag_ids_for_deleting")
     List<Long> tagIdsForDeleting;
@@ -69,6 +69,9 @@ public class UpdateEventDto implements Serializable {
 
     @JsonProperty("participant_ids_for_deleting")
     List<Long> participantIdsForDeleting;
+
+    @NotNull(message = "timezone is required")
+    String timezone;
 
     @JsonProperty("is_private")
     boolean isPrivate;
