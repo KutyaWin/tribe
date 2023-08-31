@@ -93,10 +93,9 @@ public class ImageConversionServiceImpl implements ImageConversionService {
         }
 
         byte[] data = inputData;
-//        if (!mimeType.equals("webp")) {
-//            data = convertToWebpWithLosslessCompression(inputData);
-//        }
+
         Dimension imageDimension = getImageDimension(data);
+
         if (imageDimension.width <= MAXIMUM_WIDTH && imageDimension.height <= MAXIMUM_HEIGHT) {
             return data;
         }

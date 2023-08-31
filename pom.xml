@@ -206,6 +206,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
         <!--        webp support -->
         <!-- https://mvnrepository.com/artifact/org.sejda.imageio/webp-imageio -->
         <dependency>
@@ -219,6 +220,7 @@
             <artifactId>pullenti</artifactId>
             <version>4.19</version>
         </dependency>
+
     </dependencies>
 
     <build>

@@ -137,6 +137,7 @@ class ImageConversionServiceImplTest {
         // When
         byte[] image1Processed = imageConversionService.process(image1, mimeType1);
         byte[] image2Processed = imageConversionService.process(image2, mimeType2);
+
         Dimension image1Dimension = getImageDimension(image1Processed);
         Dimension image2Dimension = getImageDimension(image2Processed);
 
@@ -169,5 +170,4 @@ class ImageConversionServiceImplTest {
 
         return new Dimension(inputImage.getWidth(), inputImage.getHeight());
     }
-
 }
