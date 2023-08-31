@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -49,7 +48,7 @@ public class EventSearchServiceUnitTest {
         when(eventSearchUnitRepository.findById(String.valueOf(1000L))).thenReturn(Optional.of(firstUnit));
         when(eventSearchUnitFactory.create(secondEvent)).thenReturn(secondSearchUnit);
         when(eventSearchUnitRepository.save(any())).thenReturn(firstUnit);
-        EventSearchUnit updated = eventService.update(secondEvent);
+        EventSearchUnit updated = eventService.updateOrSave(secondEvent);
         assertEquals(updated, secondSearchUnit);
     }
 

@@ -20,7 +20,7 @@ public class MockEventSearchService implements EventSearchService {
     }
 
     @Override
-    public EventSearchUnit update(Event event)  {
+    public EventSearchUnit updateOrSave(Event event)  {
         return null;
     }
 

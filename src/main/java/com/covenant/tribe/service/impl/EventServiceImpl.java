@@ -441,7 +441,7 @@ public class EventServiceImpl implements EventService {
         }
         event.setEventStatus(EventStatus.PUBLISHED);
         Event save = eventRepository.save(event);
-        eventSearchService.create(save);
+        eventSearchService.updateOrSave(save);
         sendNecessaryNotification(event);
         ZonedDateTime eventStartTimeWithZone = ZonedDateTime.of(event.getStartTime(), ZoneId.of(event.getTimeZone()));
         ZonedDateTime eventEndTimeWithZone = ZonedDateTime.of(event.getEndTime(), ZoneId.of(event.getTimeZone()));
@@ -1029,7 +1029,6 @@ public class EventServiceImpl implements EventService {
         }
         eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
-        eventSearchService.update(eventForUpdate);
         fileStorageRepository.deleteFileInTmpDir(avatarsForDeletingFromTempDirectory);
         fileStorageRepository.deleteEventAvatars(avatarsForDeletingFromDb);
 

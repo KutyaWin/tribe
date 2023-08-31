@@ -73,17 +73,16 @@ public class EventSearchServiceImpl implements EventSearchService {
 
     @Override
     @Transactional
-    public EventSearchUnit update(Event event) {
+    public EventSearchUnit updateOrSave(Event event) {
         Optional<EventSearchUnit> oldUnit = getSafe(event);
         EventSearchUnit newUnit = eventSearchUnitFactory.create(event);
         if (oldUnit.isPresent()) {
             UpdateUtil.updateEntity(oldUnit, newUnit);
             UpdateUtil.updateEntity(newUnit.getEventAddress(), newUnit.getEventAddress());
             return eventSearchUnitRepository.save(oldUnit.get());
+        } else {
+            return create(event);
         }
-        String erMessage = "Event search unit with id %s not found".formatted(event.getId());
-        log.error(erMessage);
-        throw new EventSearchUnitNotFoundException(erMessage);
     }
 
     private Optional<EventSearchUnit> getSafe(Event event) {
