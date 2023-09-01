@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.FileNotFoundException;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 
 @Slf4j
@@ -17,7 +18,6 @@ public class StorageExceptionHandler {
     @ExceptionHandler(FilesNotHandleException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseErrorDTO handleFileNotSavedException(RuntimeException fileNotSavedException) {
-        log.error("[EXCEPTION] message: " + fileNotSavedException.getMessage());
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -28,11 +28,20 @@ public class StorageExceptionHandler {
     @ExceptionHandler(FileNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseErrorDTO handleFileNotFoundException(Exception fileNotFoundException) {
-        log.error("[EXCEPTION] message: " + fileNotFoundException.getMessage());
 
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.NOT_FOUND)
                 .errorMessage(List.of(fileNotFoundException.getMessage()))
+                .build();
+    }
+
+    @ExceptionHandler(FileAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleFileAlreadyExistsException(FileAlreadyExistsException fileAlreadyExistsException) {
+
+        return ResponseErrorDTO.builder()
+                .status(HttpStatus.CONFLICT)
+                .errorMessage(List.of(fileAlreadyExistsException.getMessage()))
                 .build();
     }
 }

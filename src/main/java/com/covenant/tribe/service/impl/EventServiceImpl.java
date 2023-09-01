@@ -867,7 +867,6 @@ public class EventServiceImpl implements EventService {
             List<EventAvatar> eventAvatars = eventAvatarRepository.findAllByAvatarUrlIn(
                     avatarsForDeletingFromDb
             );
-            eventAvatarRepository.deleteAll(eventAvatars);
             eventForUpdate.deleteAvatars(eventAvatars);
         }
 

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -90,24 +91,41 @@ public class FileStorageRepositoryImpl implements FileStorageRepository {
     public List<String> addEventAvatars(List<String> fileNames) throws IOException {
         String currentDate = LocalDate.now().toString();
         ArrayList<String> paths = new ArrayList<>();
-        String pathToTmpDir = new StringBuilder(pathConfiguration.getHome())
-                .append(pathConfiguration.getMain()).append(File.separator)
-                .append(pathConfiguration.getTmp()).toString();
-        String pathToNewFolder = new StringBuilder(pathConfiguration.getHome())
-                .append(pathConfiguration.getMain()).append(File.separator)
-                .append(pathConfiguration.getImage()).append(File.separator)
-                .append(pathConfiguration.getEvent()).append(File.separator)
-                .append(pathConfiguration.getAvatar()).append(File.separator)
-                .append(currentDate).toString();
-        Files.createDirectories(Path.of(pathToNewFolder));
+        Path pathToTmpDir = Path.of(
+                pathConfiguration.getHome(),
+                pathConfiguration.getMain(),
+                pathConfiguration.getTmp()
+        );
+        Path pathToNewFolder = Path.of(
+                pathConfiguration.getHome(),
+                pathConfiguration.getMain(),
+                pathConfiguration.getImage(),
+                pathConfiguration.getEvent(),
+                pathConfiguration.getAvatar(),
+                currentDate
+        );
+        Files.createDirectories(pathToNewFolder);
 
         for (String fileName : fileNames) {
             String pathForDb = currentDate + File.separator + fileName;
-            String pathForFile = pathToNewFolder + File.separator + fileName;
+            Path pathForFile = pathToNewFolder.resolve(fileName);
             paths.add(pathForDb);
+            Path pathToFileInTmpDir = pathToTmpDir.resolve(fileName);
+            if (Files.notExists(pathToFileInTmpDir)) {
+                String erMessage = "File with name %s does not exist"
+                        .formatted(fileName);
+                log.error(erMessage);
+                throw new FilesNotHandleException(erMessage);
+            }
+            if (Files.exists(pathForFile)) {
+                String erMessage = "File with name %s already exist".formatted(fileName);
+                log.error(erMessage);
+                throw new FileAlreadyExistsException(erMessage);
+            }
             Files.copy(
-                    Path.of(pathToTmpDir + File.separator + fileName),
-                    Path.of(pathForFile));
+                    pathToFileInTmpDir,
+                    pathForFile
+            );
         }
         return paths;
     }
