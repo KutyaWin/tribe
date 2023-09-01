@@ -212,6 +212,15 @@ public class Event {
         }
     }
 
+    public void deleteAvatars(List<EventAvatar> eventAvatars) {
+        eventAvatars.forEach(this::deleteAvatar);
+    }
+
+    public void deleteAvatar(EventAvatar eventAvatar) {
+        eventAvatar.setEvent(null);
+        this.eventAvatars.remove(eventAvatar);
+    }
+
     public void addTagList(List<Tag> passedTags) {
 
         if (this.tagList == null) this.tagList = new ArrayList<>();

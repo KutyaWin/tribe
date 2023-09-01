@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface EventAvatarRepository extends JpaRepository<EventAvatar, Long> {
-    void deleteAllByAvatarUrlIn(List<String> avatarUrls);
+    Integer deleteAllByAvatarUrlIn(List<String> avatarUrls);
+
+    List<EventAvatar> findAllByAvatarUrlIn(List<String> avatarUrls);
 }
