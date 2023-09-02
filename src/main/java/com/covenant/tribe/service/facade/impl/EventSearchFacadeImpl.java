@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,10 @@ public class EventSearchFacadeImpl implements EventSearchFacade {
         for (Event event : byIdIn) {
             list[collect.indexOf(event.getId())] = event;
         }
-        PageImpl<Event> events = new PageImpl<>(Arrays.stream(list).toList());
+        PageImpl<Event> events = new PageImpl<>(
+                Arrays.stream(list)
+                        .sorted(Comparator.comparing(Event::getCreatedAt).reversed())
+                        .toList());
         return events;
     }
 
@@ -70,8 +74,8 @@ public class EventSearchFacadeImpl implements EventSearchFacade {
         int i = 0;
         eventSearchService.deleteAll();
         while (true) {
-            List<Event> all = eventService.findAll(i, size);
-            if (all.size() == 0) break;
+            List<Event> all = eventService.findAllByEventStatusIs(i, size);
+            if (all.isEmpty()) break;
             updateAll(all);
             i++;
         }

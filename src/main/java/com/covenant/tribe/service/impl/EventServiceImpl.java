@@ -97,6 +97,7 @@ public class EventServiceImpl implements EventService {
         if (filter.getStrictEventSort() == null) filter.setStrictEventSort(false);
         QPredicates qPredicates = QPredicates.builder();
         QSort orders = new QSort();
+
         qPredicates.add(Boolean.TRUE, QEvent.event.showEventInSearch.isTrue());
         qPredicates.add(EventStatus.PUBLISHED, QEvent.event.eventStatus.eq(EventStatus.PUBLISHED));
         boolean filterPresent = filter.getSort() != null;
@@ -106,8 +107,13 @@ public class EventServiceImpl implements EventService {
         orders = handleAlco(filter, qPredicates, orders, filterPresent);
         qPredicates.add(filter.getIsFree(), QEvent.event.isFree::eq);
         qPredicates.add(filter.getIsEighteenYearLimit(), QEvent.event.isEighteenYearLimit::eq);
+        DateTimePath<LocalDateTime> createdAt = QEvent.event.createdAt;
+        if (orders.isEmpty() && filter.getText() == null) {
+            orders = new QSort(createdAt.desc());
+        }
         Pageable pageable = QPageRequest.of(page, pageSize, orders);
         Predicate predicate = qPredicates.build();
+
         Pair<Predicate, Pageable> pair = new ImmutablePair<>(predicate, pageable);
         return pair;
     }
@@ -413,6 +419,13 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<Event> findAll(Integer page, Integer size) {
         return eventRepository.findAll(PageRequest.of(page, size)).stream().toList();
+    }
+
+    @Override
+    public List<Event> findAllByEventStatusIs(Integer page, Integer size) {
+        return eventRepository.findAllByEventStatusIs(
+                PageRequest.of(page, size), EventStatus.PUBLISHED
+        ).stream().toList();
     }
 
     @Override

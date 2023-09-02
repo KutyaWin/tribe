@@ -5,6 +5,7 @@ import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventIdView;
+import com.covenant.tribe.domain.event.EventStatus;
 import com.covenant.tribe.dto.event.*;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.querydsl.core.types.Predicate;
@@ -48,6 +49,8 @@ public interface EventService {
     Page<Event> findAll(Pageable pageable, Predicate predicate);
 
     List<Event> findAll(Integer page, Integer size);
+
+    List<Event> findAllByEventStatusIs(Integer page, Integer size);
 
     List<EventIdView> findIdsByPredicate(Predicate predicate);
 
