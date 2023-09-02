@@ -1019,12 +1019,8 @@ public class EventServiceImpl implements EventService {
             eventForUpdate.setShowEventInSearch(updateEventDto.isShowInSearch());
         }
 
-        if (updateEventDto.isSendByInterests() && !eventForUpdate.isSendToAllUsersByInterests()) {
-            eventForUpdate.setSendToAllUsersByInterests(true);
-            List<User> usersWhoSendNotification =
-                    userRepository.findAllByInterestingEventTypeContainingAndStatus(
-                            eventForUpdate.getEventType().getId(), UserStatus.ENABLED.toString()
-                    );
+        if (updateEventDto.isSendByInterests() != eventForUpdate.isSendToAllUsersByInterests()) {
+            eventForUpdate.setSendToAllUsersByInterests(updateEventDto.isSendByInterests());
         }
 
         if (updateEventDto.isHasAlcohol() != eventForUpdate.isPresenceOfAlcohol()) {
