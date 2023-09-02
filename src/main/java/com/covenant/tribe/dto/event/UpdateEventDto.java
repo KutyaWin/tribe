@@ -88,4 +88,7 @@ public class UpdateEventDto implements Serializable {
     @JsonProperty("has_alcohol")
     boolean hasAlcohol;
 
+    @JsonProperty("is_free")
+    boolean isFree;
+
 }

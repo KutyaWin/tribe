@@ -1030,6 +1030,9 @@ public class EventServiceImpl implements EventService {
         if (updateEventDto.isHasAlcohol() != eventForUpdate.isPresenceOfAlcohol()) {
             eventForUpdate.setPresenceOfAlcohol(updateEventDto.isHasAlcohol());
         }
+        if (updateEventDto.isFree() != eventForUpdate.isFree()) {
+            eventForUpdate.setFree(updateEventDto.isFree());
+        }
         eventForUpdate.setEventStatus(EventStatus.VERIFICATION_PENDING);
         eventRepository.save(eventForUpdate);
         fileStorageRepository.deleteFileInTmpDir(avatarsForDeletingFromTempDirectory);
