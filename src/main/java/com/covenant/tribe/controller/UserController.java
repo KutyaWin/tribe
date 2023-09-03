@@ -175,8 +175,7 @@ public class UserController {
 
     @Operation(
             description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Поле для поиска." +
-                    " Действие: Получение всех подписчиков, текущего пользователя у которых username совпадает" +
-                    " с введенным в поле поиска. (Можно передавать не username целиком, а первые несколько символов.)",
+                    " Действие: Получение всех подписчиков, текущего пользователя",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -185,7 +184,6 @@ public class UserController {
                                             schema = @Schema(implementation = UserSubscriberDto.class))))},
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PreAuthorize("#userId.equals(authentication.getName())")
     @GetMapping("/subscriber/{user_id}")
     public ResponseEntity<?> findAllSubscribersById(
             @PathVariable(value = "user_id") String userId,
