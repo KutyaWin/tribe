@@ -79,12 +79,42 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("relationshipStatus") RelationshipStatus relationshipStatus,
             Pageable pageable);
 
+    @Query(
+            """
+                    SELECT f.userWhoGetFollower
+                    FROM User u
+                    JOIN u.following f
+                    WHERE f.userWhoMadeFollowing.id = :userId
+                    AND f.relationshipStatus = :relationshipStatus
+                    """
+    )
+    Page<User> findAllFollowings(long userId, Pageable pageable, RelationshipStatus relationshipStatus);
+
+
     @Query("SELECT u.id " +
             "FROM User u " +
             "JOIN u.followers f " +
             "WHERE  f.userWhoMadeFollowing.id = :userId " +
-            "AND f.userWhoGetFollower.id IN (:userIds)")
-    Set<Long> findMutuallySubscribed(@Param("userIds") List<Long> userIds, @Param("userId") Long userId);
+            "AND f.userWhoGetFollower.id IN (:userIds)" +
+            "AND f.relationshipStatus = :relationshipStatus")
+    Set<Long> findMutuallySubscribed(
+            @Param("userIds") List<Long> userIds,
+            @Param("userId") Long userId,
+            @Param("relationshipStatus") RelationshipStatus relationshipStatus
+    );
+
+    @Query(
+            """
+                    SELECT u.id
+                    FROM User u
+                    JOIN u.following f
+                    WHERE f.userWhoGetFollower.id = :userId
+                    AND f.userWhoMadeFollowing.id IN (:followingIds)
+                    AND f.relationshipStatus = :relationshipStatus
+                    """
+    )
+    Set<Long> findMutuallyFollowing(List<Long> followingIds, long userId, RelationshipStatus relationshipStatus);
+
 
     Optional<User> findUserByUsername(String username);
 

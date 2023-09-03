@@ -203,6 +203,42 @@ public class UserController {
     }
 
     @Operation(
+            description = """
+                        Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписки. Поле для поиска.
+                        Действие: Получение всех подписок, текущего пользователя.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                array = @ArraySchema(
+                                    schema = @Schema(implementation = UserSubscriberDto.class)
+                                )
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/following/{user_id}")
+    public ResponseEntity<?> findAllFollowingById(
+            @PathVariable(value = "user_id") String userId,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "100") Integer size
+    ) {
+        log.info("[CONTROLLER] start endpoint findAllFollowing");
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserSubscriberDto> responseUser = userService.findAllFollowing(Long.parseLong(userId), pageable);
+
+        log.info("[CONTROLLER] end endpoint findAllFollowing");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseUser);
+
+    }
+
+    @Operation(
             description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Кнопка: подписаться." +
                     " Действие: подписаться на пользователя.",
             responses = {

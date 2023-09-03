@@ -112,7 +112,7 @@ class UserRepositoryIT extends AbstractTestcontainers {
         long userId  = 1001L;
         List<Long> userIds = List.of(1000L, 1002L);
 
-        Set<Long> allSubscribers = userRepository.findMutuallySubscribed(userIds, userId);
+        Set<Long> allSubscribers = userRepository.findMutuallySubscribed(userIds, userId, RelationshipStatus.SUBSCRIBE);
 
         assertNotNull(allSubscribers);
         assertEquals(allSubscribers.size(), 1);

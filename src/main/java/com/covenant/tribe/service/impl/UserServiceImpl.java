@@ -134,7 +134,9 @@ public class UserServiceImpl implements UserService {
                 userId, partialUsername, RelationshipStatus.SUBSCRIBE, pageable
         );
         List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
-        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
+        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(
+                subscriberIds, userId, RelationshipStatus.SUBSCRIBE
+        );
 
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
     }
@@ -144,8 +146,22 @@ public class UserServiceImpl implements UserService {
     public Page<UserSubscriberDto> findAllSubscribers(long userId, Pageable pageable) {
         Page<User> subscribers = userRepository.findAllSubscribers(userId, RelationshipStatus.SUBSCRIBE, pageable);
         List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
-        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(subscriberIds, userId);
+        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(
+                subscriberIds, userId, RelationshipStatus.SUBSCRIBE
+        );
         return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserSubscriberDto> findAllFollowing(long userId, Pageable pageable) {
+        Page<User> followings = userRepository.findAllFollowings(userId, pageable, RelationshipStatus.SUBSCRIBE);
+        List<Long> followingIds = followings.stream().map(User::getId).toList();
+        Set<Long> followingToWhichUserIsFollowing = userRepository.findMutuallyFollowing(
+                followingIds, userId, RelationshipStatus.SUBSCRIBE
+        );
+        return followings
+                .map(user -> userMapper.mapToUserSubscriberDto(user, followingToWhichUserIsFollowing));
     }
 
     @Transactional(readOnly = true)
@@ -498,4 +514,6 @@ public class UserServiceImpl implements UserService {
     public List<User> findAll() {
         return userRepository.findAll();
     }
+
+
 }
