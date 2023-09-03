@@ -59,4 +59,6 @@ public interface UserService {
     void deleteUser(long userId);
 
     List<User> findAll();
+
+    Page<UserSubscriberDto> findAllFollowing(long userId, Pageable pageable);
 }
