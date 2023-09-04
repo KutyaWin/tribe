@@ -254,7 +254,7 @@ class AuthServiceImplTest {
                 "user");
         Registrant registrant = new Registrant();
         registrant.setStatus(RegistrantStatus.CONFIRMED);
-        when(registrantRepository.findByEmail("email@mail.com")).thenReturn(registrant);
+        when(registrantRepository.findByEmailAndStatus("email@mail.com", RegistrantStatus.AWAITED)).thenReturn(registrant);
 
         // Then
         assertThrows(UserAlreadyExistException.class, () -> authService.addRegistrantWithEmail(dto));
@@ -268,7 +268,7 @@ class AuthServiceImplTest {
                 "user");
         Registrant registrant = new Registrant();
         registrant.setStatus(RegistrantStatus.EXPIRED);
-        when(registrantRepository.findByEmail("email@mail.com")).thenReturn(registrant);
+        when(registrantRepository.findByEmailAndStatus("email@mail.com", RegistrantStatus.AWAITED)).thenReturn(registrant);
 
         // When
         RegistrantResponseDTO responseDTO = authService.addRegistrantWithEmail(dto);

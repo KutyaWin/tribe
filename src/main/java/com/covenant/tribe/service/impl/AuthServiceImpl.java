@@ -174,7 +174,9 @@ public class AuthServiceImpl implements AuthService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         int verificationCode = verificationCodeService.getVerificationCode(minCodeValue, maxCodeValue);
-        Registrant registrant = registrantRepository.findByEmail(registrantRequestDTO.getEmail());
+        Registrant registrant = registrantRepository.findByEmailAndStatus(
+                registrantRequestDTO.getEmail(), RegistrantStatus.AWAITED
+        );
         String emailMessage = String.format("Код подтверждения: %s", verificationCode);
         if (registrant == null) {
             registrant = registrantMapper.mapToRegistrant(registrantRequestDTO, verificationCode);
@@ -182,17 +184,10 @@ public class AuthServiceImpl implements AuthService {
             mailService.sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             return new RegistrantResponseDTO(newRegistrant.getId(), verificationCode);
         } else {
-            if (registrant.getStatus() == RegistrantStatus.CONFIRMED ||
-                    userRepository.findUserByUserEmail(registrantRequestDTO.getEmail()).isPresent()
-            ) {
-                String message = String.format("User with email: %s already exists", registrantRequestDTO.getEmail());
-                throw new UserAlreadyExistException(message);
-            }
             registrant.setPassword(encoder.encode(registrantRequestDTO.getPassword()));
             registrant.setUsername(registrantRequestDTO.getUsername());
             mailService.sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
             registrant.setVerificationCode(verificationCode);
-            registrant.setStatus(RegistrantStatus.AWAITED);
             registrant.setCreatedAt(OffsetDateTime.now());
             registrantRepository.save(registrant);
 
@@ -577,7 +572,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-private TokensDTO getTokenForVkUser(String token, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException {
+    private TokensDTO getTokenForVkUser(String token, UserForSignInUpDTO userForSignInUpDTO) throws JsonProcessingException {
 
         VkValidationParams vkValidationParams = new VkValidationParams(token, clientSecret, apiVersion);
         ResponseEntity<String> vkResponse = vkClient.isTokenValid(vkValidationParams);
