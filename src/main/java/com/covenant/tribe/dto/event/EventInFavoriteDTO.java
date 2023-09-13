@@ -30,6 +30,9 @@ public class EventInFavoriteDTO {
     @Size(max = 100)
     String eventName;
 
+    @JsonProperty(value = "event_type_name")
+    String eventTypeName;
+
     @JsonProperty(value = "event_address")
     EventAddressDTO eventAddress;
 

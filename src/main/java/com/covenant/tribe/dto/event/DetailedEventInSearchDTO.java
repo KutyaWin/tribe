@@ -40,6 +40,9 @@ public class DetailedEventInSearchDTO {
     @Size(max = 200, message = "organizer_photo must not consist of more than 200 characters")
     String organizerPhoto;
 
+    @JsonProperty(value = "event_type_name")
+    String eventTypeName;
+
     @JsonProperty(value = "event_name")
     @NotBlank(message = "event_name should not be null or empty")
     @Size(max = 100)
