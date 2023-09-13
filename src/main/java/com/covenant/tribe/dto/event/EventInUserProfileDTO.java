@@ -28,6 +28,9 @@ public class EventInUserProfileDTO implements Serializable {
         @JsonProperty(value = "city")
         String city;
 
+        @JsonProperty(value = "event_type_name")
+        String eventTypeName;
+
         @JsonProperty(value = "start_time")
         LocalDateTime startTime;
 

@@ -190,6 +190,7 @@ public class EventMapperImpl implements EventMapper {
                 .eventPhotoUrl(getEventAvatars(event.getEventAvatars()))
                 .eventName(event.getEventName())
                 .city(event.getEventAddress().getCity())
+                .eventTypeName(event.getEventType().getTypeName())
                 .startTime(event.getStartTime())
                 .eventStatus(event.getEventStatus())
                 .isFinished(isEventFinished(event))
