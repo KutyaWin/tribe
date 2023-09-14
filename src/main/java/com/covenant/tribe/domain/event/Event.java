@@ -112,7 +112,7 @@ public class Event {
     @Column(name = "event_status", nullable = false)
     EventStatus eventStatus = EventStatus.VERIFICATION_PENDING;
 
-    @Column(name = "time_zone")
+    @Column(name = "time_zone", columnDefinition = "varchar")
     String timeZone;
 
     @ManyToMany(fetch = FetchType.LAZY)

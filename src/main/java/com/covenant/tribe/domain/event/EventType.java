@@ -49,7 +49,7 @@ public class EventType {
     String darkRectangleAnimation;
 
     @Column(name = "priority", nullable = false)
-    Long priority;
+    Integer priority;
 
     @OneToMany(mappedBy = "eventType", fetch = FetchType.LAZY)
     @ToString.Exclude
