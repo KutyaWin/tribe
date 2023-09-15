@@ -230,7 +230,8 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer,
-                            EventType eventType, @Nullable EventAddress eventAddress,
+                            EventType eventType, List<EventContactInfo> eventContactInfos,
+                            @Nullable EventAddress eventAddress,
                             @Nullable List<Tag> alreadyExistEventTags,
                             @Nullable List<Tag> createdEventTagsByRequest,
                             @Nullable List<User> invitedUserByRequest) {
@@ -253,6 +254,10 @@ public class EventMapperImpl implements EventMapper {
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
         organizer.addEventWhereUserAsOrganizer(event);
         eventType.addEvent(event);
+
+        if (!eventContactInfos.isEmpty()) {
+            event.addContactInfos(eventContactInfos);
+        }
 
         if (eventAddress != null) {
             event.setEventAddress(eventAddress);

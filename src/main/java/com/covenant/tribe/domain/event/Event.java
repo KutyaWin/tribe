@@ -11,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -134,6 +131,14 @@ public class Event {
     )
     private Set<EventPartOfDay> partsOfDay;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "event_contact_info",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "contact_info_id")
+    )
+    List<EventContactInfo> eventContactInfos;
+
     @OneToMany(
             mappedBy = "eventRelations",
             fetch = FetchType.LAZY,
@@ -156,6 +161,19 @@ public class Event {
                     eventAvatar.getId());
             log.error(String.format(message));
             throw new AlreadyExistArgumentForAddToEntityException(message);
+        }
+    }
+
+    public void addContactInfos(List<EventContactInfo> eventContactInfos) {
+        if (this.eventContactInfos == null) this.eventContactInfos = new ArrayList<>();
+        eventContactInfos.forEach(this::addContactInfo);
+    }
+
+    public void addContactInfo(EventContactInfo eventContactInfo) {
+        if (this.eventContactInfos == null) this.eventContactInfos = new ArrayList<>();
+        if (!this.eventContactInfos.contains(eventContactInfo)) {
+            this.eventContactInfos.add(eventContactInfo);
+            eventContactInfo.getEvents().add(this);
         }
     }
 
@@ -186,6 +204,7 @@ public class Event {
             );
         }
     }
+
     public void addEventsRelationsWithUsers(List<UserRelationsWithEvent> userRelationsWithEvents) {
         if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
         userRelationsWithEvents.forEach(this::addEventRelationsWithUser);
@@ -241,4 +260,6 @@ public class Event {
     public int hashCode() {
         return this.getClass().hashCode();
     }
+
+
 }
