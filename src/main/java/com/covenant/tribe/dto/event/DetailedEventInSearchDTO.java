@@ -43,6 +43,9 @@ public class DetailedEventInSearchDTO {
     @JsonProperty(value = "event_type_name")
     String eventTypeName;
 
+    @JsonProperty(value = "contact_info")
+    List<EventContactInfoDto> contactInfos;
+
     @JsonProperty(value = "event_name")
     @NotBlank(message = "event_name should not be null or empty")
     @Size(max = 100)
