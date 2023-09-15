@@ -44,7 +44,7 @@ public class KudagoFetchServiceImpl implements KudagoFetchService {
 
     @PostConstruct
     public void init() {
-        List<String> fieldsToRetrieve = List.of("id", "publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images", "tags");
+        List<String> fieldsToRetrieve = List.of("id", "publication_date", "place", "location", "dates", "title", "slug", "age_restriction", "price", "body_text", "categories", "images", "tags", "site_url");
         List<String> detailedFields = List.of("place", "dates", "location", "categories", "images");
         textFormat = "text";
         orderBy = "-publication_date";

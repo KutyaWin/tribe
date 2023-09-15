@@ -4,13 +4,11 @@ import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventAddress;
-import com.covenant.tribe.domain.event.EventAvatar;
-import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.EventCategory;
 import com.covenant.tribe.dto.event.EventAddressDTO;
+import com.covenant.tribe.dto.event.EventContactInfoDto;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.exeption.event.EventTypeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;
@@ -161,6 +159,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     @Override
     public void saveNewExternalEvents(
             List<KudagoEventDto> kudaGoEvents,
+            Map<Long, List<EventContactInfo>> eventContactInfos,
             Map<Long, EventAddressDTO> eventAddresses,
             Map<Long, List<String>> imageFileNames,
             Map<Long, List<Long>> eventTagIds,
@@ -204,6 +203,9 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                     kudagoEvent, organizer, eventAddress, eventType,
                     eventTags, userRelationsWithEvent, dates, hasAgeRestriction, eventImages
             );
+
+            List<EventContactInfo> eventContactInfoList = eventContactInfos.get(kudagoEvent.getId());
+            newEventFromKudaGo.addContactInfos(eventContactInfoList);
             Event save = eventRepository.save(newEventFromKudaGo);
             eventSearchService.create(save);
         });
