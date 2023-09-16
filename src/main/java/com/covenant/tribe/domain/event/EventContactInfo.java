@@ -34,4 +34,18 @@ public class EventContactInfo {
     @Builder.Default
     List<Event> events = new ArrayList<>();
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || this.getClass() != o.getClass()) return false;
+
+        EventContactInfo eventContactInfo = (EventContactInfo) o;
+        return this.id != null && this.id.equals(eventContactInfo.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getClass().hashCode();
+    }
 }

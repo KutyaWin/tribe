@@ -137,7 +137,7 @@ public class Event {
             joinColumns = @JoinColumn(name = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "contact_info_id")
     )
-    List<EventContactInfo> eventContactInfos;
+    Set<EventContactInfo> eventContactInfos;
 
     @OneToMany(
             mappedBy = "eventRelations",
@@ -165,16 +165,26 @@ public class Event {
     }
 
     public void addContactInfos(List<EventContactInfo> eventContactInfos) {
-        if (this.eventContactInfos == null) this.eventContactInfos = new ArrayList<>();
+        if (this.eventContactInfos == null) this.eventContactInfos = new HashSet<>();
+        eventContactInfos.forEach(this::addContactInfo);
+    }
+
+    public void addContactInfos(Set<EventContactInfo> eventContactInfos) {
+        if (this.eventContactInfos == null) this.eventContactInfos = new HashSet<>();
         eventContactInfos.forEach(this::addContactInfo);
     }
 
     public void addContactInfo(EventContactInfo eventContactInfo) {
-        if (this.eventContactInfos == null) this.eventContactInfos = new ArrayList<>();
+        if (this.eventContactInfos == null) this.eventContactInfos = new HashSet<>();
         if (!this.eventContactInfos.contains(eventContactInfo)) {
             this.eventContactInfos.add(eventContactInfo);
             eventContactInfo.getEvents().add(this);
         }
+    }
+
+    public void updateContactInfos(Set<EventContactInfo> eventContactInfos) {
+        addContactInfos(eventContactInfos);
+        this.eventContactInfos.retainAll(eventContactInfos);
     }
 
     public void addEventAvatars(Set<EventAvatar> eventAvatars) {

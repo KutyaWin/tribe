@@ -2,6 +2,7 @@ package com.covenant.tribe.dto.event;
 
 import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -30,6 +31,10 @@ public class UpdateEventDto implements Serializable {
     @NotNull(message = "event_type_id is required")
     @JsonProperty("event_type_id")
     Long eventTypeId;
+
+    @Nullable
+    @JsonProperty("event_contact_info")
+    Set<EventContactInfoDto> eventContactInfoDtos;
 
     @JsonProperty("avatars_for_deleting")
     List<String> avatarsForDeleting;

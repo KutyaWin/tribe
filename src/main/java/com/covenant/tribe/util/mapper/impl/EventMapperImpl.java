@@ -463,7 +463,7 @@ public class EventMapperImpl implements EventMapper {
         return responseDto;
     }
 
-    private List<EventContactInfoDto> getContactInfo(List<EventContactInfo> eventContactInfos) {
+    private Set<EventContactInfoDto> getContactInfo(Set<EventContactInfo> eventContactInfos) {
         return eventContactInfos.stream()
                 .map(eventContactInfo -> {
                     return EventContactInfoDto.builder()
@@ -471,7 +471,7 @@ public class EventMapperImpl implements EventMapper {
                             .contactType(eventContactInfo.getContactType())
                             .build();
                 })
-                .toList();
+                .collect(Collectors.toSet());
     }
 
     private Set<UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {
