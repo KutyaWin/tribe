@@ -1,14 +1,13 @@
 package com.covenant.tribe.service.facade.impl;
 
 import com.covenant.tribe.domain.Tag;
-import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.EventAddress;
-import com.covenant.tribe.domain.event.EventAvatar;
-import com.covenant.tribe.domain.event.EventType;
+import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
+import com.covenant.tribe.dto.event.EventContactInfoDto;
 import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.covenant.tribe.repository.EventAddressRepository;
+import com.covenant.tribe.repository.EventContactInfoRepository;
 import com.covenant.tribe.service.*;
 import com.covenant.tribe.service.facade.EventFacade;
 import com.covenant.tribe.service.impl.pojo.CollectedDataForMappingToEvent;
@@ -18,12 +17,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -41,6 +42,7 @@ public class EventFacadeImpl implements EventFacade {
     PhotoStorageService photoStorageService;
     FirebaseService firebaseService;
     EventAvatarService eventAvatarService;
+    EventContactInfoRepository eventContactInfoRepository;
 
 
     @Transactional
@@ -53,9 +55,9 @@ public class EventFacadeImpl implements EventFacade {
                 collectDataFromDifferentServicesForMappingToEvent(requestTemplateForCreatingEvent);
 
         Event newEvent = eventMapper.mapToEvent(requestTemplateForCreatingEvent, resultCollectingData.organizer(),
-                resultCollectingData.eventType(), resultCollectingData.eventAddress(),
-                resultCollectingData.alreadyExistEventTags(), resultCollectingData.createdEventTagsByRequest(),
-                resultCollectingData.invitedUserByRequest());
+                resultCollectingData.eventType(), resultCollectingData.eventContactInfos(),
+                resultCollectingData.eventAddress(), resultCollectingData.alreadyExistEventTags(),
+                resultCollectingData.createdEventTagsByRequest(), resultCollectingData.invitedUserByRequest());
 
         newEvent = eventService.saveNewEvent(newEvent);
 
@@ -75,6 +77,9 @@ public class EventFacadeImpl implements EventFacade {
 
         EventType eventType = eventTypeService
                 .getEventTypeByIdFetchEventListWithTypeAndTagList(requestTemplateForCreatingEvent.getEventTypeId());
+
+        List<EventContactInfo> eventContactInfos = getEventContactInfos(requestTemplateForCreatingEvent);
+        eventContactInfoRepository.saveAll(eventContactInfos);
 
         EventAddress eventAddress = null;
         if (requestTemplateForCreatingEvent.getEventAddress() != null) {
@@ -111,8 +116,29 @@ public class EventFacadeImpl implements EventFacade {
             );
         }
 
-        return new CollectedDataForMappingToEvent(organizer, eventType, eventAddress, alreadyExistEventTags,
+        return new CollectedDataForMappingToEvent(organizer, eventType,  eventContactInfos ,eventAddress, alreadyExistEventTags,
                 createdEventTagsByRequest, invitedUserByRequest);
+    }
+    private List<EventContactInfo> getEventContactInfos(RequestTemplateForCreatingEventDTO requestTemplateForCreatingEvent) {
+        List<EventContactInfo> eventContactInfos = new ArrayList<>();
+        if (requestTemplateForCreatingEvent.getEventContactInfoDtos() != null &&
+                !requestTemplateForCreatingEvent.getEventContactInfoDtos().isEmpty()) {
+            List<EventContactInfoDto> contactInfoDtos = requestTemplateForCreatingEvent.getEventContactInfoDtos();
+            contactInfoDtos.forEach(contactInfo -> {
+                Optional<EventContactInfo> eventContactInfoOp = eventContactInfoRepository.findByContactAndContactType(
+                        contactInfo.getContact(), contactInfo.getContactType()
+                );
+                EventContactInfo eventContactInfo = eventContactInfoOp.orElseGet(() -> {
+                            return EventContactInfo.builder()
+                                    .contactType(contactInfo.getContactType())
+                                    .contact(contactInfo.getContact())
+                                    .build();
+                        }
+                );
+                eventContactInfos.add(eventContactInfo);
+            });
+        }
+        return eventContactInfos;
     }
 
     private void processNecessaryPhotos(RequestTemplateForCreatingEventDTO requestTemplateForCreatingEvent,

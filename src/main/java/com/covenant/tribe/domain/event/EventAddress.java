@@ -51,7 +51,7 @@ public class EventAddress {
     @Column(length = 10)
     String building;
 
-    @Column(name = "house_number", length = 10)
+    @Column(name = "house_number", length = 30)
     String houseNumber;
 
     @Column(length = 10)

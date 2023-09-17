@@ -11,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -112,7 +109,7 @@ public class Event {
     @Column(name = "event_status", nullable = false)
     EventStatus eventStatus = EventStatus.VERIFICATION_PENDING;
 
-    @Column(name = "time_zone")
+    @Column(name = "time_zone", columnDefinition = "varchar")
     String timeZone;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -133,6 +130,14 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "part_of_day_id")
     )
     private Set<EventPartOfDay> partsOfDay;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "event_contact_info",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "contact_info_id")
+    )
+    Set<EventContactInfo> eventContactInfos;
 
     @OneToMany(
             mappedBy = "eventRelations",
@@ -157,6 +162,29 @@ public class Event {
             log.error(String.format(message));
             throw new AlreadyExistArgumentForAddToEntityException(message);
         }
+    }
+
+    public void addContactInfos(List<EventContactInfo> eventContactInfos) {
+        if (this.eventContactInfos == null) this.eventContactInfos = new HashSet<>();
+        eventContactInfos.forEach(this::addContactInfo);
+    }
+
+    public void addContactInfos(Set<EventContactInfo> eventContactInfos) {
+        if (this.eventContactInfos == null) this.eventContactInfos = new HashSet<>();
+        eventContactInfos.forEach(this::addContactInfo);
+    }
+
+    public void addContactInfo(EventContactInfo eventContactInfo) {
+        if (this.eventContactInfos == null) this.eventContactInfos = new HashSet<>();
+        if (!this.eventContactInfos.contains(eventContactInfo)) {
+            this.eventContactInfos.add(eventContactInfo);
+            eventContactInfo.getEvents().add(this);
+        }
+    }
+
+    public void updateContactInfos(Set<EventContactInfo> eventContactInfos) {
+        addContactInfos(eventContactInfos);
+        this.eventContactInfos.retainAll(eventContactInfos);
     }
 
     public void addEventAvatars(Set<EventAvatar> eventAvatars) {
@@ -186,6 +214,7 @@ public class Event {
             );
         }
     }
+
     public void addEventsRelationsWithUsers(List<UserRelationsWithEvent> userRelationsWithEvents) {
         if (this.eventRelationsWithUser == null) this.eventRelationsWithUser = new ArrayList<>();
         userRelationsWithEvents.forEach(this::addEventRelationsWithUser);
@@ -241,4 +270,6 @@ public class Event {
     public int hashCode() {
         return this.getClass().hashCode();
     }
+
+
 }

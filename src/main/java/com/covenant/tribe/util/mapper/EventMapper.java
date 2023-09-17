@@ -16,8 +16,9 @@ import java.util.Set;
 public interface EventMapper {
 
     Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer, EventType eventType,
-                     @Nullable EventAddress eventAddress, @Nullable List<Tag> alreadyExistEventTags,
-                     @Nullable List<Tag> createdEventTagsByRequest, @Nullable List<User> invitedUserByRequest);
+                     List<EventContactInfo> eventContactInfos, @Nullable EventAddress eventAddress,
+                     @Nullable List<Tag> alreadyExistEventTags, @Nullable List<Tag> createdEventTagsByRequest,
+                     @Nullable List<User> invitedUserByRequest);
 
     Event mapToEvent(
             KudagoEventDto kudagoEventDto, User organizer, EventAddress eventAddress,
@@ -35,9 +36,9 @@ public interface EventMapper {
 
     List<SearchEventDTO> mapToSearchEventDTOList(List<Event> filteredEvents, List<UserRelationsWithEvent> relationsWithEventCurrentUserId);
 
-    SearchEventDTO  mapToSearchEventDTO(Event event);
+    SearchEventDTO mapToSearchEventDTO(Event event);
 
-    SearchEventDTO  mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId);
+    SearchEventDTO mapToSearchEventDTO(Event event, List<UserRelationsWithEvent> relationsWithEventCurrentUserId);
 
     Set<EventPartOfDay> partEnumSetToEntity(Set<PartsOfDay> partsOfDay);
 

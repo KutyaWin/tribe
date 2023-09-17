@@ -1,6 +1,7 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.domain.event.Event;
+import com.covenant.tribe.domain.event.EventContactInfo;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.event.DetailedEventInSearchDTO;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,12 +73,13 @@ class EventFacadeImplUnitTest {
         Event savedMappedRequestToEventToDB = mock(Event.class);
         User spyUser = spy(User.class);
         List<User> allUsersIdWhoInterestingEventType = List.of(spyUser);
+        List<EventContactInfo> eventContactInfos = new ArrayList<>();
         DetailedEventInSearchDTO responseEventDto = mock(DetailedEventInSearchDTO.class);
 
         doReturn(organizer).when(userService).findUserByIdFetchUserAsOrganizer(anyLong());
         doReturn(eventType).when(eventTypeService).getEventTypeByIdFetchEventListWithTypeAndTagList(anyLong());
-        doReturn(mappedRequestToEvent).when(eventMapper).mapToEvent(request, organizer, eventType, null,
-                null, null, null);
+        doReturn(mappedRequestToEvent).when(eventMapper).mapToEvent(request, organizer, eventType, eventContactInfos,
+                null, null, null, null);
         doReturn(savedMappedRequestToEventToDB).when(eventService).saveNewEvent(mappedRequestToEvent);
         doReturn(allUsersIdWhoInterestingEventType).when(userService).findAllByInterestingEventTypeContaining(anyLong());
         doReturn(FAKER.number().randomNumber()).when(spyUser).getId();
@@ -90,8 +93,8 @@ class EventFacadeImplUnitTest {
 
         //then
         assertThat(actualResponseEventDto).isNotNull();
-        verify(eventMapper, times(1)).mapToEvent(request, organizer, eventType, null,
-                null, null, null);
+        verify(eventMapper, times(1)).mapToEvent(request, organizer, eventType, eventContactInfos,
+                null, null, null, null);
         verify(eventService, times(1)).saveNewEvent(mappedRequestToEvent);
         verify(eventMapper, times(1)).mapToDetailedEvent(eq(savedMappedRequestToEventToDB), any());
     }

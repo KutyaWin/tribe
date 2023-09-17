@@ -230,7 +230,8 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer,
-                            EventType eventType, @Nullable EventAddress eventAddress,
+                            EventType eventType, List<EventContactInfo> eventContactInfos,
+                            @Nullable EventAddress eventAddress,
                             @Nullable List<Tag> alreadyExistEventTags,
                             @Nullable List<Tag> createdEventTagsByRequest,
                             @Nullable List<User> invitedUserByRequest) {
@@ -253,6 +254,10 @@ public class EventMapperImpl implements EventMapper {
         event.setPartsOfDay(partEnumSetToEntity(getPartsOfDay(event)));
         organizer.addEventWhereUserAsOrganizer(event);
         eventType.addEvent(event);
+
+        if (!eventContactInfos.isEmpty()) {
+            event.addContactInfos(eventContactInfos);
+        }
 
         if (eventAddress != null) {
             event.setEventAddress(eventAddress);
@@ -412,6 +417,7 @@ public class EventMapperImpl implements EventMapper {
                 )
                 .eventName(event.getEventName())
                 .eventTypeName(event.getEventType().getTypeName())
+                .contactInfos(getContactInfo(event.getEventContactInfos()))
                 .description(event.getEventDescription())
                 .isPrivate(event.isPrivate())
                 .isFree(event.isFree())
@@ -420,7 +426,6 @@ public class EventMapperImpl implements EventMapper {
                 .isWantToGo(isWantToGo)
                 .build();
     }
-
     private DetailedEventInSearchDTO makeDetailedEventForParticipantOrNoPrivateEvent(
             Event event, List<String> eventAvatars, boolean isFavoriteEvent, boolean isParticipant,
             boolean isInvited, boolean isWantToGo
@@ -432,6 +437,7 @@ public class EventMapperImpl implements EventMapper {
                 .organizerPhoto(event.getOrganizer().getUserAvatar())
                 .eventName(event.getEventName())
                 .eventTypeName(event.getEventType().getTypeName())
+                .contactInfos(getContactInfo(event.getEventContactInfos()))
                 .organizerUsername(event.getOrganizer().getUsername())
                 .organizerId(event.getOrganizer().getId())
                 .startTime(event.getStartTime())
@@ -455,6 +461,17 @@ public class EventMapperImpl implements EventMapper {
             responseDto.setEventAddress(eventAddressMapper.mapToEventAddressDto(event.getEventAddress()));
         }
         return responseDto;
+    }
+
+    private Set<EventContactInfoDto> getContactInfo(Set<EventContactInfo> eventContactInfos) {
+        return eventContactInfos.stream()
+                .map(eventContactInfo -> {
+                    return EventContactInfoDto.builder()
+                            .contact(eventContactInfo.getContact())
+                            .contactType(eventContactInfo.getContactType())
+                            .build();
+                })
+                .collect(Collectors.toSet());
     }
 
     private Set<UsersWhoParticipantsOfEventDTO> mapUsersToUsersWhoParticipantsOfEventDTO(Set<User> users) {

@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Data
@@ -19,6 +20,9 @@ public class EventDto implements Serializable {
 
     @JsonProperty("event_type_info_dto")
     EventTypeInfoDto eventTypeInfoDto;
+
+    @JsonProperty("event_contacts")
+    Set<EventContactInfoDto> eventContactInfos;
 
     @JsonProperty("avatar_urls")
     List<String> avatarUrls;

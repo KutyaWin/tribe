@@ -55,6 +55,9 @@ public class RequestTemplateForCreatingEventDTO implements Serializable {
     @NotNull(message = "description should not be null")
     String description;
 
+    @JsonProperty(value = "contact_info")
+    List<EventContactInfoDto> eventContactInfoDtos;
+
     @JsonProperty(value = "avatars_for_deleting")
     List<String> avatarsForDeleting;
 

@@ -185,7 +185,7 @@ public class EventController {
                             content = @Content(
                                     schema = @Schema(implementation = DetailedEventInSearchDTO.class)))})
     @GetMapping("/{event_id}")
-    public ResponseEntity<?> getEventForUpdating(
+    public ResponseEntity<?> getEventById(
             @PathVariable("event_id") String eventId,
             HttpServletRequest token
     ) {

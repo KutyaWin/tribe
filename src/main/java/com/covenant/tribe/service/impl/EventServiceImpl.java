@@ -77,8 +77,10 @@ public class EventServiceImpl implements EventService {
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     UserService userService;
+    EventContactInfoService eventContactInfoService;
     EventMapper eventMapper;
     EventTypeMapper eventTypeMapper;
+    ContactInfoMapper contactInfoMapper;
     EventTagMapper eventTagMapper;
     UserMapper userMapper;
     EventAddressMapper eventAddressMapper;
@@ -830,6 +832,7 @@ public class EventServiceImpl implements EventService {
 
         return EventDto.builder()
                 .eventTypeInfoDto(eventTypeInfoDto)
+                .eventContactInfos(contactInfoMapper.mapToEventContactInfoDtos(event.getEventContactInfos()))
                 .avatarUrls(avatarUrlList)
                 .name(event.getEventName())
                 .addressDTO(eventAddressDTO)
@@ -854,6 +857,8 @@ public class EventServiceImpl implements EventService {
         Event eventForUpdate = findEventById(updateEventDto.getEventId());
         ArrayList<String> avatarsForDeletingFromTempDirectory = new ArrayList<>();
         ArrayList<String> avatarsForDeletingFromDb = new ArrayList<>();
+
+        eventContactInfoService.updateContactInfo(updateEventDto.getEventContactInfoDtos(), updateEventDto.getEventId());
 
         if (updateEventDto.getEventTypeId().longValue() != eventForUpdate.getEventType().getId()) {
             EventType newEventType = eventTypeRepository

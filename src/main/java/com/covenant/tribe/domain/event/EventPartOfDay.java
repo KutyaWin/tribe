@@ -21,10 +21,10 @@ public class EventPartOfDay {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", columnDefinition = "varchar", nullable = false)
     private String name;
 
-    @Column(name = "part_of_day")
+    @Column(name = "part_of_day", nullable = false)
     private Integer partsOfDay;
 
     @ManyToMany(mappedBy = "partsOfDay")
