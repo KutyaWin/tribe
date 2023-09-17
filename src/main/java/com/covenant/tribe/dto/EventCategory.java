@@ -3,26 +3,26 @@ package com.covenant.tribe.dto;
 public enum EventCategory {
 
     BUSINESS_EVENTS("business-events", "Обучение"),
-    CINEMA("cinema", "Кино"),
-    CONCERTS("concert", "Фестиваль"),
+    CINEMA("cinema", "Культура"),
+    CONCERTS("concert", "Культура"),
     EDUCATION("education", "Обучение"),
     ENTERTAINMENT("entertainment", "Прогулки"),
-    EXHIBITIONS("exhibition", "Выставка"),
-    FASHION("fashion", "Выставка"),
-    FESTIVALS("festival", "Фестиваль"),
+    EXHIBITIONS("exhibition", "Культура"),
+    FASHION("fashion", "Культура"),
+    FESTIVALS("festival", "Культура"),
     HOLIDAYS("holiday", "Посиделки"),
     KIDS("kids", "Для детей"),
-    OTHER("other", "Посиделки"),
-    PARTIES("party", "Фестиваль"),
-    PHOTOGRAPHY("photo", "Выставка"),
-    QUESTS("quest", "Прогулки"),
-    RECREATION("recreation", "Прогулки"),
-    SHOPPING("shopping", "Прогулки"),
-    SOCIAL_ACTIVITY("social-activity", "Религия"),
-    STOCKS("stock", "Stocks"), // Убрать из мероприятий шв 25
-    THEATER("theater", "Кино"),
-    TOURS("tour", "Посиделки"),
-    FAIRS("yarmarki-razvlecheniya-yarmarki", "Выставка");
+    OTHER("other", "Другое"),
+    PARTIES("party", "Посиделки"),
+    PHOTOGRAPHY("photo", "Культура"),
+    QUESTS("quest", "Игры"),
+    RECREATION("recreation", "Посиделки"),
+    SHOPPING("shopping", "Шопинг"),
+    SOCIAL_ACTIVITY("social-activity", "Другое"),
+    STOCKS("stock", "Другое"), // Убрать из мероприятий шв 25
+    THEATER("theater", "Культура"),
+    TOURS("tour", "Поездки"),
+    FAIRS("yarmarki-razvlecheniya-yarmarki", "Культура");
 
     private final String kudaGoName;
     private final String tribeName;
