@@ -129,6 +129,7 @@ public class Event {
             joinColumns = @JoinColumn(name = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "part_of_day_id")
     )
+    @ToString.Exclude
     private Set<EventPartOfDay> partsOfDay;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -138,6 +139,7 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "contact_info_id")
     )
     @Builder.Default
+    @ToString.Exclude
     Set<EventContactInfo> eventContactInfos = new HashSet<>();
 
     @OneToMany(

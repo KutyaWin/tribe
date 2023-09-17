@@ -14,4 +14,6 @@ public interface EventTypeRepository extends JpaRepository<EventType, Long>, Cus
     Optional<EventType> findEventTypeByTypeName(String typeName);
 
     Set<EventType> findAllByIdNotIn(List<Long> ids);
+
+    List<EventType> findAllByTypeNameIsNot(String typeName);
 }

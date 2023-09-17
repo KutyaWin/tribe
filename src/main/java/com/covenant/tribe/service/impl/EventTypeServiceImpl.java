@@ -95,7 +95,8 @@ public class EventTypeServiceImpl implements EventTypeService {
     @Transactional(readOnly = true)
     @Override
     public List<EventTypeDTO> getAllCircleEventTypes(boolean isDark) {
-        List<EventType> eventTypes = eventTypeRepository.findAll();
+        String excludeTypeName = "Другое";
+        List<EventType> eventTypes = eventTypeRepository.findAllByTypeNameIsNot(excludeTypeName);
         return eventTypes.stream()
                 .sorted(Comparator.comparing(EventType::getPriority))
                 .map(eventType -> {
