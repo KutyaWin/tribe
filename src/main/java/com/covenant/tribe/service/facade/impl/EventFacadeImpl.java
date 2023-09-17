@@ -121,8 +121,10 @@ public class EventFacadeImpl implements EventFacade {
     }
     private List<EventContactInfo> getEventContactInfos(RequestTemplateForCreatingEventDTO requestTemplateForCreatingEvent) {
         List<EventContactInfo> eventContactInfos = new ArrayList<>();
-        if (requestTemplateForCreatingEvent.getEventContactInfoDtos() != null &&
-                !requestTemplateForCreatingEvent.getEventContactInfoDtos().isEmpty()) {
+        if (requestTemplateForCreatingEvent.getEventContactInfoDtos() == null) {
+            return new ArrayList<>();
+        }
+        if (!requestTemplateForCreatingEvent.getEventContactInfoDtos().isEmpty()) {
             List<EventContactInfoDto> contactInfoDtos = requestTemplateForCreatingEvent.getEventContactInfoDtos();
             contactInfoDtos.forEach(contactInfo -> {
                 Optional<EventContactInfo> eventContactInfoOp = eventContactInfoRepository.findByContactAndContactType(

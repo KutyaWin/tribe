@@ -137,7 +137,8 @@ public class Event {
             joinColumns = @JoinColumn(name = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "contact_info_id")
     )
-    Set<EventContactInfo> eventContactInfos;
+    @Builder.Default
+    Set<EventContactInfo> eventContactInfos = new HashSet<>();
 
     @OneToMany(
             mappedBy = "eventRelations",

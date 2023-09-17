@@ -230,7 +230,8 @@ public class EventMapperImpl implements EventMapper {
 
     @Override
     public Event mapToEvent(RequestTemplateForCreatingEventDTO dto, User organizer,
-                            EventType eventType, List<EventContactInfo> eventContactInfos,
+                            EventType eventType,
+                            List<EventContactInfo> eventContactInfos,
                             @Nullable EventAddress eventAddress,
                             @Nullable List<Tag> alreadyExistEventTags,
                             @Nullable List<Tag> createdEventTagsByRequest,
