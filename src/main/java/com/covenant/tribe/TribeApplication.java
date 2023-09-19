@@ -20,6 +20,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
                     url = "http://localhost:8083/", description = "Local server"
                 ),
                 @Server(
+                        url = "https://dev.tribual.ru/", description = "Dev server"
+                ),
+                @Server(
                     url = "https://tribual.ru/", description = "Production server"
                 )
         }
