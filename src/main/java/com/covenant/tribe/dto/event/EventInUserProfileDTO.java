@@ -2,7 +2,6 @@ package com.covenant.tribe.dto.event;
 
 import com.covenant.tribe.domain.event.EventStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

@@ -1,7 +1,6 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.domain.Tag;
-import com.covenant.tribe.dto.TagDTO;
 import com.covenant.tribe.dto.event.EventTagDTO;
 import com.covenant.tribe.service.TagService;
 import com.covenant.tribe.util.mapper.EventTagMapper;

@@ -4,7 +4,6 @@ import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.dto.event.SearchEventDTO;
 import com.covenant.tribe.util.querydsl.EventFilter;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

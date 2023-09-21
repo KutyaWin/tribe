@@ -8,7 +8,6 @@ import com.covenant.tribe.domain.event.*;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.dto.EventCategory;
 import com.covenant.tribe.dto.event.EventAddressDTO;
-import com.covenant.tribe.dto.event.EventContactInfoDto;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.exeption.event.EventTypeNotFoundException;
 import com.covenant.tribe.exeption.user.UserNotFoundException;

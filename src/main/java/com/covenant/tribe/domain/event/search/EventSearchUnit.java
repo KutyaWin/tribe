@@ -1,7 +1,6 @@
 package com.covenant.tribe.domain.event.search;
 
 import com.covenant.tribe.domain.user.search.UserSearchUnit;
-import com.covenant.tribe.util.reflection.MyNested;
 import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

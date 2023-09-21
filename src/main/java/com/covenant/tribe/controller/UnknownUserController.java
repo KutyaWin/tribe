@@ -1,14 +1,11 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.user.UnknownUserWithInterestsDTO;
-import com.covenant.tribe.dto.user.UserSubscriberDto;
 import com.covenant.tribe.service.UnknownUserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

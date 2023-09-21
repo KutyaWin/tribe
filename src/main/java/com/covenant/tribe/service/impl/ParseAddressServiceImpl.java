@@ -1,7 +1,6 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
-import com.covenant.tribe.dto.event.EventAddressDTO;
 import com.covenant.tribe.dto.event.external.ParsedAddressDto;
 import com.covenant.tribe.service.ParseAddressService;
 import com.pullenti.address.*;

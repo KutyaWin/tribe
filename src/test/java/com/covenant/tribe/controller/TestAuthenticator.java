@@ -1,7 +1,5 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.dto.auth.RegistrantRequestDTO;
-import com.covenant.tribe.dto.auth.RegistrantResponseDTO;
 import com.covenant.tribe.dto.auth.TokensDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;

@@ -1,9 +1,6 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.AbstractTestcontainers;
-import com.covenant.tribe.service.EventSearchService;
-import com.covenant.tribe.service.facade.EventSearchFacade;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -11,7 +8,6 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
-import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;

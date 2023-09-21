@@ -1,7 +1,6 @@
 package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.service.MailService;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;

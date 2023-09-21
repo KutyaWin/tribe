@@ -7,8 +7,6 @@ import com.covenant.tribe.client.dadata.dto.ReverseGeocodingResponse;
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingSuggestions;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.service.ReverseGeolocationService;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

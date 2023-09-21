@@ -1,6 +1,5 @@
 package com.covenant.tribe.domain.event;
 
-import com.covenant.tribe.util.querydsl.PartsOfDay;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

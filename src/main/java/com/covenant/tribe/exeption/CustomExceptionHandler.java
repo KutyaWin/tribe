@@ -5,7 +5,6 @@ import com.covenant.tribe.exeption.event.WrongPartOfADayFilter;
 import com.covenant.tribe.exeption.auth.VerificationCodeNotFoundException;
 import com.covenant.tribe.exeption.user.SubscribeNotFoundException;
 import com.covenant.tribe.exeption.util.IllegalAccessDuringUpdateException;
-import com.google.auth.oauth2.TokenVerifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.dao.DataIntegrityViolationException;

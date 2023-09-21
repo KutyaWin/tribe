@@ -2,7 +2,6 @@ package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.auth.EmailLoginDTO;
 import com.covenant.tribe.dto.auth.TokensDTO;
-import com.covenant.tribe.dto.event.RequestTemplateForCreatingEventDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;

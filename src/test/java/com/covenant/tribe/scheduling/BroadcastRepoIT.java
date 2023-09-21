@@ -3,7 +3,6 @@ package com.covenant.tribe.scheduling;
 import com.covenant.tribe.IDUtil;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.UserStatus;
-import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import com.covenant.tribe.scheduling.notifications.BroadcastRepository;
 import org.junit.jupiter.api.AfterAll;
@@ -15,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;

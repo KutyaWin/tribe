@@ -1,7 +1,6 @@
 package com.covenant.tribe.dto.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.annotation.Nullable;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

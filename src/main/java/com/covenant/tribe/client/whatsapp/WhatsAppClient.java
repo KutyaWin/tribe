@@ -1,7 +1,6 @@
 package com.covenant.tribe.client.whatsapp;
 
 import com.covenant.tribe.client.whatsapp.dto.WhatsAppVerificationMsgDto;
-import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

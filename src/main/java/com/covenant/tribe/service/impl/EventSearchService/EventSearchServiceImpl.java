@@ -6,7 +6,6 @@ import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.search.EventSearchUnit;
 import com.covenant.tribe.domain.event.search.EventSearchUnitFactory;
-import com.covenant.tribe.exeption.event.search.EventSearchUnitNotFoundException;
 import com.covenant.tribe.repository.EventSearchUnitRepository;
 import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.impl.EventSearchService.pojo.SearchFields;

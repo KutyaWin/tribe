@@ -1,19 +1,14 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
-import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.event.EventContactInfo;
 import com.covenant.tribe.dto.event.EventAddressDTO;
-import com.covenant.tribe.dto.event.external.ExternalEventAddressDto;
 import com.covenant.tribe.dto.event.external.ExternalEventDates;
 import com.covenant.tribe.service.*;
 import com.covenant.tribe.service.facade.ExternalEventAddressHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;

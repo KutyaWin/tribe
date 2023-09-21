@@ -5,7 +5,6 @@ import com.covenant.tribe.dto.event.EventContactInfoDto;
 import com.covenant.tribe.util.mapper.ContactInfoMapper;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 

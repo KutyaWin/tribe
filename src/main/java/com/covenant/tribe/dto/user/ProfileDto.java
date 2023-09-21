@@ -1,7 +1,5 @@
 package com.covenant.tribe.dto.user;
 
-import com.covenant.tribe.dto.event.EventTypeDTO;
-import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

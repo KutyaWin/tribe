@@ -1,6 +1,5 @@
 package com.covenant.tribe.repository;
 
-import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.RelationshipStatus;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.UserStatus;

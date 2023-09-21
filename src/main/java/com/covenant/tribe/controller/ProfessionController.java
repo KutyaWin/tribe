@@ -1,7 +1,6 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.user.ProfessionDto;
-import com.covenant.tribe.service.EventTypeService;
 import com.covenant.tribe.service.ProfessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -4,7 +4,6 @@ import com.covenant.tribe.scheduling.model.Notification;
 import com.covenant.tribe.scheduling.notifications.NotificationRepository;
 import com.covenant.tribe.scheduling.notifications.NotificationStatus;
 import com.covenant.tribe.service.FirebaseService;
-import com.covenant.tribe.service.impl.FirebaseServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

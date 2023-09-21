@@ -1,7 +1,6 @@
 package com.covenant.tribe.controller;
 
 import com.covenant.tribe.dto.ImageDto;
-import com.covenant.tribe.dto.auth.EmailConfirmCodeDto;
 import com.covenant.tribe.dto.storage.TempFileDTO;
 import com.covenant.tribe.dto.user.*;
 import com.covenant.tribe.service.PhotoStorageService;
@@ -27,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;

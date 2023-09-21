@@ -1,7 +1,6 @@
 package com.covenant.tribe.exeption.client;
 
 import com.covenant.tribe.dto.ResponseErrorDTO;
-import com.covenant.tribe.exeption.event.*;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

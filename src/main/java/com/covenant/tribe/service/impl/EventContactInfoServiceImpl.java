@@ -7,7 +7,6 @@ import com.covenant.tribe.exeption.NotFoundException;
 import com.covenant.tribe.repository.EventContactInfoRepository;
 import com.covenant.tribe.repository.EventRepository;
 import com.covenant.tribe.service.EventContactInfoService;
-import com.covenant.tribe.service.EventService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 

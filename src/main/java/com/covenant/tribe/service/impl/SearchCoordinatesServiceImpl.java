@@ -1,6 +1,5 @@
 package com.covenant.tribe.service.impl;
 
-import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.nominatim.NominatimClient;
 import com.covenant.tribe.client.nominatim.dto.NominatimAddress;
 import com.covenant.tribe.client.nominatim.dto.NominatimPlaceDto;

@@ -4,7 +4,6 @@ import com.covenant.tribe.dto.user.UsersWhoParticipantsOfEventDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

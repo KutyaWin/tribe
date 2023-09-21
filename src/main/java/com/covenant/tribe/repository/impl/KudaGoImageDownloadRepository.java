@@ -5,13 +5,9 @@ import com.covenant.tribe.dto.ImageDto;
 import com.covenant.tribe.exeption.NotFoundException;
 import com.covenant.tribe.repository.ImageDownloadRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
-import org.thymeleaf.util.ArrayUtils;
-
-import java.util.List;
 
 @AllArgsConstructor
 @Repository

@@ -2,7 +2,6 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.TestcontainersTest;
 import com.covenant.tribe.TribeApplication;
-import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.service.KudagoFetchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Map;
 

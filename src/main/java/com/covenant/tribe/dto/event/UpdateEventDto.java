@@ -1,6 +1,5 @@
 package com.covenant.tribe.dto.event;
 
-import com.covenant.tribe.dto.user.UserToSendInvitationDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotEmpty;

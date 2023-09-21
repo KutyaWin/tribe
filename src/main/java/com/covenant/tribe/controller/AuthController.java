@@ -1,6 +1,5 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.domain.auth.PhoneVerificationCode;
 import com.covenant.tribe.dto.auth.*;
 import com.covenant.tribe.dto.user.UserForSignInUpDTO;
 import com.covenant.tribe.service.AuthService;
@@ -16,7 +15,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.el.parser.Token;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

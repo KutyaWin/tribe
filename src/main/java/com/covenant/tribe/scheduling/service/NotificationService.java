@@ -4,7 +4,6 @@ import com.covenant.tribe.scheduling.model.BroadcastEntity;
 import com.covenant.tribe.scheduling.notifications.NotificationStatus;
 import com.covenant.tribe.scheduling.model.Broadcast;
 import com.covenant.tribe.scheduling.model.Notification;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

@@ -1,6 +1,5 @@
 package com.covenant.tribe.controller;
 
-import com.covenant.tribe.service.EventSearchService;
 import com.covenant.tribe.service.facade.EventSearchFacade;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

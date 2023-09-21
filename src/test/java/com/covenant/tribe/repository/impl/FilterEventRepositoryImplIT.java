@@ -2,10 +2,7 @@ package com.covenant.tribe.repository.impl;
 
 import com.covenant.tribe.AbstractTestcontainers;
 import com.covenant.tribe.domain.event.Event;
-import com.covenant.tribe.domain.event.QEvent;
 import com.covenant.tribe.util.querydsl.EventFilter;
-import com.covenant.tribe.util.querydsl.QPredicates;
-import com.querydsl.core.types.Predicate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;

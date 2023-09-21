@@ -3,7 +3,6 @@ package com.covenant.tribe.repository.impl;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.repository.CustomTagRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

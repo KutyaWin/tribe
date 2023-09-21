@@ -1,6 +1,5 @@
 package com.covenant.tribe.security;
 
-import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.domain.user.UserRole;
 import com.covenant.tribe.exeption.auth.JwtDecoderException;
 import io.jsonwebtoken.Claims;
@@ -12,11 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

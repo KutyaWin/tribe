@@ -2,7 +2,6 @@ package com.covenant.tribe.service.impl;
 
 import com.covenant.tribe.client.kudago.EventRequestQueryMap;
 import com.covenant.tribe.client.kudago.KudagoClient;
-import com.covenant.tribe.client.kudago.dto.KudagoClientParams;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.client.kudago.dto.KudagoEventsResponseDto;
 import com.covenant.tribe.service.KudagoFetchService;
@@ -17,14 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j

@@ -5,7 +5,6 @@ import com.covenant.tribe.domain.event.EventIdView;
 import com.covenant.tribe.domain.event.search.EventSearchUnit;
 import com.covenant.tribe.service.EventSearchService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
