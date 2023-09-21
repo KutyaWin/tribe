@@ -43,7 +43,9 @@ public class ProfessionController {
     )
     @GetMapping()
     public ResponseEntity<?> getAllProfessions() {
+        log.info("[CONTROLLER] start endpoint getAllProfessions");
         List<ProfessionDto> professionDtoList = professionService.getAllProfessions();
+        log.info("[CONTROLLER] end endpoint getAllProfessions");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(professionDtoList);

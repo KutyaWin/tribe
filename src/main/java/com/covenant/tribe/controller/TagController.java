@@ -49,12 +49,14 @@ public class TagController {
     public ResponseEntity<?> getAllTagsByEventTypeId(
             @PathVariable("event_type_id") Long eventTypeId
     ) {
+        log.info("[CONTROLLER] start endpoint getAllTagsByEventTypeId");
         List<Tag> eventTags = tagService.getAllTagsByEventTypeId(eventTypeId);
         List<EventTagDTO> eventTagDTOs = eventTags
                 .stream()
                 .map(eventTag -> eventTagMapper
                         .mapEventTagToEventTagDTO(eventTag))
                 .toList();
+        log.info("[CONTROLLER] end endpoint getAllTagsByEventTypeId");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventTagDTOs);
