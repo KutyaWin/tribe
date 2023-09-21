@@ -241,7 +241,8 @@ public class EventController {
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
-    @PatchMapping("/verification/confirm/{event_id}")//TODO для продакшн сборки сделать PreAuthorize(ADMIN)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/verification/confirm/{event_id}")
     public ResponseEntity<?> updateEventStatusToPublished(
             @PathVariable(value = "event_id") Long eventId
     ) {
