@@ -44,9 +44,11 @@ public class UnknownUserController {
     public ResponseEntity<?> saveUnknownUserWithInterests(
             @RequestBody UnknownUserWithInterestsDTO unknownUserWithInterests
     ) {
+        log.info("[CONTROLLER] start endpoint saveUnknownUserWithInterests");
         Long unknownUserId = unknownUserService.saveNewUnknownUserWithInterests(
                 unknownUserWithInterests
         );
+        log.info("[CONTROLLER] end endpoint saveUnknownUserWithInterests");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(unknownUserId);

@@ -70,7 +70,7 @@ public class UserController {
         Page<UserToSendInvitationDTO> responseUser =
                 userService.findUsersByContainsStringInUsernameForSendInvite(partialUsername, pageable);
 
-        log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite with response: {}", responseUser);
+        log.info("[CONTROLLER] end endpoint findUserByUsernameForSendInvite}");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responseUser);
@@ -102,7 +102,7 @@ public class UserController {
         Page<UserSubscriberDto> responseUser = userService.findAllSubscribersByUsername(subscriberUsername,
                 Long.parseLong(userId), pageable);
 
-        log.info("[CONTROLLER] end endpoint findAllSubscribersByUsername with response: {}", responseUser);
+        log.info("[CONTROLLER] end endpoint findAllSubscribersByUsername");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -131,7 +131,7 @@ public class UserController {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Page<UserUnSubscriberDto> unsubscribers = userService.findAllUnSubscribers(Long.parseLong(userId), pageable);
 
-        log.info("[CONTROLLER] end endpoint findAllUnSubscribers with response: {}", unsubscribers);
+        log.info("[CONTROLLER] end endpoint findAllUnSubscribers");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(unsubscribers);
@@ -164,7 +164,7 @@ public class UserController {
                 unsubscriberUsername, Long.parseLong(userId), pageable
         );
 
-        log.info("[CONTROLLER] end endpoint findAllUnSubscribersByUsername with response: {}", unsubscribers);
+        log.info("[CONTROLLER] end endpoint findAllUnSubscribersByUsername");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -195,7 +195,7 @@ public class UserController {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Page<UserSubscriberDto> responseUser = userService.findAllSubscribers(Long.parseLong(userId), pageable);
 
-        log.info("[CONTROLLER] end endpoint findAllSubscribers with response: {}", responseUser);
+        log.info("[CONTROLLER] end endpoint findAllSubscribers");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -467,7 +467,7 @@ public class UserController {
 
         ImageDto imageDto = storageService.getUserAvatar(addedDate + File.separator + fileName);
 
-        log.info("[CONTROLLER] end endpoint getAvatar");
+        log.info("[CONTROLLER] end endpoint getUserAvatar");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
