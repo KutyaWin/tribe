@@ -182,7 +182,7 @@ public class AuthServiceImpl implements AuthService {
             registrant = registrantMapper.mapToRegistrant(registrantRequestDTO, verificationCode);
             Registrant newRegistrant = registrantRepository.save(registrant);
             mailService.sendEmail(EMAIL_SUBJECT, emailMessage, registrantRequestDTO.getEmail());
-            return new RegistrantResponseDTO(newRegistrant.getId(), verificationCode);
+            return new RegistrantResponseDTO(newRegistrant.getId());
         } else {
             registrant.setPassword(encoder.encode(registrantRequestDTO.getPassword()));
             registrant.setUsername(registrantRequestDTO.getUsername());
@@ -193,7 +193,7 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("[TRANSACTION] End transaction in class: " + this.getClass().getName());
 
-            return new RegistrantResponseDTO(registrant.getId(), verificationCode);
+            return new RegistrantResponseDTO(registrant.getId());
         }
     }
 

@@ -14,6 +14,4 @@ import java.io.Serializable;
 public class RegistrantResponseDTO implements Serializable {
     @JsonProperty("registrant_id")
     Long registrantId;
-
-    int code; //TODO delete before release
 }
