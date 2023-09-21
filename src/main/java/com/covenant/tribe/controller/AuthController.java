@@ -53,7 +53,7 @@ public class AuthController {
 
         TokensDTO tokensDTO = authService.getTokensToUserFromSocialNetworks(token, tokenType, userLoginDTO);
 
-        log.info("[CONTROLLER] end endpoint signInUpUser with ResponseBody: {}", tokensDTO);
+        log.info("[CONTROLLER] end endpoint signInUpUser");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
@@ -72,7 +72,7 @@ public class AuthController {
     public ResponseEntity<?> getCodeForLoginWithWhatsApp(
             @Valid @RequestBody PhoneNumberDto phoneNumberDto
     ) {
-        log.info("[CONTROLLER] start endpoint getCodeForLoginWithWhatsApp with phoneNumberDto: {}", phoneNumberDto);
+        log.info("[CONTROLLER] start endpoint getCodeForLoginWithWhatsApp with phoneNumberDto");
 
         authService.getCodeForLoginWithWhatsApp(phoneNumberDto);
 
@@ -127,7 +127,7 @@ public class AuthController {
 
         TokensDTO tokensDTO = authService.loginUserWithEmail(emailLoginDTO);
 
-        log.info("[CONTROLLER] end endpoint loginUserWithEmail with ResponseBody: {}", tokensDTO);
+        log.info("[CONTROLLER] end endpoint loginUserWithEmail with ResponseBody:");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
@@ -212,7 +212,9 @@ public class AuthController {
     )
     @GetMapping("/token/refresh")
     public ResponseEntity<?> refreshTokens(@RequestHeader(name = "Authorization") String token) {
+        log.info("[CONTROLLER] start endpoint refreshTokens)");
         TokensDTO tokensDTO = authService.refreshTokens(token);
+        log.info("[CONTROLLER] end endpoint refreshTokens");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(tokensDTO);
@@ -236,9 +238,8 @@ public class AuthController {
         log.info("[CONTROLLER] start endpoint add registrant with registrantDTO {} ", registrantRequestDTO);
 
         RegistrantResponseDTO registrantResponseDto = authService.addRegistrantWithEmail(registrantRequestDTO);
-        //RegistrantResponseDTO registrantResponseDTO = new RegistrantResponseDTO(registrantId);
 
-        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody: {}", registrantResponseDto);
+        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -265,7 +266,7 @@ public class AuthController {
 
         TokensDTO tokensDTO = authService.confirmEmailRegistration(confirmRegistrationDTO);
 
-        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody: {}", tokensDTO);
+        log.info("[CONTROLLER] end endpoint add registrant with ResponseBody");
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
