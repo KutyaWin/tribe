@@ -57,7 +57,6 @@ public class EventController {
     EventMapper eventMapper;
     EventFacade eventFacade;
     EventSearchFacade eventSearchFacade;
-    Environment env;
 
     JwtProvider jwtProvider;
 
@@ -138,13 +137,13 @@ public class EventController {
     @PostMapping
     @PreAuthorize("#requestTemplateForCreatingEventDTO.getOrganizerId().toString().equals(authentication.getName())")
     public ResponseEntity<?> createEvent(
-           @Valid @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
+            @Valid @RequestBody RequestTemplateForCreatingEventDTO requestTemplateForCreatingEventDTO
     ) {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 
         DetailedEventInSearchDTO response = eventFacade.handleNewEvent(requestTemplateForCreatingEventDTO);
 
-        log.info("[CONTROLLER] end endpoint createEvent with response: {}", response);
+        log.info("[CONTROLLER] end endpoint createEvent with response");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
@@ -170,7 +169,7 @@ public class EventController {
 
         eventService.deleteEvent(organizerId, eventId);
 
-        log.info("[CONTROLLER] end endpoint deleteEvent with response: {}", eventId);
+        log.info("[CONTROLLER] end endpoint deleteEvent with response");
 
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
@@ -202,7 +201,7 @@ public class EventController {
                 Long.parseLong(eventId), currentUserId
         );
 
-        log.info("[CONTROLLER] end endpoint getEventById with response: {}", responseEvent);
+        log.info("[CONTROLLER] end endpoint getEventById with response");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responseEvent);
@@ -294,16 +293,16 @@ public class EventController {
     )
     @GetMapping("/organisation/{organizer_id}")
     public ResponseEntity<?> findEventsByOrganizerId(
-           @PathVariable(value = "organizer_id") String organizerId,
-           Authentication authentication
+            @PathVariable(value = "organizer_id") String organizerId,
+            Authentication authentication
     ) {
         log.info("[CONTROLLER] start endpoint findEventsByOrganizerId with param: {}", organizerId);
         AbstractAuthenticationToken token = (AbstractAuthenticationToken) authentication;
         Long requestUserId = Long.valueOf(authentication.getName());
         List<EventInUserProfileDTO> organizersEvents = eventService
-                .findEventsByOrganizerId(organizerId,requestUserId);
+                .findEventsByOrganizerId(organizerId, requestUserId);
 
-        log.info("[CONTROLLER] end endpoint findEventsByOrganizerId with response: {}", organizersEvents);
+        log.info("[CONTROLLER] end endpoint findEventsByOrganizerId");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(organizersEvents);
@@ -326,7 +325,7 @@ public class EventController {
         log.info("[CONTROLLER] start endpoint findEventsByUserIdWhichUserIsInvited with param: {}", userId);
         List<EventInUserProfileDTO> invitedEvents = eventService.findEventsByUserIdWhichUserIsInvited(userId);
 
-        log.info("[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsInvited with response: {}", invitedEvents);
+        log.info("[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsInvited");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(invitedEvents);
@@ -405,10 +404,7 @@ public class EventController {
 
         List<EventInUserProfileDTO> participantsEvents = eventService.findEventsByUserIdWhichUserIsParticipant(userId);
 
-        log.info(
-                "[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsParticipant with response: {}",
-                participantsEvents
-        );
+        log.info("[CONTROLLER] end endpoint findEventsByUserIdWhichUserIsParticipant");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(participantsEvents);
@@ -430,7 +426,12 @@ public class EventController {
             @PathVariable("event_id") Long eventId,
             @PathVariable("organizer_id") String organizerId
     ) {
+        log.info(
+                "[CONTROLLER] start endpoint addUserToEventAsParticipant with eventId: {} and organizerId: {}"
+                , eventId, organizerId
+        );
         eventService.addUsersToPrivateEventAsParticipants(eventId, Long.valueOf(organizerId));
+        log.info("[CONTROLLER] end endpoint addUserToEventAsParticipant");
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();
@@ -453,11 +454,17 @@ public class EventController {
             @PathVariable("organizer_id") String organizerId,
             @PathVariable("user_id") Long userId
     ) {
+        log.info(
+                "[CONTROLLER] start endpoint addUserToEventAsParticipant with eventId: {} and organizerId: {} and userId: {}"
+                , eventId, organizerId, userId
+        );
         eventService.addUserToPrivateEventAsParticipant(eventId, Long.valueOf(organizerId), userId);
+        log.info("[CONTROLLER] end endpoint addUserToEventAsParticipant");
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
                 .build();
     }
+
     @Operation(
             description = "Категория: Splash/Фид/Cards, Избранное, Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +
                     "Экран: Экран карточки. Кнопка: Отменить. Действие: Отзыв запроса на " +
@@ -582,7 +589,9 @@ public class EventController {
     public ResponseEntity<?> addEventAvatarToTempDirectory(
             @RequestBody ImageDto imageDTO
     ) {
+        log.info("[CONTROLLER] start endpoint addEventAvatarToTempDirectory");
         String uniqueTempFileName = storageService.saveFileToTmpDir(imageDTO.getContentType(), imageDTO.getImage());
+        log.info("[CONTROLLER] end endpoint addEventAvatarToTempDirectory");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new TempFileDTO(uniqueTempFileName));
@@ -603,7 +612,9 @@ public class EventController {
             @PathVariable(value = "added_date") String addedDate,
             @PathVariable(value = "avatar_file_name") String avatarFileName
     ) throws FileNotFoundException {
+        log.info("[CONTROLLER] start endpoint getEventAvatar");
         ImageDto imageDTO = storageService.getEventAvatar(addedDate + File.separator + avatarFileName);
+        log.info("[CONTROLLER] end endpoint getEventAvatar");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .contentType(MediaType.parseMediaType(imageDTO.getContentType()))
@@ -629,7 +640,6 @@ public class EventController {
     ) throws JsonProcessingException {
 
         log.info("[CONTROLLER] start endpoint getAllEventByFilter");
-        log.debug("With data: {}", eventFilter);
 
         Long currentUserId = null;
         if (token.getHeader(HttpHeaders.AUTHORIZATION) != null) {
@@ -641,7 +651,6 @@ public class EventController {
         );
 
         log.info("[CONTROLLER] end endpoint getAllEventByFilter");
-        log.debug("With response: {}", response);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
@@ -649,13 +658,13 @@ public class EventController {
 
     @Operation(
             description = "Категория: Фильтр  Экран: Фильтр расширенный. Действие: доставка количества " +
-"отфильтрованных событий, для отображения на кнопке - Показать",
+                    "отфильтрованных событий, для отображения на кнопке - Показать",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
                                     schema = @Schema(implementation = FilteredEventQuantityDto.class)))}
-                    )
+    )
     @GetMapping("/search/quantity")
     public ResponseEntity<?> getFilteredEventQuantity(EventFilter eventFilter) {
         log.info("[CONTROLLER] start endpoint getFilteredEventQuantity");
@@ -710,7 +719,9 @@ public class EventController {
             @PathVariable(value = "user_id") String userId,
             @PathVariable(value = "event_id") Long eventId
     ) {
+        log.info("[CONTROLLER] start endpoint deleteEventFromFavorites");
         eventService.removeEventFromFavorite(Long.parseLong(userId), eventId);
+        log.info("[CONTROLLER] end endpoint deleteEventFromFavorites");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
@@ -738,7 +749,7 @@ public class EventController {
                 .map(eventMapper::mapToEventInFavoriteDTO)
                 .toList();
 
-        log.info("[CONTROLLER] end endpoint getAllFavoritesByUserId with response: {}", userFavorites);
+        log.info("[CONTROLLER] end endpoint getAllFavoritesByUserId");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(userFavorites);
@@ -764,7 +775,7 @@ public class EventController {
 
         EventDto event = eventService.getEventForUpdating(eventId, Long.valueOf(organizerId));
 
-        log.info("[CONTROLLER] end endpoint getEventForUpdating with response: {}", event);
+        log.info("[CONTROLLER] end endpoint getEventForUpdating");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -787,10 +798,10 @@ public class EventController {
             @RequestBody @Valid UpdateEventDto updateEventDto
     ) throws IOException {
         log.info("[CONTROLLER] start endpoint updateEvent with updateEventDto: {}", updateEventDto);
-        
+
         DetailedEventInSearchDTO detailedEventDto = eventService.updateEvent(updateEventDto);
 
-        log.info("[CONTROLLER] end endpoint updateEvent with response: {}", detailedEventDto);
+        log.info("[CONTROLLER] end endpoint updateEvent with response");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
