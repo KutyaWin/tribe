@@ -44,7 +44,9 @@ public class EventTypeController {
     public ResponseEntity<?> getRectangleEventTypes(
             @RequestParam(value = "is_dark") boolean isDark
     ) {
+        log.info("[CONTROLLER] start endpoint updateEvent with getRectangleEventTypes");
         List<EventTypeDTO> eventTypeDTOs = eventTypeService.getAllRectangleEventTypes(isDark);
+        log.info("[CONTROLLER] end endpoint getRectangleEventTypes");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventTypeDTOs);
@@ -64,7 +66,9 @@ public class EventTypeController {
     public ResponseEntity<?> getCircleEventTypes(
             @RequestParam(value = "is_dark") boolean isDark
     ) {
+        log.info("[CONTROLLER] start endpoint updateEvent with getCircleEventTypes");
         List<EventTypeDTO> eventTypeDTOs = eventTypeService.getAllCircleEventTypes(isDark);
+        log.info("[CONTROLLER] end endpoint getCircleEventTypes");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventTypeDTOs);

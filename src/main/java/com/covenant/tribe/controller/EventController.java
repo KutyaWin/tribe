@@ -143,7 +143,7 @@ public class EventController {
 
         DetailedEventInSearchDTO response = eventFacade.handleNewEvent(requestTemplateForCreatingEventDTO);
 
-        log.info("[CONTROLLER] end endpoint createEvent with response");
+        log.info("[CONTROLLER] end endpoint createEvent");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
@@ -169,7 +169,7 @@ public class EventController {
 
         eventService.deleteEvent(organizerId, eventId);
 
-        log.info("[CONTROLLER] end endpoint deleteEvent with response");
+        log.info("[CONTROLLER] end endpoint deleteEvent");
 
         return ResponseEntity
                 .status(HttpStatus.ACCEPTED)
@@ -201,7 +201,7 @@ public class EventController {
                 Long.parseLong(eventId), currentUserId
         );
 
-        log.info("[CONTROLLER] end endpoint getEventById with response");
+        log.info("[CONTROLLER] end endpoint getEventById");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responseEvent);
@@ -801,7 +801,7 @@ public class EventController {
 
         DetailedEventInSearchDTO detailedEventDto = eventService.updateEvent(updateEventDto);
 
-        log.info("[CONTROLLER] end endpoint updateEvent with response");
+        log.info("[CONTROLLER] end endpoint updateEvent");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
