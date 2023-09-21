@@ -1,21 +1,71 @@
+server:
+  port: ${APP_PORT}
+  forward-headers-strategy: framework
 spring:
-  autoconfigure:
-    exclude: "org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration,
-    org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration,
-    org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration"
+  elasticsearch:
+    rest:
+      uris: ${ELASTIC_URI}
+      username: ${ELASTICSEARCH_USERNAME}
+      password: ${ELASTIC_PASSWORD}
   properties:
     hibernate:
       dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driverClassName: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      max-lifetime: 60000
   jpa:
-#    database-platform: com.covenant.tribe.configuration.CustomPostgreSQLDialect
+    open-in-view: false #lock auto start transactional anywhere
     database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
+    hibernate:
+      ddl-auto: none
+  flyway:
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL}
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  mail:
+    host: mail.jino.ru
+    port: 587
+    username: tribe@tribual.ru
+    password: M5T&ojn@PF$Czx*b
+    protocol: smtp
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+        starttls:
+          enable: true
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
   cloud:
     openfeign:
       client:
         config:
+          vk-client:
+            url: ${SPRING_VK_INTROSPECTION_URI}
+            client-id: ${SPRING_VK_CLIENT_ID}
+            client-secret: ${SPRING_VK_CLIENT_SECRET}
+            api-version: ${SPRING_VK_API_VERSION}
+          whatsapp-client:
+            logger-level: full
+            url: ${SPRING_WHATSAPP_API_HOST}
+            api-version: ${SPRING_WHATSAPP_API_VERSION}
+            access-token: ${SPRING_WHATSAPP_ACCESS_TOKEN}
+            phone-number-id: ${SPRING_WHATSAPP_PHONE_NUMBER_ID}
           kudago-client:
+            url: "https://kudago.com/public-api/v1.4"
             connectTimeout: 100000
             readTimeout: 100000
             error-decoder: com.covenant.tribe.client.kudago.decoder.KudagoDecoder
@@ -42,11 +92,40 @@ spring:
             connectTimeout: 50000
             readTimeout: 50000
             retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
-
+logging:
+  file:
+    path: ${SPRING_LOG_DIRECTORY}
+  level:
+    root: info
+google:
+  client-id: ${SPRING_GOOGLE_CLIENT_ID}
 elastic:
-  enabled: false
+  enabled: true
 scheduler:
   mode: "retrying"
 event:
   message:
-    strategy: CONSOLE
+    strategy: FIREBASE
+verification:
+  code:
+    email:
+      min: 1000
+      max: 9999
+springdoc:
+  default-produces-media-type: application/json
+path:
+  home: ${SPRING_PARENT_DIRECTORY}
+  main: tribe
+  tmp: temp
+  image: image
+  avatar: avatar
+  event: event
+  user: user
+  animation: animation
+  add-events: add events
+  onboard: onboard
+keys:
+  access-private: access_private.der
+  access-public: access_public.pem
+  refresh-private: refresh_private.der
+  refresh-public: refresh_public.pem

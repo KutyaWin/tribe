@@ -2,6 +2,10 @@ server:
   port: 8085
 
 spring:
+  autoconfigure:
+    exclude: "org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration,
+      org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration,
+      org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration"
   elasticsearch:
     rest:
       uris: mock

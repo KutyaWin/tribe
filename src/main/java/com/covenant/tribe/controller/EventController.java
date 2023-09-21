@@ -28,6 +28,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -56,6 +57,7 @@ public class EventController {
     EventMapper eventMapper;
     EventFacade eventFacade;
     EventSearchFacade eventSearchFacade;
+    Environment env;
 
     JwtProvider jwtProvider;
 
@@ -624,6 +626,7 @@ public class EventController {
             EventFilter eventFilter,
             HttpServletRequest token
     ) throws JsonProcessingException {
+
         log.info("[CONTROLLER] start endpoint getAllEventByFilter");
         log.debug("With data: {}", eventFilter);
 
