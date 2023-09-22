@@ -10,3 +10,5 @@ allowed:
     admin: https://dev.admin.tribual.ru/
     host: http://localhost
     admin-host: http://localhost:3001
+path:
+  main: tribe

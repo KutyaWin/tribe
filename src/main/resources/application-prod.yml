@@ -7,3 +7,5 @@ allowed:
     admin: https://admin.tribual.ru/
     host: http://localhost
     admin-host: http://localhost:3000
+path:
+  main: tribe/prod
