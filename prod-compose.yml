@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+
+  prod_app:
+    image: tribe:latest
+    user: "${UID}:${GID}"
+    container_name: prod_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      prod_db:
+        condition: service_healthy
+      prod_elasticsearch:
+        condition: service_healthy
+      prod_kibana:
+        condition: service_healthy
+    links:
+      - prod_db
+      - prod_elasticsearch
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://prod_db:5432/tribe
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_VK_CLIENT_ID: ${VK_CLIENT_ID}
+      SPRING_VK_CLIENT_SECRET: ${VK_CLIENT_SECRET}
+      SPRING_VK_API_VERSION: ${VK_API_VERSION}
+      SPRING_VK_INTROSPECTION_URI: ${VK_INTROSPECTION_URI}
+      SPRING_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SPRING_LOG_DIRECTORY: ${LOG_DIRECTORY}
+      SPRING_PARENT_DIRECTORY: ${PARENT_DIRECTORY}
+      SPRING_WHATSAPP_API_HOST: ${WHATSAPP_API_HOST}
+      SPRING_WHATSAPP_API_VERSION: ${WHATSAPP_API_VERSION}
+      SPRING_WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN}
+      SPRING_WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
+      SPRING_DADATA_TOKEN: ${DADATA_API_KEY}
+      APP_PORT: ${APP_PORT}
+      ELASTIC_URI: prod_elasticsearch:9200
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      JAVA_TOOL_OPTIONS: "-XX:MaxDirectMemorySize=256m"
+    ports:
+      - "127.0.0.1:${APP_PORT}:${APP_PORT}"
+    restart: always
+    volumes:
+      - ${HOST_PARENT_DIRECTORY}:/tribe
+      - ${HOST_LOG_DIRECTORY}:/tribe/logs
+
+  prod_db:
+    image: postgis/postgis
+    container_name: prod_db
+    restart: always
+    volumes:
+      - prod_pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: tribe
+    ports:
+      - "127.0.0.1:${EXTERNAL_DB_PORT}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d tribe" ]
+      interval: 8s
+      timeout: 4s
+      retries: 4
+
+  prod_elasticsearch:
+    container_name: prod_elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
+    volumes:
+      - prod_elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "${ELASTIC_PORT}:9200"
+      - "${ELASTIC_PORT_2}:9300"
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=true
+      - ELASTICSEARCH_USERNAME=$ELASTICSEARCH_USERNAME
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+      - discovery.type=single-node
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=2gb
+      - cluster.routing.allocation.disk.watermark.high=1gb
+      - cluster.routing.allocation.disk.watermark.flood_stage=512mb
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl http://localhost:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+  prod_kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.2
+    container_name: prod_kibana
+    depends_on:
+      - prod_elasticsearch
+    ports:
+      - "${KIBANA_PORT}:5601"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=http://prod_elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=$KIBANA_USERNAME
+      - ELASTICSEARCH_PASSWORD=$ELASTIC_PASSWORD
+      - XPACK_SECURITY_ENABLED=false
+    restart: unless-stopped
+
+volumes:
+  prod_elasticsearch_data:
+    driver: local
+  prod_pg_data:
