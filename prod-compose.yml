@@ -65,7 +65,20 @@ services:
       interval: 8s
       timeout: 4s
       retries: 4
-
+  prod_setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    depends_on:
+      prod_elasticsearch:
+        condition: service_healthy
+    user: "0"
+    command: >
+      bash -c '
+        echo "Waiting for Elasticsearch availability";
+        until curl -s http://prod_elasticsearch:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+        echo "Setting kibana_system password";
+        until curl -s -X POST -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" http://prod_elasticsearch:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        echo "All done!";
+      '
   prod_elasticsearch:
     container_name: prod_elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
@@ -75,8 +88,12 @@ services:
       - "${ELASTIC_PORT}:9200"
       - "${ELASTIC_PORT_2}:9300"
     environment:
+      - node.name=prod_elasticsearch
+      - cluster.name=${CLUSTER_NAME}
+      - bootstrap.memory_lock=true
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - xpack.security.enabled=true
+      - xpack.license.self_generated.type=${LICENSE}
       - ELASTICSEARCH_USERNAME=$ELASTICSEARCH_USERNAME
       - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
       - discovery.type=single-node
@@ -89,7 +106,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl http://localhost:9200 | grep -q 'missing authentication credentials'",
+          "curl -s http://localhost:9200 | grep -q 'missing authentication credentials'",
         ]
       interval: 10s
       timeout: 10s
@@ -115,8 +132,7 @@ services:
       - SERVERNAME=kibana
       - ELASTICSEARCH_HOSTS=http://prod_elasticsearch:9200
       - ELASTICSEARCH_USERNAME=$KIBANA_USERNAME
-      - ELASTICSEARCH_PASSWORD=$ELASTIC_PASSWORD
-      - XPACK_SECURITY_ENABLED=false
+      - ELASTICSEARCH_PASSWORD=$KIBANA_PASSWORD
     restart: unless-stopped
 
 volumes:
