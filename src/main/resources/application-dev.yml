@@ -11,4 +11,4 @@ allowed:
     host: http://localhost
     admin-host: http://localhost:3001
 path:
-  main: tribe
+  main: tribe/dev
