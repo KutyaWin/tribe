@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
@@ -43,6 +44,9 @@ public class ProjectSecurityConfig {
 
     @Autowired
     JwtProvider jwtProvider;
+
+    @Autowired
+    Environment env;
 
     @Value("${allowed.corse.tribual}")
     String corsTribual;
@@ -111,7 +115,11 @@ public class ProjectSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(corsTribual, corsAdmin, corsHost, corsAdminHost));
+        if (env.getActiveProfiles()[0].equals("dev")) {
+            configuration.setAllowedOrigins(List.of("*"));
+        } else {
+            configuration.setAllowedOrigins(Arrays.asList(corsTribual, corsAdmin, corsHost, corsAdminHost));
+        }
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
