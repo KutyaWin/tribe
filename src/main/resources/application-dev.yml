@@ -5,10 +5,10 @@ spring:
         format_sql: true
     show-sql: true
 allowed:
-  corse:
-    tribual: https://dev.tribual.ru
-    admin: https://dev.admin.tribual.ru/
-    host: http://localhost
-    admin-host: http://localhost:3001
+  cors:
+    - https://dev.tribual.ru
+    - https://dev.admin.tribual.ru/
+    - http://localhost
+    - http://localhost:3001
 path:
   main: tribe/dev

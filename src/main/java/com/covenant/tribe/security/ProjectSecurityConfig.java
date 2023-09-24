@@ -1,5 +1,6 @@
 package com.covenant.tribe.security;
 
+import com.covenant.tribe.configuration.properties.AllowedCorsProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -46,19 +47,7 @@ public class ProjectSecurityConfig {
     JwtProvider jwtProvider;
 
     @Autowired
-    Environment env;
-
-    @Value("${allowed.corse.tribual}")
-    String corsTribual;
-
-    @Value("${allowed.corse.admin}")
-    String corsAdmin;
-
-    @Value("${allowed.corse.host}")
-    String corsHost;
-
-    @Value("${allowed.corse.admin-host}")
-    String corsAdminHost;
+    AllowedCorsProperties corsProperties;
 
     @Bean
     @Order(0)
@@ -115,11 +104,7 @@ public class ProjectSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        if (env.getActiveProfiles()[0].equals("dev")) {
-            configuration.setAllowedOrigins(List.of("*"));
-        } else {
-            configuration.setAllowedOrigins(Arrays.asList(corsTribual, corsAdmin, corsHost, corsAdminHost));
-        }
+        configuration.setAllowedOrigins(corsProperties.getCors());
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
