@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.user;
 
+import com.covenant.tribe.chat.domain.Chat;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
@@ -155,6 +156,10 @@ public class User {
     @ToString.Exclude
     @Builder.Default
     Set<Profession> userProfessions = new HashSet<>();
+
+    @ManyToMany(mappedBy = "participant")
+    @ToString.Exclude
+    Set<Chat> chats;
 
     @OneToMany(
             mappedBy = "userRelations",

@@ -9,6 +9,9 @@ allowed:
     - https://dev.tribual.ru
     - https://dev.admin.tribual.ru/
     - http://localhost
-    - http://localhost:3001
+    - http://localhost:3000
+logging:
+  level:
+    org.springframework.security: trace
 path:
   main: tribe/dev
