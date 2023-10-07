@@ -2,19 +2,15 @@ package com.covenant.tribe.chat.controller.rest;
 
 import com.covenant.tribe.chat.dto.PrivateChatInfoDto;
 import com.covenant.tribe.chat.dto.PrivateChatInvitedUserDto;
-import com.covenant.tribe.chat.service.PrivateChatService;
+import com.covenant.tribe.chat.service.ChatService;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -41,7 +37,7 @@ import org.springframework.web.bind.annotation.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PrivateChatController {
 
-    PrivateChatService chatService;
+    ChatService chatService;
 
     @PostMapping("/chat")
     public ResponseEntity<?> createPrivateChat(

@@ -9,17 +9,18 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Data
 @Builder
-public class ChatMessage {
+public class AuthorDto {
 
-    @JsonProperty(value = "chat_id")
-    Long chatId;
+    @JsonProperty(value = "author_id")
+    Long authorId;
 
-    @JsonProperty(value = "sender_id")
-    Long senderId;
+    @JsonProperty(value = "avatar_url")
+    String avatarUrl;
 
-    @JsonProperty(value = "recipient_id")
-    Long recipientId;
+    String username;
 
-    String content;
+    String firstname;
+
+    String lastname;
 
 }
