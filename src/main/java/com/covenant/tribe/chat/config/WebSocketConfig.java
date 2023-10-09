@@ -67,6 +67,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/api/v1/ws")
                 .setAllowedOriginPatterns("*");
+        registry.addEndpoint("/api/v1/ws/web")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
 
     }
 
