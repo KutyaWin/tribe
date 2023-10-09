@@ -1,5 +1,7 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.chat.domain.Chat;
+import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.domain.auth.EmailVerificationCode;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.*;
@@ -66,13 +68,14 @@ public class UserServiceImpl implements UserService {
     ProfessionMapper professionMapper;
     EventTypeMapper eventTypeMapper;
     FileStorageRepository fileStorageRepository;
+    ChatRepository chatRepository;
     ProfessionRepository professionRepository;
     EmailVerificationRepository emailVerificationRepository;
     MailService mailService;
     VerificationCodeService verificationCodeService;
 
     @Autowired
-    public UserServiceImpl(EventTypeRepository eventTypeRepository, FriendshipRepository friendshipRepository, UserRepository userRepository, UserMapper userMapper, ProfessionMapper professionMapper, EventTypeMapper eventTypeMapper, FileStorageRepository fileStorageRepository, ProfessionRepository professionRepository, EmailVerificationRepository emailVerificationRepository, MailService mailService, VerificationCodeService verificationCodeService) {
+    public UserServiceImpl(EventTypeRepository eventTypeRepository, ChatRepository chatRepository, FriendshipRepository friendshipRepository, UserRepository userRepository, UserMapper userMapper, ProfessionMapper professionMapper, EventTypeMapper eventTypeMapper, FileStorageRepository fileStorageRepository, ProfessionRepository professionRepository, EmailVerificationRepository emailVerificationRepository, MailService mailService, VerificationCodeService verificationCodeService) {
         this.eventTypeRepository = eventTypeRepository;
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
@@ -84,6 +87,7 @@ public class UserServiceImpl implements UserService {
         this.emailVerificationRepository = emailVerificationRepository;
         this.mailService = mailService;
         this.verificationCodeService = verificationCodeService;
+        this.chatRepository = chatRepository;
     }
 
     @Transactional(readOnly = true)
@@ -304,7 +308,15 @@ public class UserServiceImpl implements UserService {
                 .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
                         userWhoRequested, profileOwner, RelationshipStatus.SUBSCRIBE
                 );
-        return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing);
+        if (profileOwnerId == userWhoRequestedId) {
+            return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing, null);
+        }
+        List<Long> chatId = chatRepository
+                .findAllByParticipantInAndIsGroup(Set.of(profileOwner, userWhoRequested), false);
+        if (chatId.isEmpty()) {
+            return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing, null);
+        }
+        return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing, chatId.get(0));
     }
 
     @Transactional

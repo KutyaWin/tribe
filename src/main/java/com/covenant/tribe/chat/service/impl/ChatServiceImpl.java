@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -44,8 +43,15 @@ public class ChatServiceImpl implements ChatService {
         User invitedUser = userService.findUserById(invitedUserDto.invitedUserId());
         User chatCreator = userService.findUserById(chatCreatorId);
         Set<User> participants = Set.of(invitedUser, chatCreator);
-        List<Chat> chats = chatRepository.findAllByParticipantInAndIsGroup(participants, false);
-        if (!chats.isEmpty()) {
+        List<Long> chatIds = chatRepository.findAllByParticipantInAndIsGroup(participants, false);
+        if (chatIds.size() > 1) {
+            String erMessage = "There are more than one chat with users: %s and %s".formatted(
+                    invitedUser.getUsername(), chatCreator.getUsername()
+            );
+            log.error(erMessage);
+            throw new UnexpectedDataException(erMessage);
+        }
+        if (!chatIds.isEmpty()) {
             String erMessage = "Private chat with users: %s and %s already exists".formatted(
                     invitedUser.getUsername(), chatCreator.getUsername()
             );

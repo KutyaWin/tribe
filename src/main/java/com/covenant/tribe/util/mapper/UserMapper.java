@@ -20,6 +20,10 @@ public interface UserMapper {
 
     User mapToUserFromUserVkRegistration(UserForSignInUpDTO userForSignInUpDTO, String vkUserId);
 
+    ProfileDto mapToProfileDto(
+            User user, boolean isFollowed, boolean isFollowing, Long chatId
+    );
+
     UserToSendInvitationDTO mapToUserToSendInvitationDTO(User user);
 
     User buildUserFromConfirmRegistrationDTORegistrantAndUserInterests(
@@ -35,5 +39,4 @@ public interface UserMapper {
             List<EventTypeInfoDto> eventTypeInfoDtoList
     );
 
-    ProfileDto mapToProfileDto(User user, boolean isFollowed, boolean isFollowing);
 }

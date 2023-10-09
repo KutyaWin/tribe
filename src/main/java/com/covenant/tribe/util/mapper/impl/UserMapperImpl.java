@@ -112,7 +112,7 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public ProfileDto mapToProfileDto(
-            User user, boolean isFollowed, boolean isFollowing
+            User user, boolean isFollowed, boolean isFollowing, Long chatId
     ) {
         return ProfileDto.builder()
                 .userId(user.getId())
@@ -146,6 +146,7 @@ public class UserMapperImpl implements UserMapper {
                                 .map(EventType::getTypeName)
                                 .collect(Collectors.toList())
                 )
+                .chatId(chatId)
                 .build();
     }
 

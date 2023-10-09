@@ -43,4 +43,7 @@ public class ProfileDto implements Serializable {
 
     List<String> interests;
 
+    @JsonProperty("chat_id")
+    Long chatId;
+
 }
