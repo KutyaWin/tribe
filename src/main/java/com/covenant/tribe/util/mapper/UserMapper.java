@@ -9,6 +9,7 @@ import com.covenant.tribe.dto.event.EventTypeInfoDto;
 import com.covenant.tribe.dto.user.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface UserMapper {
@@ -30,7 +31,7 @@ public interface UserMapper {
             ConfirmRegistrationDTO confirmRegistrationDTO, Set<EventType> userInterests, Registrant registrant
     );
 
-    UserSubscriberDto mapToUserSubscriberDto(User follower, Set<Long> userIds);
+    UserSubscriberDto mapToUserSubscriberDto(User follower, Set<Long> userIds, Map<Long, Long> userIdsWithChatsExist);
 
     UserUnSubscriberDto mapToUserUnSubscriberDto(User user);
 

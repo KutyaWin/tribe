@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,7 +66,7 @@ public class UserMapperImpl implements UserMapper {
     }
 
     @Override
-    public UserSubscriberDto mapToUserSubscriberDto(User subscriber, Set<Long> userIds) {
+    public UserSubscriberDto mapToUserSubscriberDto(User subscriber, Set<Long> userIds, Map<Long, Long> userIdsWithChatsExist) {
         return UserSubscriberDto.builder()
                 .username(subscriber.getUsername())
                 .userId(subscriber.getId())
@@ -73,6 +74,7 @@ public class UserMapperImpl implements UserMapper {
                 .isUserSubscribeToSubscriber(userIds.contains(subscriber.getId()))
                 .lastName(subscriber.getLastName())
                 .firstName(subscriber.getFirstName())
+                .chatId(userIdsWithChatsExist.get(subscriber.getId()))
                 .build();
 
     }

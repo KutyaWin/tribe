@@ -108,6 +108,35 @@ public class UserController {
     }
 
     @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Поле для поиска." +
+                    " Действие: Получение всех подписчиков, текущего пользователя",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserSubscriberDto.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @GetMapping("/subscriber/{user_id}")
+    public ResponseEntity<?> findAllSubscribersById(
+            @PathVariable(value = "user_id") String userId,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "100") Integer size
+    ) {
+        log.info("[CONTROLLER] start endpoint findAllSubscribers with response: {}", userId);
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserSubscriberDto> responseUser = userService.findAllSubscribers(Long.parseLong(userId), pageable);
+
+        log.info("[CONTROLLER] end endpoint findAllSubscribers");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseUser);
+    }
+
+    @Operation(
             description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписаться. Поле для поиска." +
                     " Действие: Получение всех пользователей, на которых не подписан текущий пользователь",
             responses = {
@@ -170,36 +199,6 @@ public class UserController {
 
     }
 
-
-    @Operation(
-            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Поле для поиска." +
-                    " Действие: Получение всех подписчиков, текущего пользователя",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            content = @Content(
-                                    array = @ArraySchema(
-                                            schema = @Schema(implementation = UserSubscriberDto.class))))},
-            security = @SecurityRequirement(name = "BearerJWT")
-    )
-    @GetMapping("/subscriber/{user_id}")
-    public ResponseEntity<?> findAllSubscribersById(
-            @PathVariable(value = "user_id") String userId,
-            @RequestParam(value = "page", defaultValue = "0") Integer page,
-            @RequestParam(value = "size", defaultValue = "100") Integer size
-    ) {
-        log.info("[CONTROLLER] start endpoint findAllSubscribers with response: {}", userId);
-
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
-        Page<UserSubscriberDto> responseUser = userService.findAllSubscribers(Long.parseLong(userId), pageable);
-
-        log.info("[CONTROLLER] end endpoint findAllSubscribers");
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(responseUser);
-    }
-
     @Operation(
             description = """
                         Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписки. Поле для поиска.
@@ -209,14 +208,15 @@ public class UserController {
                     @ApiResponse(
                             responseCode = "200",
                             content = @Content(
-                                array = @ArraySchema(
-                                    schema = @Schema(implementation = UserSubscriberDto.class)
-                                )
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserSubscriberDto.class)
+                                    )
                             )
                     )
             },
             security = @SecurityRequirement(name = "BearerJWT")
     )
+    @PreAuthorize("#userId.equals(authentication.getName())")
     @GetMapping("/following/{user_id}")
     public ResponseEntity<?> findAllFollowingById(
             @PathVariable(value = "user_id") String userId,
@@ -234,6 +234,40 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(responseUser);
 
+    }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Подписчики. Поле для поиска." +
+                    " Действие: Получение всех подписок пользователя, у которых username совпадает с введенным в поле поиска." +
+                    " (Можно передавать не username целиком, а первые несколько символов.)",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = UserSubscriberDto.class))))},
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PreAuthorize("#userId.equals(authentication.getName())")
+    @GetMapping("/following/partial/{user_id}")
+    public ResponseEntity<?> findAllFollowingsByUsername(
+            @PathVariable("user_id") String userId,
+            @RequestParam(value = "user_name") String username,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "100") Integer size
+    ) {
+        log.info("[CONTROLLER] start endpoint findAllFollowingsByUsername");
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<UserSubscriberDto> responseUser = userService.findAllFollowingsByUsername(
+                username, Long.parseLong(userId), pageable
+        );
+
+        log.info("[CONTROLLER] end endpoint findAllFollowingsByUsername");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseUser);
     }
 
     @Operation(
@@ -323,7 +357,7 @@ public class UserController {
     @PreAuthorize("#userEmailDto.getUserId().equals(authentication.getName())")
     @PostMapping("/email/change/code")
     public ResponseEntity<?> sendEmailConfirmationCode(
-        @RequestBody @Valid UserEmailDto userEmailDto
+            @RequestBody @Valid UserEmailDto userEmailDto
     ) {
         log.info("[CONTROLLER] start endpoint sendEmailConfirmationCode with param: {}", userEmailDto);
 
@@ -486,7 +520,7 @@ public class UserController {
     @PreAuthorize("#userProfileUpdateDto.userId.toString().equals(authentication.getName())")
     @PatchMapping()
     public ResponseEntity<?> updateUserProfile(
-         @RequestBody @Valid UserProfileUpdateDto userProfileUpdateDto
+            @RequestBody @Valid UserProfileUpdateDto userProfileUpdateDto
     ) {
         log.info("[CONTROLLER] start endpoint updateUserProfile with param: {}", userProfileUpdateDto);
 
