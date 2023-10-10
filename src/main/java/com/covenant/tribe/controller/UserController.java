@@ -87,9 +87,9 @@ public class UserController {
             security = @SecurityRequirement(name = "BearerJWT")
     )
     @PreAuthorize("#userId.equals(authentication.getName())")
-    @GetMapping("/subscriber/partial/{subscriber_username}/{user_id}")
+    @GetMapping("/subscriber/partial/{user_id}")
     public ResponseEntity<?> findAllSubscribersByUsername(
-            @PathVariable(value = "subscriber_username") String subscriberUsername,
+            @RequestParam(value = "subscriber_username") String subscriberUsername,
             @PathVariable(value = "user_id") String userId,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "100") Integer size
@@ -177,11 +177,11 @@ public class UserController {
                                             schema = @Schema(implementation = UserUnSubscriberDto.class))))},
             security = @SecurityRequirement(name = "BearerJWT"))
     @PreAuthorize("#userId.equals(authentication.getName())")
-    @GetMapping("/unsubscriber/partial/{unsubscriber_username}/{user_id}")
+    @GetMapping("/unsubscriber/partial/{user_id}")
     public ResponseEntity<?> findAllUnSubscribersByUsername(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "100") Integer size,
-            @PathVariable(name = "unsubscriber_username") String unsubscriberUsername,
+            @RequestParam(name = "unsubscriber_username") String unsubscriberUsername,
             @PathVariable(name = "user_id") String userId
     ) {
         log.info("[CONTROLLER] start endpoint findAllUnSubscribersByUsername with param: {}", unsubscriberUsername);
