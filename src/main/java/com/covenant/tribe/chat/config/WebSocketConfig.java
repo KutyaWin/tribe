@@ -106,7 +106,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     Authentication user = (Authentication) accessor.getUser();
                     String destination = accessor.getDestination();
                     if (destination == null) {
-                        user = null;
+                        accessor.setUser(null);
                         throw new UnexpectedDataException("Empty destination is no support");
                     }
                     if (user == null) {
@@ -121,7 +121,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     if (userIdFromDestination != null && userIdFromDestination.equals(user.getName())) {
                         return message;
                     } else {
-                        user = null;
+                        accessor.setUser(null);
                         throw new AccessDeniedException("You are not authenticated user");
                     }
                 }
