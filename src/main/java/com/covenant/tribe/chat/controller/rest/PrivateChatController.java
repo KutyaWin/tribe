@@ -3,6 +3,11 @@ package com.covenant.tribe.chat.controller.rest;
 import com.covenant.tribe.chat.dto.PrivateChatInfoDto;
 import com.covenant.tribe.chat.dto.PrivateChatInvitedUserDto;
 import com.covenant.tribe.chat.service.ChatService;
+import com.covenant.tribe.dto.auth.TokensDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,6 +44,19 @@ public class PrivateChatController {
 
     ChatService chatService;
 
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/. Экран: Любой, на котором можно создать новый чат" +
+                    ". Кнопка: Вход в чат, или создание чата. Действие: Создание нового или перемещение в уже " +
+                    "существующий чат",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(implementation = PrivateChatInfoDto.class)
+                            )
+                    )
+            }
+    )
     @PostMapping("/chat")
     public ResponseEntity<?> createPrivateChat(
             @RequestBody PrivateChatInvitedUserDto invitedUserDto
