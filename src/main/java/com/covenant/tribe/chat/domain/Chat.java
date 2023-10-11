@@ -39,4 +39,8 @@ public class Chat {
     @ToString.Exclude
     @Builder.Default
     Set<User> participant = new HashSet<>();
+
+    public void addMessage(Message message) {
+        messages.add(message);
+    }
 }

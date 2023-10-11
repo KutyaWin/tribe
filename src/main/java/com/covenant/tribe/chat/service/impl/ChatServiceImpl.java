@@ -2,12 +2,15 @@ package com.covenant.tribe.chat.service.impl;
 
 import com.covenant.tribe.chat.controller.ws.WsChatController;
 import com.covenant.tribe.chat.domain.Chat;
+import com.covenant.tribe.chat.domain.Message;
 import com.covenant.tribe.chat.dto.AuthorDto;
 import com.covenant.tribe.chat.dto.ChatMessageDto;
 import com.covenant.tribe.chat.dto.PrivateChatInfoDto;
 import com.covenant.tribe.chat.dto.PrivateChatInvitedUserDto;
 import com.covenant.tribe.chat.factory.ChatFactory;
+import com.covenant.tribe.chat.factory.MessageFactory;
 import com.covenant.tribe.chat.repository.ChatRepository;
+import com.covenant.tribe.chat.repository.MessageRepository;
 import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.UnexpectedDataException;
@@ -31,8 +34,10 @@ import java.util.Set;
 public class ChatServiceImpl implements ChatService {
 
     ChatRepository chatRepository;
+    MessageRepository messageRepository;
     UserService userService;
     ChatFactory chatFactory;
+    MessageFactory messageFactory;
     SimpMessagingTemplate simpMessagingTemplate;
     @Transactional
     @Override
@@ -86,6 +91,9 @@ public class ChatServiceImpl implements ChatService {
         List<Long> sendToIds = chat.getParticipant().stream()
                 .map(User::getId)
                 .toList();
+        Message message = messageFactory.makeMessage(content, author, chat);
+        chat.addMessage(message);
+        messageRepository.save(message);
         for (Long sendToId : sendToIds) {
             simpMessagingTemplate.convertAndSend(
                     replaceToAddress(sendToId.toString()),
