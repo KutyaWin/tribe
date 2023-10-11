@@ -1,5 +1,6 @@
 package com.covenant.tribe.chat.config;
 
+import com.covenant.tribe.exeption.UnexpectedDataException;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthenticatedAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationEventPublisher;
 import org.springframework.security.authorization.AuthorizationManager;
@@ -34,6 +36,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -98,6 +102,28 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     }
                     Authentication user = new JwtAuthenticationToken(jwt, new ArrayList<>(), jwt.getClaim("sub"));
                     accessor.setUser(user);
+                } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                    Authentication user = (Authentication) accessor.getUser();
+                    String destination = accessor.getDestination();
+                    if (destination == null) {
+                        user = null;
+                        throw new UnexpectedDataException("Empty destination is no support");
+                    }
+                    if (user == null) {
+                        throw new AccessDeniedException("You are not authenticated user");
+                    }
+                    Pattern  pattern = Pattern.compile("^/topic/(.*)/chat$");
+                    Matcher matcher = pattern.matcher(destination);
+                    String userIdFromDestination = null;
+                    if (matcher.matches()) {
+                        userIdFromDestination = matcher.group(1);
+                    }
+                    if (userIdFromDestination != null && userIdFromDestination.equals(user.getName())) {
+                        return message;
+                    } else {
+                        user = null;
+                        throw new AccessDeniedException("You are not authenticated user");
+                    }
                 }
                 return message;
             }
