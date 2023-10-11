@@ -75,6 +75,10 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public void sendMessageToSubscribers(Long authorId, Long chatId, String content) {
         User author = userService.findUserById(authorId);
+        Chat chat = getChatById(chatId);
+        Message message = messageFactory.makeMessage(content, author, chat);
+        chat.addMessage(message);
+
         AuthorDto authorDto = AuthorDto.builder()
                 .authorId(authorId)
                 .avatarUrl(author.getUserAvatar())
@@ -86,13 +90,12 @@ public class ChatServiceImpl implements ChatService {
                 .chatId(chatId)
                 .author(authorDto)
                 .content(content)
+                .createdAt(message.getCreatedAt())
                 .build();
-        Chat chat = getChatById(chatId);
         List<Long> sendToIds = chat.getParticipant().stream()
                 .map(User::getId)
                 .toList();
-        Message message = messageFactory.makeMessage(content, author, chat);
-        chat.addMessage(message);
+
         messageRepository.save(message);
         for (Long sendToId : sendToIds) {
             simpMessagingTemplate.convertAndSend(

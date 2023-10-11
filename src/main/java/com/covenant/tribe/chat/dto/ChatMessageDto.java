@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.ZonedDateTime;
+
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,5 +19,8 @@ public class ChatMessageDto {
     AuthorDto author;
 
     String content;
+
+    @JsonProperty(value = "created_at")
+    ZonedDateTime createdAt;
 
 }
