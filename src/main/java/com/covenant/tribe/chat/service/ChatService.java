@@ -1,9 +1,12 @@
 package com.covenant.tribe.chat.service;
 
 
+import com.covenant.tribe.chat.dto.ChatDto;
 import com.covenant.tribe.chat.dto.ChatMessageDto;
 import com.covenant.tribe.chat.dto.PrivateChatInfoDto;
 import com.covenant.tribe.chat.dto.PrivateChatInvitedUserDto;
+
+import java.util.List;
 
 public interface ChatService {
 
@@ -11,4 +14,5 @@ public interface ChatService {
 
         void sendMessageToSubscribers(Long authorId, Long chatId, String content);
 
+        List<ChatDto> getChatsByUserId(Long userId);
 }

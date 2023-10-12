@@ -33,9 +33,11 @@ public class WsChatController {
     }
 
     public static final String SUBSCRIBE_TO_MESSAGES = "/topic/{user_id}/chat";
+
     @MessageMapping("/chat/{chat_id}")
     public String processMessage(
-            @Payload String chatMessage, Principal principal, @DestinationVariable(value = "chat_id") String chatId
+            @Payload String chatMessage, Principal principal,
+            @DestinationVariable(value = "chat_id") String chatId
     ) {
         chatService.sendMessageToSubscribers(
                 Long.valueOf(principal.getName()),

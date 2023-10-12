@@ -27,4 +27,5 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             @Param("participants") Set<User> participants,
             @Param("is_group") Boolean isGroup
     );
+
 }

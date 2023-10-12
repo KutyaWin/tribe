@@ -1,0 +1,5 @@
+ALTER TABLE chat
+    ADD event_id BIGINT;
+
+ALTER TABLE chat
+    ADD CONSTRAINT FK_CHAT_ON_EVENT FOREIGN KEY (event_id) REFERENCES events (id);
