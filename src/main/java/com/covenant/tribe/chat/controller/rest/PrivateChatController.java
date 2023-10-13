@@ -4,12 +4,14 @@ import com.covenant.tribe.chat.dto.ChatDto;
 import com.covenant.tribe.chat.dto.PrivateChatInfoDto;
 import com.covenant.tribe.chat.dto.PrivateChatInvitedUserDto;
 import com.covenant.tribe.chat.service.ChatService;
+import com.covenant.tribe.util.security.TokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,8 +29,9 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("api/v1")
+@RequestMapping("api/v1/chat")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Tag(name = "Chat")
 public class PrivateChatController {
 
     ChatService chatService;
@@ -46,14 +49,14 @@ public class PrivateChatController {
                     )
             }
     )
-    @PostMapping("/chat")
+    @PostMapping()
     public ResponseEntity<?> createPrivateChat(
             @RequestBody PrivateChatInvitedUserDto invitedUserDto
     ) {
 
         log.info("[CONTROLLER] start endpoint getChatIdByParticipants");
 
-        Long chatCreatorId = getUserIdFromToken();
+        Long chatCreatorId = TokenUtil.getUserIdFromToken(SecurityContextHolder.getContext());
 
         PrivateChatInfoDto chatInfoByParticipants = chatService
                 .createPrivateChat(invitedUserDto, chatCreatorId);
@@ -81,14 +84,14 @@ public class PrivateChatController {
             },
             security = @SecurityRequirement(name = "Bearer JWT")
     )
-    @GetMapping("/chats")
+    @GetMapping()
     public ResponseEntity<?> getChatsByUser(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size
     ) {
         log.info("[CONTROLLER] start endpoint getChatsByUser");
 
-        Long userId = getUserIdFromToken();
+        Long userId = TokenUtil.getUserIdFromToken(SecurityContextHolder.getContext());
 
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Page<ChatDto> chats = chatService.getChatsByUserId(userId, pageable);
@@ -98,11 +101,6 @@ public class PrivateChatController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(chats);
-    }
-
-    private Long getUserIdFromToken() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return Long.valueOf(auth.getName());
     }
 
 }
