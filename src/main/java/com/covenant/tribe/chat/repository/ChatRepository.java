@@ -34,4 +34,6 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             Long userId, Pageable pageable, Boolean isGroup
     );
 
+    Boolean existsChatByParticipantAndId(User participant, Long chatId);
+
 }
