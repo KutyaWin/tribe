@@ -14,6 +14,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,23 +23,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-
-/*
-   При нажатии на Bottom Nav получаем все чаты.
-
-
-   При нажатии на чат в профиле пользователя:
-    1. Чата еще нет.
-
-
-
-
-    2. Чат есть.
-
-
- */
-
 
 @RestController
 @Slf4j
@@ -97,12 +82,16 @@ public class PrivateChatController {
             security = @SecurityRequirement(name = "Bearer JWT")
     )
     @GetMapping("/chats")
-    public ResponseEntity<?> getChatsByUser() {
+    public ResponseEntity<?> getChatsByUser(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size
+    ) {
         log.info("[CONTROLLER] start endpoint getChatsByUser");
 
         Long userId = getUserIdFromToken();
 
-        List<ChatDto> chats = chatService.getChatsByUserId(userId);
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        Page<ChatDto> chats = chatService.getChatsByUserId(userId, pageable);
 
         log.info("[CONTROLLER] end endpoint getChatsByUser");
 

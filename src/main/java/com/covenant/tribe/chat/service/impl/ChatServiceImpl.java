@@ -20,6 +20,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChatServiceImpl implements ChatService {
+
+    private final Boolean IS_GROUP_CHAT = true;
+    private final Boolean IS_NOT_GROUP_CHAT = false;
+
 
     ChatRepository chatRepository;
     MessageRepository messageRepository;
@@ -118,15 +124,16 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public List<ChatDto> getChatsByUserId(Long userId) {
+    public Page<ChatDto> getChatsByUserId(Long userId, Pageable pageable) {
         User user = userService.findUserById(userId);
-        Set<Chat> chats = user.getChats();
+        Page<Chat> chats = chatRepository.findAllByParticipantIdAndIsGroup(
+                userId, pageable, IS_NOT_GROUP_CHAT
+        );
         return makeChatDtos(chats, user);
     }
 
-    private List<ChatDto> makeChatDtos(Set<Chat> chats, User gettingChatParticipant) {
-        List<ChatDto> chatDtos = new ArrayList<>();
-        for (Chat chat : chats) {
+    private Page<ChatDto> makeChatDtos(Page<Chat> chats, User gettingChatParticipant) {
+        return chats.map(chat -> {
             Message lastMessage = messageRepository
                     .findFirstByChatOrderByCreatedAtDesc(chat);
             String avatarUrl = null;
@@ -148,17 +155,17 @@ public class ChatServiceImpl implements ChatService {
                 avatarUrl = secondParticipant.getUserAvatar();
                 chatName = secondParticipant.getUsername();
             }
-            chatDtos.add(new ChatDto(
-                            lastMessage == null ? null : lastMessage.getText(),
-                            lastMessage == null ? null : lastMessage.getCreatedAt(),
-                            null,
-                            avatarUrl,
-                            chat.getIsGroup(),
-                            chatName
-                    )
+            return new ChatDto(
+                    chat.getId(),
+                    lastMessage == null ? null : lastMessage.getText(),
+                    lastMessage == null ? null : lastMessage.getCreatedAt(),
+                    null,
+                    avatarUrl,
+                    chat.getIsGroup(),
+                    chatName
             );
-        }
-        return chatDtos;
+        });
+
     }
 
     private Chat getChatById(Long chatId) {

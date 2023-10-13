@@ -2,6 +2,8 @@ package com.covenant.tribe.chat.repository;
 
 import com.covenant.tribe.chat.domain.Chat;
 import com.covenant.tribe.domain.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,6 +28,10 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     List<Long> findAllByParticipantInAndIsGroup(
             @Param("participants") Set<User> participants,
             @Param("is_group") Boolean isGroup
+    );
+
+    Page<Chat> findAllByParticipantIdAndIsGroup(
+            Long userId, Pageable pageable, Boolean isGroup
     );
 
 }
