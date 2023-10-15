@@ -7,7 +7,7 @@ import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class KudagoDecoder implements ErrorDecoder {
+public class  KudagoDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
@@ -16,6 +16,7 @@ public class KudagoDecoder implements ErrorDecoder {
             return exception;
         }
         if(response.status() >= 500 || response.status() == 403){
+            log.error("We have exception in response with status: {} and message: {}", response.status(), response.body());
             return new RetryableException(response.status(),
                     exception.getMessage(),
                     response.request().httpMethod(),

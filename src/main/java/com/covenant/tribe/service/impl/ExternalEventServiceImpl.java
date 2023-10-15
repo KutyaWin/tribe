@@ -183,9 +183,15 @@ public class ExternalEventServiceImpl implements ExternalEventService {
                 eventAddress = addressesInDb.get(0);
             }
 
-            Set<EventAvatar> eventImages = eventAvatarMapper.mapToEventAvatars(
-                    imageFileNames.get(kudagoEvent.getId())
-            );
+            List<String> eventImagesFromMap = imageFileNames.get(kudagoEvent.getId());
+            Set<EventAvatar> eventImages = Set.of();
+            if (eventImagesFromMap.isEmpty()) {
+                log.warn("Event with id: {} has no images", kudagoEvent.getId());
+            } else {
+                eventImages = eventAvatarMapper.mapToEventAvatars(
+                        imageFileNames.get(kudagoEvent.getId())
+                );
+            }
             EventType eventType = getEventTypeByName(kudagoEvent.getCategories().get(0));
             List<Tag> eventTags = tagRepository.findByIdIn(eventTagIds.get(kudagoEvent.getId()));
             UserRelationsWithEvent userRelationsWithEvent = UserRelationsWithEvent.builder()

@@ -95,6 +95,7 @@ spring:
             url: "https://media.kudago.com/"
             connectTimeout: 50000
             readTimeout: 50000
+            error-decoder: com.covenant.tribe.client.kudago.decoder.KudagoDecoder
             retryer: com.covenant.tribe.client.kudago.retryer.KudagoClientRetryer
 logging:
   file:
