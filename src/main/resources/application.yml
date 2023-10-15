@@ -138,4 +138,4 @@ resilience4j:
       dadata:
         limitForPeriod: 29
         limitRefreshPeriod: 1s
-        timeoutDuration: 0
+        timeoutDuration: 2s
