@@ -52,9 +52,9 @@ spring:
   cloud:
     openfeign:
       httpclient:
-        max-connections: 50
+        max-connections: 60
         connection-timeout: 10000
-        max-connections-per-route: 40
+        max-connections-per-route: 50
       client:
         config:
           vk-client:
@@ -132,3 +132,10 @@ keys:
   access-public: access_public.pem
   refresh-private: refresh_private.der
   refresh-public: refresh_public.pem
+resilience4j:
+  ratelimiter:
+    instances:
+      dadata:
+        limitForPeriod: 29
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0
