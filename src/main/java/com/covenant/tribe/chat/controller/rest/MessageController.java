@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,8 @@ public class MessageController {
                                     )
                             )
                     )
-            }
+            },
+            security = @SecurityRequirement(name = "Bearer JWT")
     )
     @GetMapping("/{chat_id}")
     public ResponseEntity<?> getMessagesByChatId(
@@ -69,20 +71,15 @@ public class MessageController {
 
     @Operation(
             description = """
-                    Категория: Чат. Экран: Чат. Действие: Получение всех сообщений чата.
+                    Категория: Чат. Экран: Чат. Действие: Добавление/обновление последнего
+                    прочитанного сообщения.
                     """,
             responses = {
                     @ApiResponse(
-                            responseCode = "200",
-                            content = @Content(
-                                    array = @ArraySchema(
-                                            schema = @Schema(
-                                                    implementation = ChatMessageDto.class
-                                            )
-                                    )
-                            )
+                            responseCode = "200"
                     )
-            }
+            },
+            security = @SecurityRequirement(name = "Bearer JWT")
     )
     @PatchMapping("/{chat_id}/{message_id}/read")
     public ResponseEntity<?> setLastReadMessage(
