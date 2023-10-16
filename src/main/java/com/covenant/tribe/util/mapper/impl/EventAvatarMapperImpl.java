@@ -21,6 +21,9 @@ public class EventAvatarMapperImpl implements EventAvatarMapper {
 
     @Override
     public Set<EventAvatar> mapToEventAvatars(List<String> avatarFileNames) {
+        if (avatarFileNames.isEmpty()) {
+            return Set.of();
+        }
         return avatarFileNames.stream()
                 .map(avatarFileName -> {
                     return EventAvatar.builder()

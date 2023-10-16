@@ -40,6 +40,6 @@ public class KudagoClientRetryer implements Retryer {
 
     @Override
     public Retryer clone() {
-        return new KudagoClientRetryer(6, 2000L);
+        return new KudagoClientRetryer(10, 2000L);
     }
 }

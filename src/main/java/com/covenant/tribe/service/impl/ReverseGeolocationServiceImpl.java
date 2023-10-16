@@ -35,11 +35,6 @@ public class ReverseGeolocationServiceImpl implements ReverseGeolocationService 
         events.forEach(event -> {
             ReverseGeocodingData externalEventAddress = getExternalEventAddress(event);
             externalEventAddresses.put(event.getId(), externalEventAddress);
-            try {
-                Thread.sleep(30);
-            } catch (InterruptedException e) {
-                log.error(e.getMessage());
-            }
         });
         return externalEventAddresses;
     }
