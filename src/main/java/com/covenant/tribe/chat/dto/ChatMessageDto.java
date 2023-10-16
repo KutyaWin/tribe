@@ -16,6 +16,12 @@ public class ChatMessageDto {
     @JsonProperty(value = "chat_id")
     Long chatId;
 
+    @JsonProperty(value = "message_id")
+    Long messageId;
+
+    @JsonProperty(value = "is_read")
+    Boolean isRead;
+
     AuthorDto author;
 
     String content;

@@ -38,6 +38,14 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     @Override
     public Page<ChatMessageDto> getMessagesByChatId(Long userId, Long chatId, Pageable pageable) {
         User user = userService.findUserById(userId);
+        Optional<LastReadMessage> lastReadMessage = lastReadMessageRepository.
+                findByChatIdAndParticipantId(chatId, userId);
+        long lastReadMessageId;
+        if (lastReadMessage.isPresent()) {
+            lastReadMessageId = lastReadMessage.get().getMessage().getId();
+        } else {
+            lastReadMessageId = 0;
+        }
         checkUserParticipationInChat(user, chatId);
         Page<Message> messages = messageRepository.findAllByChatIdOrderByCreatedAtDesc(chatId, pageable);
         return messages.map(message -> {
@@ -51,11 +59,17 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                     .build();
             return new ChatMessageDto(
                     message.getChat().getId(),
+                    message.getId(),
+                    isMessageReadCheck(message, lastReadMessageId),
                     authorDto,
                     message.getText(),
                     message.getCreatedAt()
             );
         });
+    }
+
+    private boolean isMessageReadCheck(Message message, long lastReadMessageId) {
+        return lastReadMessageId != 0 && message.getId() <= lastReadMessageId;
     }
 
     @Transactional
