@@ -2,11 +2,13 @@ package com.covenant.tribe.chat.service.impl;
 
 import com.covenant.tribe.chat.controller.ws.WsChatController;
 import com.covenant.tribe.chat.domain.Chat;
+import com.covenant.tribe.chat.domain.LastReadMessage;
 import com.covenant.tribe.chat.domain.Message;
 import com.covenant.tribe.chat.dto.*;
 import com.covenant.tribe.chat.factory.ChatFactory;
 import com.covenant.tribe.chat.factory.MessageFactory;
 import com.covenant.tribe.chat.repository.ChatRepository;
+import com.covenant.tribe.chat.repository.LastReadMessageRepository;
 import com.covenant.tribe.chat.repository.MessageRepository;
 import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.domain.event.EventAvatar;
@@ -20,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.Opt;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -44,6 +47,7 @@ public class ChatServiceImpl implements ChatService {
     ChatRepository chatRepository;
     MessageRepository messageRepository;
     EventAvatarRepository eventAvatarRepository;
+    LastReadMessageRepository lastReadMessageRepository;
     UserService userService;
     ChatFactory chatFactory;
     MessageFactory messageFactory;
@@ -136,6 +140,20 @@ public class ChatServiceImpl implements ChatService {
         return chats.map(chat -> {
             Message lastMessage = messageRepository
                     .findFirstByChatOrderByCreatedAtDesc(chat);
+            Optional<LastReadMessage> lastReadMessageOptional = lastReadMessageRepository.findByChatIdAndParticipantId(
+                    chat.getId(), gettingChatParticipant.getId()
+            );
+            int unreadMessageCount;
+            if (lastReadMessageOptional.isPresent()) {
+                lastMessage = lastReadMessageOptional.get().getMessage();
+                unreadMessageCount = messageRepository.countMessageByAuthorNotAndChatAndIdAfter(
+                        gettingChatParticipant, chat, lastMessage.getId()
+                );
+            } else {
+                unreadMessageCount = messageRepository.countMessageByAuthorNotAndChat(
+                        gettingChatParticipant, chat
+                );
+            }
             String avatarUrl = null;
             String chatName = null;
             if (chat.getIsGroup()) {
@@ -159,7 +177,7 @@ public class ChatServiceImpl implements ChatService {
                     chat.getId(),
                     lastMessage == null ? null : lastMessage.getText(),
                     lastMessage == null ? null : lastMessage.getCreatedAt(),
-                    null,
+                    unreadMessageCount,
                     avatarUrl,
                     chat.getIsGroup(),
                     chatName
