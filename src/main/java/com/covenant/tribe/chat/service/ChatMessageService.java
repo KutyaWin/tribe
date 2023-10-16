@@ -8,4 +8,5 @@ public interface ChatMessageService {
 
     Page<ChatMessageDto> getMessagesByChatId(Long userId, Long chatId, Pageable pageable);
 
+    void setLastReadMessage(Long userId, Long chatId, Long messageId);
 }

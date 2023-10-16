@@ -67,4 +67,39 @@ public class MessageController {
                 .body(messages);
     }
 
+    @Operation(
+            description = """
+                    Категория: Чат. Экран: Чат. Действие: Получение всех сообщений чата.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(
+                                                    implementation = ChatMessageDto.class
+                                            )
+                                    )
+                            )
+                    )
+            }
+    )
+    @PatchMapping("/{chat_id}/{message_id}/read")
+    public ResponseEntity<?> setLastReadMessage(
+            @PathVariable(value = "chat_id") Long chatId,
+            @PathVariable(value = "message_id") Long messageId
+    ) {
+        log.info("[CONTROLLER] start endpoint setLastReadMessage");
+
+        Long userId = TokenUtil.getUserIdFromToken(SecurityContextHolder.getContext());
+
+        chatMessageService.setLastReadMessage(userId, chatId, messageId);
+
+        log.info("[CONTROLLER] end endpoint setLastReadMessage");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
 }

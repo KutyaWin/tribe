@@ -42,7 +42,7 @@ public class Chat {
     @Builder.Default
     Set<User> participant = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "event_id")
     @ToString.Exclude
     Event event;
