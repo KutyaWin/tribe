@@ -11,6 +11,7 @@ import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.chat.repository.LastReadMessageRepository;
 import com.covenant.tribe.chat.repository.MessageRepository;
 import com.covenant.tribe.chat.service.ChatService;
+import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventAvatar;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.UnexpectedDataException;
@@ -83,6 +84,20 @@ public class ChatServiceImpl implements ChatService {
         log.debug("[TRANSACTIONAL] Close transaction in class" + ChatServiceImpl.class.getName());
 
         return new PrivateChatInfoDto(newChat.getId());
+    }
+
+    @Transactional
+    @Override
+    public Long createEventChat(User eventOrganizer, Event event) {
+        chatRepository.findByEvent(event)
+                .ifPresent(chat -> {
+                    String erMessage = "Chat with event: %s already exist".formatted(event.getId());
+                    log.error(erMessage);
+                    throw new UnexpectedDataException(erMessage);
+                });
+        Chat newChat = chatFactory.makeChat(Set.of(eventOrganizer), IS_GROUP_CHAT);
+        chatRepository.save(newChat);
+        return newChat.getId();
     }
 
     @Override

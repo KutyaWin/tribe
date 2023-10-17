@@ -1,5 +1,6 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
@@ -72,6 +73,7 @@ public class EventServiceImpl implements EventService {
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     UserService userService;
+    ChatService chatService;
     EventContactInfoService eventContactInfoService;
     EventMapper eventMapper;
     EventTypeMapper eventTypeMapper;
@@ -483,6 +485,7 @@ public class EventServiceImpl implements EventService {
             );
             log.error(message);
         }
+        Long newChatId = chatService.createEventChat(event.getOrganizer(), event);
     }
 
     private void sendNecessaryNotification(Event event) {
