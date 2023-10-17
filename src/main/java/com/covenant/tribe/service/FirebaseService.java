@@ -15,4 +15,6 @@ public interface FirebaseService {
     void sendNotificationsToUsers(List<User> userIdsWhoWillGetNotification,
                                   boolean isEighteenYearsRestrictForEvent,
                                   String notificationTitle, String notificationMessage, Long eventIdForNotification);
+
+    void sendNotificationByFirebaseId(String firebaseId, String title, String message, Long chatId);
 }

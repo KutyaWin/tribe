@@ -3,10 +3,7 @@ package com.covenant.tribe.service.impl;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.event.MessageDidntSendException;
 import com.covenant.tribe.service.FirebaseService;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.MulticastMessage;
-import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +31,30 @@ public class FirebaseServiceImpl implements FirebaseService {
             log.error(errMessage);
             throw new MessageDidntSendException(errMessage);
         }
+    }
+
+    public void sendNotificationByFirebaseId(String firebaseId, String title, String message, Long chatId) {
+        Message fbMessage = buildMessage(firebaseId, message, title, chatId.toString());
+        try {
+            fcm.send(fbMessage);
+        } catch (FirebaseMessagingException e) {
+            String errMessage = String.format("Message doesn't send because firebase return: %s", e.getMessage());
+            log.error(errMessage);
+            throw new MessageDidntSendException(errMessage);
+        }
+    }
+
+    private Message buildMessage(String firebaseId, String message, String title, String chatId) {
+        Notification notification = Notification
+                .builder()
+                .setTitle(title)
+                .setBody(message)
+                .build();
+        return Message.builder()
+                .setToken(firebaseId)
+                .putData("chat_id", chatId)
+                .setNotification(notification)
+                .build();
     }
 
     private MulticastMessage buildMulticastMessage(List<String> firebaseIds, String message, String title, Long eventId) {

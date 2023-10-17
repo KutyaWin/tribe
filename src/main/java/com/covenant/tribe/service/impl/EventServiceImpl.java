@@ -486,6 +486,15 @@ public class EventServiceImpl implements EventService {
             log.error(message);
         }
         Long newChatId = chatService.createEventChat(event.getOrganizer(), event);
+        firebaseService.sendNotificationByFirebaseId(
+                event.getOrganizer().getFirebaseId(),
+                "Tribe на связи!",
+                """
+                        Событие: %s прошло верификацию и было опубликовано!
+                        Также был создан чат для всех посетителей мероприятия.
+                        """,
+                newChatId
+        );
     }
 
     private void sendNecessaryNotification(Event event) {
