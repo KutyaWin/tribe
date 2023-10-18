@@ -47,6 +47,7 @@ public class ChatServiceImpl implements ChatService {
 
     ChatRepository chatRepository;
     MessageRepository messageRepository;
+    EventRepository eventRepository;
     EventAvatarRepository eventAvatarRepository;
     LastReadMessageRepository lastReadMessageRepository;
     UserService userService;
@@ -149,6 +150,23 @@ public class ChatServiceImpl implements ChatService {
                 userId, pageable, IS_NOT_GROUP_CHAT
         );
         return makeChatDtos(chats, user);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Chat getChatByEventId(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    String erMessage = "Event with id %s not found".formatted(eventId);
+                    log.error(erMessage);
+                    return new EntityNotFoundException(erMessage);
+                });
+        return chatRepository.findByEvent(event)
+                .orElseThrow(() -> {
+                    String erMessage = "Chat with event with id %s not found".formatted(eventId);
+                    log.error(erMessage);
+                    return new EntityNotFoundException(erMessage);
+                });
     }
 
     private Page<ChatDto> makeChatDtos(Page<Chat> chats, User gettingChatParticipant) {

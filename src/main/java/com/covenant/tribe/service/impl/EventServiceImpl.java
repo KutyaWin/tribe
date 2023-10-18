@@ -1,5 +1,7 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.chat.domain.Chat;
+import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
@@ -62,6 +64,7 @@ public class EventServiceImpl implements EventService {
 
     EventTypeRepository eventTypeRepository;
     EventRepository eventRepository;
+    ChatRepository chatRepository;
     TagRepository tagRepository;
     BroadcastRepository broadcastRepository;
     TagService tagService;
@@ -579,6 +582,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public void confirmInvitationToEvent(Long eventId, String userId) {
+        Chat eventChat = chatService.getChatByEventId(eventId);
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
                 .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
@@ -590,6 +594,8 @@ public class EventServiceImpl implements EventService {
                 });
         userRelationsWithEvent.setParticipant(true);
         userRelationsWithEvent.setInvited(false);
+        eventChat.addParticipant(userRelationsWithEvent.getUserRelations());
+        chatRepository.save(eventChat);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 

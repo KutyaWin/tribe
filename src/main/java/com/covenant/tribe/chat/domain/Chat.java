@@ -51,6 +51,11 @@ public class Chat {
         messages.add(message);
     }
 
+    public void addParticipant(User user) {
+        participant.add(user);
+        user.addChat(this);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

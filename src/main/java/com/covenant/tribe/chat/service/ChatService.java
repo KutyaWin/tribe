@@ -1,6 +1,7 @@
 package com.covenant.tribe.chat.service;
 
 
+import com.covenant.tribe.chat.domain.Chat;
 import com.covenant.tribe.chat.dto.ChatDto;
 import com.covenant.tribe.chat.dto.ChatMessageDto;
 import com.covenant.tribe.chat.dto.PrivateChatInfoDto;
@@ -21,4 +22,6 @@ public interface ChatService {
         void sendMessageToSubscribers(Long authorId, Long chatId, String content);
 
         Page<ChatDto> getChatsByUserId(Long userId, Pageable pageable);
+
+        Chat getChatByEventId(Long eventId);
 }
