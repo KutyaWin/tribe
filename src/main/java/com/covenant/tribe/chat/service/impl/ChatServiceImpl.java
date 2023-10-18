@@ -115,6 +115,7 @@ public class ChatServiceImpl implements ChatService {
         }
         Message message = messageFactory.makeMessage(content, author, chat);
         chat.addMessage(message);
+        messageRepository.save(message);
 
         AuthorDto authorDto = AuthorDto.builder()
                 .authorId(authorId)
@@ -125,6 +126,7 @@ public class ChatServiceImpl implements ChatService {
                 .build();
         ChatMessageDto chatMessageDto = ChatMessageDto.builder()
                 .chatId(chatId)
+                .messageId(message.getId())
                 .author(authorDto)
                 .content(content)
                 .createdAt(message.getCreatedAt())
@@ -133,7 +135,6 @@ public class ChatServiceImpl implements ChatService {
                 .map(User::getId)
                 .toList();
 
-        messageRepository.save(message);
         for (Long sendToId : sendToIds) {
             simpMessagingTemplate.convertAndSend(
                     replaceToAddress(sendToId.toString()),
