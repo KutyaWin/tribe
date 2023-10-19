@@ -220,11 +220,6 @@ public class User {
             );
         }
     }
-
-    public void addChat(Chat chat) {
-        this.chats.add(chat);
-    }
-
     public void addUsersRelationsWithEvent(List<UserRelationsWithEvent> userRelationsWithEvents) {
         if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
 

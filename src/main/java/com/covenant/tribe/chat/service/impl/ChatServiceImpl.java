@@ -79,7 +79,7 @@ public class ChatServiceImpl implements ChatService {
             log.error(erMessage);
             throw new UnexpectedDataException(erMessage);
         }
-        Chat newChat = chatFactory.makeChat(Set.of(invitedUser, chatCreator), false);
+        Chat newChat = chatFactory.makeChat(Set.of(invitedUser, chatCreator), false, null);
         chatRepository.save(newChat);
 
         log.debug("[TRANSACTIONAL] Close transaction in class" + ChatServiceImpl.class.getName());
@@ -96,7 +96,7 @@ public class ChatServiceImpl implements ChatService {
                     log.error(erMessage);
                     throw new UnexpectedDataException(erMessage);
                 });
-        Chat newChat = chatFactory.makeChat(Set.of(eventOrganizer), IS_GROUP_CHAT);
+        Chat newChat = chatFactory.makeChat(Set.of(eventOrganizer), IS_GROUP_CHAT, event);
         chatRepository.save(newChat);
         return newChat.getId();
     }
@@ -141,6 +141,26 @@ public class ChatServiceImpl implements ChatService {
                     chatMessageDto
             );
         }
+    }
+
+    @Transactional
+    public void addParticipantToEventChat(Long eventId, User user) {
+        Chat eventChat = getChatByEventId(eventId);
+        eventChat.addParticipant(user);
+        chatRepository.save(eventChat);
+
+        log.info("Add user with id {} to chat with id {}", user.getId(), eventChat.getId());
+    }
+
+    @Transactional
+    @Override
+    public void deleteUserFromEventChat(Long eventId, Long userId) {
+        Chat eventChat = getChatByEventId(eventId);
+        User user = userService.findUserById(userId);
+        eventChat.removeParticipant(user);
+        chatRepository.save(eventChat);
+
+        log.info("Delete user with id {} from chat with id {}", user.getId(), eventChat.getId());
     }
 
     @Override

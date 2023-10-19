@@ -27,7 +27,7 @@ public class Chat {
     Boolean isGroup;
 
     @OneToMany(
-            mappedBy = "chat", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true
+            mappedBy = "chat", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true
     )
     @ToString.Exclude
     @Builder.Default
@@ -53,7 +53,12 @@ public class Chat {
 
     public void addParticipant(User user) {
         participant.add(user);
-        user.addChat(this);
+        user.getChats().add(this);
+    }
+
+    public void removeParticipant(User user) {
+        participant.remove(user);
+        user.getChats().remove(this);
     }
 
     @Override
