@@ -174,7 +174,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("[TRANSACTION] Open transaction in class: " + this.getClass().getName());
 
         int verificationCode = verificationCodeService.getVerificationCode(minCodeValue, maxCodeValue);
-        Registrant registrant = registrantRepository.findByEmailAndStatus(
+        Registrant registrant = registrantRepository.findFirstByEmailAndStatusOrderByCreatedAtDesc(
                 registrantRequestDTO.getEmail(), RegistrantStatus.AWAITED
         );
         String emailMessage = String.format("Код подтверждения: %s", verificationCode);
