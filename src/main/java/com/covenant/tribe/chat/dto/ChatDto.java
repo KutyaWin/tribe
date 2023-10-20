@@ -1,11 +1,18 @@
 package com.covenant.tribe.chat.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.Nullable;
+
 import java.time.ZonedDateTime;
+
 public record ChatDto(
 
         @JsonProperty(value = "chat_id")
         Long chatId,
+        @JsonProperty(value = "author_name")
+        String authorName,
+        @JsonProperty(value = "author_surname")
+        String authorSurname,
         @JsonProperty(value = "last_message")
         String lastMessage,
         @JsonProperty(value = "last_message_time")
