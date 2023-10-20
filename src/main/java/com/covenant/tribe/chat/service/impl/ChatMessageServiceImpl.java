@@ -5,6 +5,7 @@ import com.covenant.tribe.chat.domain.LastReadMessage;
 import com.covenant.tribe.chat.domain.Message;
 import com.covenant.tribe.chat.dto.AuthorDto;
 import com.covenant.tribe.chat.dto.ChatMessageDto;
+import com.covenant.tribe.chat.dto.UnreadMessageCountDto;
 import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.chat.repository.LastReadMessageRepository;
 import com.covenant.tribe.chat.repository.MessageRepository;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -104,6 +106,38 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                     .build();
         }
         lastReadMessageRepository.save(lastReadMessage);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public int countUnreadMessagesByChatAndUser(User participant, Chat chat) {
+        Message lastReadMessage = null;
+        Optional<LastReadMessage> lastReadMessageOptional = lastReadMessageRepository.findByChatIdAndParticipantId(
+                chat.getId(), participant.getId()
+        );
+        int unreadMessageCount;
+        if (lastReadMessageOptional.isPresent()) {
+            lastReadMessage = lastReadMessageOptional.get().getMessage();
+            unreadMessageCount = messageRepository.countMessageByAuthorNotAndChatAndIdAfter(
+                    participant, chat, lastReadMessage.getId()
+            );
+        } else {
+            unreadMessageCount = messageRepository.countMessageByAuthorNotAndChat(
+                    participant, chat
+            );
+        }
+        return unreadMessageCount;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public UnreadMessageCountDto countAllUnreadMessagesByUser(Long userId) {
+        User user = userService.findUserById(userId);
+        Set<Chat> chats = user.getChats();
+        int unreadMessageCount = chats.stream()
+                .mapToInt(chat -> countUnreadMessagesByChatAndUser(user, chat))
+                .sum();
+        return new UnreadMessageCountDto(unreadMessageCount);
     }
 
     private void checkUserParticipationInChat(User user, Long chatId) {

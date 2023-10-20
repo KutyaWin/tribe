@@ -10,6 +10,7 @@ import com.covenant.tribe.chat.factory.MessageFactory;
 import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.chat.repository.LastReadMessageRepository;
 import com.covenant.tribe.chat.repository.MessageRepository;
+import com.covenant.tribe.chat.service.ChatMessageService;
 import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventAvatar;
@@ -49,8 +50,8 @@ public class ChatServiceImpl implements ChatService {
     MessageRepository messageRepository;
     EventRepository eventRepository;
     EventAvatarRepository eventAvatarRepository;
-    LastReadMessageRepository lastReadMessageRepository;
     UserService userService;
+    ChatMessageService chatMessageService;
     ChatFactory chatFactory;
     MessageFactory messageFactory;
     SimpMessagingTemplate simpMessagingTemplate;
@@ -194,20 +195,9 @@ public class ChatServiceImpl implements ChatService {
         return chats.map(chat -> {
             Message lastMessage = messageRepository
                     .findFirstByChatOrderByCreatedAtDesc(chat);
-            Optional<LastReadMessage> lastReadMessageOptional = lastReadMessageRepository.findByChatIdAndParticipantId(
-                    chat.getId(), gettingChatParticipant.getId()
+            int unreadMessageCount = chatMessageService.countUnreadMessagesByChatAndUser(
+                    gettingChatParticipant, chat
             );
-            int unreadMessageCount;
-            if (lastReadMessageOptional.isPresent()) {
-                lastMessage = lastReadMessageOptional.get().getMessage();
-                unreadMessageCount = messageRepository.countMessageByAuthorNotAndChatAndIdAfter(
-                        gettingChatParticipant, chat, lastMessage.getId()
-                );
-            } else {
-                unreadMessageCount = messageRepository.countMessageByAuthorNotAndChat(
-                        gettingChatParticipant, chat
-                );
-            }
             String avatarUrl = null;
             String chatName = null;
             String authorName = null;

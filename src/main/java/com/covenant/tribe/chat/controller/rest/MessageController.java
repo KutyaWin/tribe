@@ -1,6 +1,7 @@
 package com.covenant.tribe.chat.controller.rest;
 
 import com.covenant.tribe.chat.dto.ChatMessageDto;
+import com.covenant.tribe.chat.dto.UnreadMessageCountDto;
 import com.covenant.tribe.chat.service.ChatMessageService;
 import com.covenant.tribe.util.security.TokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -97,6 +98,38 @@ public class MessageController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
+    }
+
+    @Operation(
+            description = """
+                    Категория: Чат. Экран: Bottom navigation bar. Действие:
+                    Получение общего количества непрочитанных сообщений.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            content = @Content(
+                                    schema = @Schema(
+                                            implementation = UnreadMessageCountDto.class
+                                    )
+                            )
+                    )
+            },
+            security = @SecurityRequirement(name = "Bearer JWT")
+    )
+    @GetMapping("/unread/count")
+    public ResponseEntity<?> getAllUnreadMessageCount() {
+        log.info("[CONTROLLER] start endpoint getAllUnreadMessageCount");
+
+        Long userId = TokenUtil.getUserIdFromToken(SecurityContextHolder.getContext());
+
+        UnreadMessageCountDto  unreadMessageCount = chatMessageService.countAllUnreadMessagesByUser(userId);
+
+        log.info("[CONTROLLER] end endpoint getAllUnreadMessageCount");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(unreadMessageCount);
     }
 
 }
