@@ -32,8 +32,8 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             @Param("is_group") Boolean isGroup
     );
 
-    Page<Chat> findAllByParticipantIdAndIsGroup(
-            Long userId, Pageable pageable, Boolean isGroup
+    Page<Chat> findAllByParticipantId(
+            Long userId, Pageable pageable
     );
 
     Boolean existsChatByParticipantAndId(User participant, Long chatId);

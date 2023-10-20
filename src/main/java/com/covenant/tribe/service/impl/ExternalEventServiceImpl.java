@@ -1,5 +1,6 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.client.kudago.dto.KudagoDate;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.Tag;
@@ -46,13 +47,15 @@ public class ExternalEventServiceImpl implements ExternalEventService {
     final EventSearchService eventSearchService;
     final ExternalEventDateService externalEventDateService;
 
+    final ChatService chatService;
+
     final EventAddressRepository eventAddressRepository;
     Set<String> EXTRA_KUDA_GO_CATEGORIES;
     Map<String, String> CATEGORY_NAMES_FOR_MATCHING;
 
     String EXTERNAL_EVENT_ORGANIZER_NAME;
 
-    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService, ExternalEventDateService externalEventDateService, EventAddressRepository eventAddressRepository) {
+    public ExternalEventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EventAddressMapper eventAddressMapper, EventTypeRepository eventTypeRepository, TagRepository tagRepository, EventMapper eventMapper, EventAvatarMapper eventAvatarMapper, EventSearchService eventSearchService, ExternalEventDateService externalEventDateService, ChatService chatService, EventAddressRepository eventAddressRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.eventAddressMapper = eventAddressMapper;
@@ -62,6 +65,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
         this.eventAvatarMapper = eventAvatarMapper;
         this.eventSearchService = eventSearchService;
         this.externalEventDateService = externalEventDateService;
+        this.chatService = chatService;
         this.eventAddressRepository = eventAddressRepository;
     }
 
@@ -213,6 +217,7 @@ public class ExternalEventServiceImpl implements ExternalEventService {
             newEventFromKudaGo.addContactInfos(eventContactInfoList);
             Event save = eventRepository.save(newEventFromKudaGo);
             eventSearchService.create(save);
+            chatService.createEventChat(save.getOrganizer(), save);
         });
 
     }

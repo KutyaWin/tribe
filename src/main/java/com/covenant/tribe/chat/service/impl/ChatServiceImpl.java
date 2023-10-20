@@ -167,8 +167,8 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public Page<ChatDto> getChatsByUserId(Long userId, Pageable pageable) {
         User user = userService.findUserById(userId);
-        Page<Chat> chats = chatRepository.findAllByParticipantIdAndIsGroup(
-                userId, pageable, IS_NOT_GROUP_CHAT
+        Page<Chat> chats = chatRepository.findAllByParticipantId(
+                userId, pageable
         );
         return makeChatDtos(chats, user);
     }
