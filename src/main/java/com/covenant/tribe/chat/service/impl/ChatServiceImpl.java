@@ -212,7 +212,9 @@ public class ChatServiceImpl implements ChatService {
             String chatName = null;
             if (chat.getIsGroup()) {
                 EventAvatar avatar = eventAvatarRepository.findFirstByEventId(chat.getEvent().getId());
-                avatarUrl = avatar.getAvatarUrl();
+                if (avatar != null) {
+                    avatarUrl = avatar.getAvatarUrl();
+                }
                 chatName = chat.getEvent().getEventName();
             } else {
                 User secondParticipant = chat.getParticipant().stream()
