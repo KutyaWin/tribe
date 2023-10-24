@@ -112,6 +112,10 @@ public class User {
     @Builder.Default
     UserRole userRole = UserRole.USER;
 
+    @Column(name = "is_online", columnDefinition = "boolean default false")
+    @Builder.Default
+    boolean isOnline = true;
+
     @OneToMany(
             mappedBy = "organizer",
             fetch = FetchType.LAZY

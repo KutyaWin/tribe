@@ -13,6 +13,8 @@ public record ChatDto(
         String authorName,
         @JsonProperty(value = "author_surname")
         String authorSurname,
+        @JsonProperty(value = "is_second_participant_online")
+        Boolean isSecondParticipantOnline,
         @JsonProperty(value = "last_message")
         String lastMessage,
         @JsonProperty(value = "last_message_time")

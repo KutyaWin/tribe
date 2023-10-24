@@ -33,6 +33,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -103,26 +104,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     Authentication user = new JwtAuthenticationToken(jwt, new ArrayList<>(), jwt.getClaim("sub"));
                     accessor.setUser(user);
                 } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-                    Authentication user = (Authentication) accessor.getUser();
-                    String destination = accessor.getDestination();
-                    if (destination == null) {
+                    JwtAuthenticationToken token = (JwtAuthenticationToken) accessor.getUser();
+                    if (token == null) {
+                        String erMessage = "Token is null, you are not authenticated";
+                        log.error(erMessage);
+                        throw new AccessDeniedException(erMessage);
+                    }
+                    Instant expiresAt = token.getToken().getExpiresAt();
+                    if (expiresAt == null || expiresAt.isBefore(Instant.now())) {
                         accessor.setUser(null);
-                        throw new UnexpectedDataException("Empty destination is no support");
-                    }
-                    if (user == null) {
-                        throw new AccessDeniedException("You are not authenticated user");
-                    }
-                    Pattern  pattern = Pattern.compile("^/topic/(.*)/chat$");
-                    Matcher matcher = pattern.matcher(destination);
-                    String userIdFromDestination = null;
-                    if (matcher.matches()) {
-                        userIdFromDestination = matcher.group(1);
-                    }
-                    if (userIdFromDestination != null && userIdFromDestination.equals(user.getName())) {
-                        return message;
-                    } else {
-                        accessor.setUser(null);
-                        throw new AccessDeniedException("You are not authenticated user");
+                        String erMessage = "Token is expired";
+                        log.error(erMessage);
+                        throw new AccessDeniedException(erMessage);
                     }
                 }
                 return message;
