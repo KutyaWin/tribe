@@ -10,6 +10,7 @@ import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.chat.repository.LastReadMessageRepository;
 import com.covenant.tribe.chat.repository.MessageRepository;
 import com.covenant.tribe.chat.service.ChatMessageService;
+import com.covenant.tribe.chat.service.MessageReadService;
 import com.covenant.tribe.domain.user.User;
 import com.covenant.tribe.exeption.UnexpectedDataException;
 import com.covenant.tribe.service.UserService;
@@ -35,6 +36,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     LastReadMessageRepository lastReadMessageRepository;
     ChatRepository chatRepository;
     UserService userService;
+    MessageReadService messageReadService;
 
     @Transactional
     @Override
@@ -97,6 +99,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         if (lastReadMessageOptional.isPresent()) {
             lastReadMessage = lastReadMessageOptional.get();
             checkMessageId(lastReadMessage.getMessage().getId(), messageId);
+            if  (lastReadMessage.getMessage().getId().equals(newLastMessage.get().getId())) {
+                return;
+            }
             lastReadMessage.setMessage(newLastMessage.get());
         } else {
             lastReadMessage = LastReadMessage.builder()
@@ -106,6 +111,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                     .build();
         }
         lastReadMessageRepository.save(lastReadMessage);
+        messageReadService.sendMessageToSubscribers(user, chat.get(), lastReadMessage);
     }
 
     @Transactional(readOnly = true)

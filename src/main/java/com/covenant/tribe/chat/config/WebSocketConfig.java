@@ -87,6 +87,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     public ChannelInterceptor getChannelIntercepter() {
         return new ChannelInterceptor() {
+
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor =

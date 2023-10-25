@@ -40,6 +40,7 @@ public class WsChatController {
     }
 
     public static final String SUBSCRIBE_TO_MESSAGES = "/topic/{subscriber_id}/chat";
+    public static final String SUBSCRIBE_TO_READ_MESSAGE = "/topic/{subscriber_id}/message/read";
     public static final String SUBSCRIBE_TO_USER_CONNECTION = "/topic/{subscribed_id}/connection";
 
 
@@ -67,6 +68,14 @@ public class WsChatController {
     ) {
         log.info("User with id {} subscribed to user connection with id {}",
                 user.getName(), userId);
+        return null;
+    }
+
+    @SubscribeMapping(SUBSCRIBE_TO_READ_MESSAGE)
+    public ChatMessageDto subscribeToMessageRead(
+            Principal user, @DestinationVariable(value = "user_id") String userId
+    ) {
+        log.info("User with id {} subscribed to message read", userId);
         return null;
     }
 
