@@ -251,7 +251,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private String replaceToAddress(String addr) {
-        return WsChatController.SUBSCRIBE_TO_MESSAGES.replace("{user_id}", addr);
+        return WsChatController.SUBSCRIBE_TO_MESSAGES.replace("{subscriber_id}", addr);
     }
 
 }
