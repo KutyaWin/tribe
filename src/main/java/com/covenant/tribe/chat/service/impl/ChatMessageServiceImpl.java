@@ -99,9 +99,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         if (lastReadMessageOptional.isPresent()) {
             lastReadMessage = lastReadMessageOptional.get();
             checkMessageId(lastReadMessage.getMessage().getId(), messageId);
-            if  (lastReadMessage.getMessage().getId().equals(newLastMessage.get().getId())) {
-                return;
-            }
+
             lastReadMessage.setMessage(newLastMessage.get());
         } else {
             lastReadMessage = LastReadMessage.builder()
