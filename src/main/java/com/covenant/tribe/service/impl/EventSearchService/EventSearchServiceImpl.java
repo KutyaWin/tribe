@@ -76,8 +76,8 @@ public class EventSearchServiceImpl implements EventSearchService {
         Optional<EventSearchUnit> oldUnit = getSafe(event);
         EventSearchUnit newUnit = eventSearchUnitFactory.create(event);
         if (oldUnit.isPresent()) {
-            UpdateUtil.updateEntity(oldUnit, newUnit);
-            UpdateUtil.updateEntity(newUnit.getEventAddress(), newUnit.getEventAddress());
+            UpdateUtil.updateEntity(oldUnit.get(), newUnit);
+            UpdateUtil.updateEntity(oldUnit.get().getEventAddress(), newUnit.getEventAddress());
             return eventSearchUnitRepository.save(oldUnit.get());
         } else {
             return create(event);

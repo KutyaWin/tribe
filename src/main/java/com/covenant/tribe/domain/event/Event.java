@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.event;
 
+import com.covenant.tribe.chat.domain.Chat;
 import com.covenant.tribe.domain.Tag;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.user.User;
@@ -151,6 +152,12 @@ public class Event {
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
     List<UserRelationsWithEvent> eventRelationsWithUser = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Builder.Default
+    List<Chat> eventChats = new ArrayList<>();
+
 
     public void addEventAvatar(EventAvatar eventAvatar) {
         if (this.eventAvatars == null) this.eventAvatars = new HashSet<>();

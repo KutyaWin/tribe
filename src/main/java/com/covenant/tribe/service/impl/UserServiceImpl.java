@@ -1,5 +1,7 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.chat.domain.Chat;
+import com.covenant.tribe.chat.repository.ChatRepository;
 import com.covenant.tribe.domain.auth.EmailVerificationCode;
 import com.covenant.tribe.domain.event.EventType;
 import com.covenant.tribe.domain.user.*;
@@ -28,6 +30,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -39,10 +42,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -66,13 +66,14 @@ public class UserServiceImpl implements UserService {
     ProfessionMapper professionMapper;
     EventTypeMapper eventTypeMapper;
     FileStorageRepository fileStorageRepository;
+    ChatRepository chatRepository;
     ProfessionRepository professionRepository;
     EmailVerificationRepository emailVerificationRepository;
     MailService mailService;
     VerificationCodeService verificationCodeService;
 
     @Autowired
-    public UserServiceImpl(EventTypeRepository eventTypeRepository, FriendshipRepository friendshipRepository, UserRepository userRepository, UserMapper userMapper, ProfessionMapper professionMapper, EventTypeMapper eventTypeMapper, FileStorageRepository fileStorageRepository, ProfessionRepository professionRepository, EmailVerificationRepository emailVerificationRepository, MailService mailService, VerificationCodeService verificationCodeService) {
+    public UserServiceImpl(EventTypeRepository eventTypeRepository, ChatRepository chatRepository, FriendshipRepository friendshipRepository, UserRepository userRepository, UserMapper userMapper, ProfessionMapper professionMapper, EventTypeMapper eventTypeMapper, FileStorageRepository fileStorageRepository, ProfessionRepository professionRepository, EmailVerificationRepository emailVerificationRepository, MailService mailService, VerificationCodeService verificationCodeService) {
         this.eventTypeRepository = eventTypeRepository;
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
@@ -84,6 +85,7 @@ public class UserServiceImpl implements UserService {
         this.emailVerificationRepository = emailVerificationRepository;
         this.mailService = mailService;
         this.verificationCodeService = verificationCodeService;
+        this.chatRepository = chatRepository;
     }
 
     @Transactional(readOnly = true)
@@ -127,41 +129,78 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsUserByUsername(username);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public Page<UserSubscriberDto> findAllSubscribersByUsername(String partialUsername, Long userId, Pageable pageable) {
         Page<User> subscribers = userRepository.findAllSubscribersByPartialUsername(
                 userId, partialUsername, RelationshipStatus.SUBSCRIBE, pageable
         );
-        List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
-        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(
-                subscriberIds, userId, RelationshipStatus.SUBSCRIBE
-        );
-
-        return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
+        return getUserSubscriberDtos(userId, subscribers);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Page<UserSubscriberDto> findAllSubscribers(long userId, Pageable pageable) {
         Page<User> subscribers = userRepository.findAllSubscribers(userId, RelationshipStatus.SUBSCRIBE, pageable);
-        List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
-        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(
-                subscriberIds, userId, RelationshipStatus.SUBSCRIBE
-        );
-        return subscribers.map(user -> userMapper.mapToUserSubscriberDto(user, subscribersToWhichUserIsSubscribed));
+        return getUserSubscriberDtos(userId, subscribers);
     }
-
     @Override
     @Transactional(readOnly = true)
     public Page<UserSubscriberDto> findAllFollowing(long userId, Pageable pageable) {
         Page<User> followings = userRepository.findAllFollowings(userId, pageable, RelationshipStatus.SUBSCRIBE);
+        return getUserFollowingsDtos(userId, followings);
+    }
+
+    @Override
+    public Page<UserSubscriberDto> findAllFollowingsByUsername(String username, Long userId, Pageable pageable) {
+        Page<User> followings = userRepository.findAllFollowingsByUsername(userId, pageable, RelationshipStatus.SUBSCRIBE, username);
+        return getUserFollowingsDtos(userId, followings);
+    }
+
+    @NotNull
+    private Page<UserSubscriberDto> getUserFollowingsDtos(Long userId, Page<User> followings) {
         List<Long> followingIds = followings.stream().map(User::getId).toList();
         Set<Long> followingToWhichUserIsFollowing = userRepository.findMutuallyFollowing(
                 followingIds, userId, RelationshipStatus.SUBSCRIBE
         );
+        Map<Long, Long> userIdsWithChatsExist = getChatIdsWithSubscribers(userId, followingToWhichUserIsFollowing);
         return followings
-                .map(user -> userMapper.mapToUserSubscriberDto(user, followingToWhichUserIsFollowing));
+                .map(
+                        user -> userMapper.mapToUserSubscriberDto(
+                                user, followingToWhichUserIsFollowing, userIdsWithChatsExist
+                        )
+                );
+    }
+
+    @NotNull
+    private Page<UserSubscriberDto> getUserSubscriberDtos(long userId, Page<User> subscribers) {
+        List<Long> subscriberIds = subscribers.stream().map(User::getId).toList();
+        Set<Long> subscribersToWhichUserIsSubscribed = userRepository.findMutuallySubscribed(
+                subscriberIds, userId, RelationshipStatus.SUBSCRIBE
+        );
+        Map<Long, Long> userIdsWithChatsExist = getChatIdsWithSubscribers(userId, subscribersToWhichUserIsSubscribed);
+        return subscribers.map(
+                user -> userMapper.mapToUserSubscriberDto(
+                        user, subscribersToWhichUserIsSubscribed, userIdsWithChatsExist
+                )
+        );
+    }
+
+    private Map<Long, Long> getChatIdsWithSubscribers(Long userId, Set<Long> subscribersToWhichUserIsSubscribed) {
+        Map<Long, Long> userIdsWithChatsExist = new HashMap<>();
+        for (Long user : subscribersToWhichUserIsSubscribed) {
+            User firstUser = findUserById(userId);
+            User secondUser = findUserById(user);
+            List<Long> chats = chatRepository.findAllByParticipantInAndIsGroup(
+                    Set.of(firstUser, secondUser), false
+            );
+            if (!chats.isEmpty()) {
+                userIdsWithChatsExist.put(user, chats.get(0));
+            } else {
+                userIdsWithChatsExist.put(user, null);
+            }
+        }
+        return userIdsWithChatsExist;
     }
 
     @Transactional(readOnly = true)
@@ -304,7 +343,15 @@ public class UserServiceImpl implements UserService {
                 .existsFriendshipByUserWhoGetFollowerAndUserWhoMadeFollowingAndRelationshipStatus(
                         userWhoRequested, profileOwner, RelationshipStatus.SUBSCRIBE
                 );
-        return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing);
+        if (profileOwnerId == userWhoRequestedId) {
+            return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing, null);
+        }
+        List<Long> chatId = chatRepository
+                .findAllByParticipantInAndIsGroup(Set.of(profileOwner, userWhoRequested), false);
+        if (chatId.isEmpty()) {
+            return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing, null);
+        }
+        return userMapper.mapToProfileDto(profileOwner, isFollowed, isFollowing, chatId.get(0));
     }
 
     @Transactional
@@ -461,7 +508,6 @@ public class UserServiceImpl implements UserService {
         friendshipRepository.save(friendship);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public User findUserById(Long userId) {
         return userRepository.findUserByIdAndStatus(userId, UserStatus.ENABLED)
@@ -471,7 +517,6 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<User> findAllByInterestingEventTypeContaining(Long eventTypeId) {
         return userRepository.findAllByInterestingEventTypeContainingAndStatus(

@@ -28,7 +28,7 @@ public class EventExceptionHandler {
     @ExceptionHandler(MessageDidntSendException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseErrorDTO handleMessageDidntSendException(MessageDidntSendException messageDidntSendException) {
-
+        System.out.println("this is messageDidntSendException");
         return ResponseErrorDTO.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .errorMessage(List.of(messageDidntSendException.getMessage()))

@@ -1,5 +1,7 @@
 package com.covenant.tribe.service.impl;
 
+import com.covenant.tribe.chat.repository.ChatRepository;
+import com.covenant.tribe.chat.service.ChatService;
 import com.covenant.tribe.client.dadata.dto.ReverseGeocodingData;
 import com.covenant.tribe.client.kudago.dto.KudagoEventDto;
 import com.covenant.tribe.domain.QUserRelationsWithEvent;
@@ -61,6 +63,7 @@ public class EventServiceImpl implements EventService {
 
     EventTypeRepository eventTypeRepository;
     EventRepository eventRepository;
+    ChatRepository chatRepository;
     TagRepository tagRepository;
     BroadcastRepository broadcastRepository;
     TagService tagService;
@@ -72,6 +75,7 @@ public class EventServiceImpl implements EventService {
     UserRelationsWithEventRepository userRelationsWithEventRepository;
     UserRelationsWithEventService userRelationsWithEventService;
     UserService userService;
+    ChatService chatService;
     EventContactInfoService eventContactInfoService;
     EventMapper eventMapper;
     EventTypeMapper eventTypeMapper;
@@ -483,6 +487,16 @@ public class EventServiceImpl implements EventService {
             );
             log.error(message);
         }
+        Long newChatId = chatService.createEventChat(event.getOrganizer(), event);
+        firebaseService.sendNotificationByFirebaseId(
+                event.getOrganizer().getFirebaseId(),
+                "Tribe на связи!",
+                """
+                        Событие: %s прошло верификацию и было опубликовано!
+                        Также был создан чат для всех посетителей мероприятия.
+                        """,
+                newChatId
+        );
     }
 
     private void sendNecessaryNotification(Event event) {
@@ -567,6 +581,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public void confirmInvitationToEvent(Long eventId, String userId) {
+
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
                 .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)
                 .orElseThrow(() -> {
@@ -578,6 +593,7 @@ public class EventServiceImpl implements EventService {
                 });
         userRelationsWithEvent.setParticipant(true);
         userRelationsWithEvent.setInvited(false);
+        chatService.addParticipantToEventChat(eventId, userRelationsWithEvent.getUserRelations());
         userRelationsWithEventRepository.save(userRelationsWithEvent);
     }
 
@@ -611,6 +627,7 @@ public class EventServiceImpl implements EventService {
                 });
         userRelationsWithEvent.setParticipant(false);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
+        chatService.deleteUserFromEventChat(eventId, userRelationsWithEvent.getUserRelations().getId());
     }
 
     @Transactional
@@ -722,6 +739,7 @@ public class EventServiceImpl implements EventService {
             userRelationsWithEvent.setParticipant(true);
         }
         userRelationsWithEventRepository.save(userRelationsWithEvent);
+        chatService.addParticipantToEventChat(eventId, userRelationsWithEvent.getUserRelations());
     }
 
 
@@ -761,6 +779,7 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEvents.forEach(relation -> {
             relation.setParticipant(true);
             relation.setWantToGo(false);
+            chatService.addParticipantToEventChat(eventId, relation.getUserRelations());
         });
         userRelationsWithEventRepository.saveAll(userRelationsWithEvents);
     }
@@ -789,6 +808,7 @@ public class EventServiceImpl implements EventService {
         userRelationsWithEvent.setWantToGo(false);
         userRelationsWithEvent.setParticipant(true);
         userRelationsWithEventRepository.save(userRelationsWithEvent);
+        chatService.addParticipantToEventChat(eventId, userRelationsWithEvent.getUserRelations());
     }
 
     @Override

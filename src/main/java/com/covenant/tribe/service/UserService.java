@@ -59,4 +59,5 @@ public interface UserService {
     List<User> findAll();
 
     Page<UserSubscriberDto> findAllFollowing(long userId, Pageable pageable);
+    Page<UserSubscriberDto> findAllFollowingsByUsername(String username, Long userId, Pageable pageable);
 }

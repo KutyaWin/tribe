@@ -28,4 +28,7 @@ public class UserSubscriberDto {
 
     @JsonProperty("is_user_subscribe_to_subscriber")
     Boolean isUserSubscribeToSubscriber;
+
+    @JsonProperty("chat_id")
+    Long chatId;
 }

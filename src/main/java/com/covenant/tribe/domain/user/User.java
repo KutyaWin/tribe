@@ -1,5 +1,6 @@
 package com.covenant.tribe.domain.user;
 
+import com.covenant.tribe.chat.domain.Chat;
 import com.covenant.tribe.domain.UserRelationsWithEvent;
 import com.covenant.tribe.domain.event.Event;
 import com.covenant.tribe.domain.event.EventType;
@@ -111,6 +112,10 @@ public class User {
     @Builder.Default
     UserRole userRole = UserRole.USER;
 
+    @Column(name = "is_online", columnDefinition = "boolean default false")
+    @Builder.Default
+    boolean isOnline = true;
+
     @OneToMany(
             mappedBy = "organizer",
             fetch = FetchType.LAZY
@@ -155,6 +160,10 @@ public class User {
     @ToString.Exclude
     @Builder.Default
     Set<Profession> userProfessions = new HashSet<>();
+
+    @ManyToMany(mappedBy = "participant")
+    @ToString.Exclude
+    Set<Chat> chats;
 
     @OneToMany(
             mappedBy = "userRelations",
@@ -215,7 +224,6 @@ public class User {
             );
         }
     }
-
     public void addUsersRelationsWithEvent(List<UserRelationsWithEvent> userRelationsWithEvents) {
         if (this.userRelationsWithEvents == null) this.userRelationsWithEvents = new ArrayList<>();
 

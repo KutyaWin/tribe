@@ -66,6 +66,8 @@ public class ProjectSecurityConfig {
         http.securityMatcher("/api/**", "/actuator/**")
                 .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "api/v1/tags/**").permitAll()
+                .requestMatchers("api/v1/ws/**").permitAll()
+                .requestMatchers("api/v1/ws").permitAll()
                 .requestMatchers("api/v1/auth/login/**").permitAll()
                 .requestMatchers("api/v1/auth/email/password/reset/**").permitAll()
                 .requestMatchers("api/v1/auth/registration/email/**").permitAll()
@@ -105,12 +107,15 @@ public class ProjectSecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsProperties.getCors());
+        configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+
 
     @Bean
     public JwtDecoder accessJwtDecoder() {

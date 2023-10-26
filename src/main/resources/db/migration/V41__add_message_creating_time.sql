@@ -1,0 +1,2 @@
+ALTER TABLE message
+    ADD created_at TIMESTAMP WITH TIME ZONE;

@@ -41,6 +41,8 @@ import org.springframework.web.bind.annotation.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Tag(name = "Event")
@@ -141,6 +143,8 @@ public class EventController {
         log.info("[CONTROLLER] start endpoint createEvent with RequestBody: {}", requestTemplateForCreatingEventDTO);
 
         DetailedEventInSearchDTO response = eventFacade.handleNewEvent(requestTemplateForCreatingEventDTO);
+        ZonedDateTime now = ZonedDateTime.now();
+        ZoneId zone = now.getZone();
 
         log.info("[CONTROLLER] end endpoint createEvent");
         return ResponseEntity

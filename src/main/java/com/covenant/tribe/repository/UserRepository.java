@@ -89,6 +89,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
     )
     Page<User> findAllFollowings(long userId, Pageable pageable, RelationshipStatus relationshipStatus);
 
+    @Query(
+            """
+                    SELECT f.userWhoGetFollower
+                    FROM User u
+                    JOIN u.following f
+                    WHERE f.userWhoMadeFollowing.id = :userId
+                    AND f.relationshipStatus = :relationshipStatus
+                    AND f.userWhoGetFollower.username LIKE %:username%
+                    """
+    )
+    Page<User> findAllFollowingsByUsername(
+            long userId, Pageable pageable, RelationshipStatus relationshipStatus, String username
+    );
+
 
     @Query("SELECT u.id " +
             "FROM User u " +
