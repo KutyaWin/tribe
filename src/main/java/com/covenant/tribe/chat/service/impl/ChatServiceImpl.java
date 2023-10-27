@@ -202,6 +202,7 @@ public class ChatServiceImpl implements ChatService {
             String chatName = null;
             String authorName = null;
             String authorSurname = null;
+            Long authorId = null;
             Boolean isParticipantOnline = null;
             if (chat.getIsGroup()) {
                 EventAvatar avatar = eventAvatarRepository.findFirstByEventId(chat.getEvent().getId());
@@ -223,12 +224,14 @@ public class ChatServiceImpl implements ChatService {
                 chatName = secondParticipant.getUsername();
                 authorName = secondParticipant.getFirstName();
                 authorSurname = secondParticipant.getLastName();
+                authorId = secondParticipant.getId();
                 isParticipantOnline = secondParticipant.isOnline();
             }
             return new ChatDto(
                     chat.getId(),
                     authorName,
                     authorSurname,
+                    authorId,
                     isParticipantOnline,
                     lastMessage == null ? null : lastMessage.getText(),
                     lastMessage == null ? null : lastMessage.getCreatedAt(),
