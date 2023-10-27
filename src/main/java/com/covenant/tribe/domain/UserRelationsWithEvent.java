@@ -16,8 +16,14 @@ import jakarta.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "UserRelationsWithEvent")
-@Table(name = "users_relations_with_events")
+@Entity
+@Table(
+        name = "users_relations_with_events",
+        uniqueConstraints = @UniqueConstraint(
+                name = "users_relations_with_events_unique",
+                columnNames = {"user_relations_id", "event_relations_id"}
+        )
+)
 public class UserRelationsWithEvent {
 
     @Id
@@ -37,12 +43,12 @@ public class UserRelationsWithEvent {
     boolean isFavorite;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "user_relations_id")
     @ToString.Exclude
     User userRelations;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "event_relations_id")
     @ToString.Exclude
     Event eventRelations;
 
