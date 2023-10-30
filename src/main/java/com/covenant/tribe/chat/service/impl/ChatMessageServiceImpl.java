@@ -43,7 +43,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     public Page<ChatMessageDto> getMessagesByChatId(Long userId, Long chatId, Pageable pageable) {
         User user = userService.findUserById(userId);
         Optional<LastReadMessage> lastReadMessage = lastReadMessageRepository.
-                findByChatIdAndParticipantId(chatId, userId);
+                findLastReadMessageByChatIdAndParticipantIdNot(chatId, userId);
         long lastReadMessageId;
         if (lastReadMessage.isPresent()) {
             lastReadMessageId = lastReadMessage.get().getMessage().getId();

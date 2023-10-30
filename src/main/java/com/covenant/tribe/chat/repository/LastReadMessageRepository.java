@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface LastReadMessageRepository extends JpaRepository<LastReadMessage, Long> {
     Optional<LastReadMessage> findByChatIdAndParticipantId(Long chatId, Long userId);
+    Optional<LastReadMessage> findLastReadMessageByChatIdAndParticipantIdNot(Long chatId, Long userId);
 }
