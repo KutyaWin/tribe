@@ -13,6 +13,7 @@ import com.covenant.tribe.service.PhotoStorageService;
 import com.covenant.tribe.service.facade.EventSearchFacade;
 import com.covenant.tribe.util.mapper.EventMapper;
 import com.covenant.tribe.util.querydsl.EventFilter;
+import com.covenant.tribe.util.security.TokenUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -35,6 +36,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -360,6 +363,37 @@ public class EventController {
                 .status(HttpStatus.OK)
                 .build();
     }
+
+    @Operation(
+            description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +  /* TODO Изменить описание, когда будет создан экран для приглашения пользователя */
+                    "Экран: Экран - пока неизвестно. Кнопка: неизвестно. Действие: Отправка приглашения пользователю " +
+                    "для участия в мероприятии.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    )
+            },
+            security = @SecurityRequirement(name = "BearerJWT")
+    )
+    @PatchMapping("/invitation/invite/{event_id}/{user_id}")
+    public ResponseEntity<?> inviteUserToEvent(
+            @PathVariable(value = "event_id") Long eventId,
+            @PathVariable(value = "user_id") String userId
+    ) {
+        log.info("[CONTROLLER] start endpoint inviteUserToEvent with event_id: {} and user_id {}", eventId, userId);
+
+        Long organizerId = TokenUtil.getUserIdFromToken(SecurityContextHolder.getContext());
+        Long invitedUserId = Long.valueOf(userId);
+
+        eventService.inviteUserToEvent(eventId, invitedUserId, organizerId);
+
+        log.info("[CONTROLLER] end endpoint inviteUserToEvent");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+
 
     @Operation(
             description = "Категория: Профиль/ADMIN/USER/FOLLOWERS/MESSAGES/" +

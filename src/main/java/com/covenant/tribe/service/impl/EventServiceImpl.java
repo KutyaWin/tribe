@@ -599,6 +599,72 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
+    public void inviteUserToEvent(Long eventId, Long invitedUserId, Long organizerId) {
+        Event event = getEventById(eventId);
+        if (event.getOrganizer().getId().longValue() != organizerId.longValue()) {
+            String erMessage = "[EXCEPTION] User with id %d + is not organizer of event with id %s"
+                    .formatted(organizerId, eventId);
+            log.error(erMessage);
+            throw new UnexpectedDataException(erMessage);
+        }
+        Optional<UserRelationsWithEvent> userRelationsWithEventOp = userRelationsWithEventRepository
+                .findByUserRelationsIdAndEventRelationsId(invitedUserId, eventId);
+        if (userRelationsWithEventOp.isPresent()) {
+            checkUserRelationWithEventForInviting(userRelationsWithEventOp.get());
+            userRelationsWithEventOp.get().setInvited(true);
+            userRelationsWithEventRepository.save(userRelationsWithEventOp.get());
+        } else {
+            UserRelationsWithEvent newUserRelationsWithEvent =
+                    UserRelationsWithEvent.builder()
+                            .eventRelations(event)
+                            .userRelations(getUser(invitedUserId.toString()))
+                            .isInvited(true)
+                            .isParticipant(false)
+                            .isFavorite(false)
+                            .isWantToGo(false)
+                            .build();
+            userRelationsWithEventRepository.save(newUserRelationsWithEvent);
+        }
+    }
+
+    private void checkUserRelationWithEventForInviting(UserRelationsWithEvent userRelationsWithEvent) {
+        if (userRelationsWithEvent.isInvited()) {
+            String erMessage = """
+                    [EXCEPTION] User relations with id %s and event relations with id %s is already invited
+                    """.formatted(
+                    userRelationsWithEvent.getUserRelations().getId(),
+                    userRelationsWithEvent.getEventRelations().getId()
+            );
+            log.error(erMessage);
+            throw new UnexpectedDataException(erMessage);
+        }
+
+        if (userRelationsWithEvent.isParticipant()) {
+            String erMessage = """
+                    [EXCEPTION] User relations with id %s and event relations with id %s is already participant
+                    """.formatted(
+                    userRelationsWithEvent.getUserRelations().getId(),
+                    userRelationsWithEvent.getEventRelations().getId()
+            );
+            log.error(erMessage);
+            throw new UnexpectedDataException(erMessage);
+        }
+
+        if (userRelationsWithEvent.isWantToGo()) {
+            String erMessage = """
+                   [EXCEPTION] User relations with id %s and event relations with id %s is already want to go
+                    """.formatted(
+                    userRelationsWithEvent.getUserRelations().getId(),
+                    userRelationsWithEvent.getEventRelations().getId()
+            );
+            log.error(erMessage);
+            throw new UnexpectedDataException(erMessage);
+        }
+    }
+
+
+    @Transactional
+    @Override
     public void declineInvitationToEvent(Long eventId, String userId) {
         UserRelationsWithEvent userRelationsWithEvent = userRelationsWithEventRepository
                 .findByUserRelationsIdAndEventRelationsIdAndIsInvitedTrue(Long.parseLong(userId), eventId)

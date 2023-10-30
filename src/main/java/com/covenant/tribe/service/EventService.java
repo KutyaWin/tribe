@@ -65,6 +65,8 @@ public interface EventService {
 
     void confirmInvitationToEvent(Long eventId, String userId);
 
+    void inviteUserToEvent(Long eventId, Long userId, Long organizerId) ;
+
     void declineInvitationToEvent(Long eventId, String userId);
 
     void declineToParticipantInEvent(Long eventId, String userId);
