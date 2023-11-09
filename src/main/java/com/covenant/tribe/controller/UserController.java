@@ -604,7 +604,7 @@ public class UserController {
 
         boolean is = userService.isPhoneNumberExist(number);
 
-        log.info("[CONTROLLER] start endpoint checkNumber with param: {}", number);
+        log.info("[CONTROLLER] end endpoint checkNumber with param: {}", number);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
