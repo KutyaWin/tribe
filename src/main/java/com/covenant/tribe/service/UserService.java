@@ -60,4 +60,6 @@ public interface UserService {
 
     Page<UserSubscriberDto> findAllFollowing(long userId, Pageable pageable);
     Page<UserSubscriberDto> findAllFollowingsByUsername(String username, Long userId, Pageable pageable);
+
+    boolean isPhoneNumberExist(String phoneNumber);
 }

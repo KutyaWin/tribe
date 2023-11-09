@@ -595,4 +595,20 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .build();
     }
+
+    @GetMapping("/number/check/{number}")
+    public ResponseEntity<?> checkNumber(
+            @PathVariable String number
+    ) {
+        log.info("[CONTROLLER] start endpoint checkNumber with param: {}", number);
+
+        boolean is = userService.isPhoneNumberExist(number);
+
+        log.info("[CONTROLLER] start endpoint checkNumber with param: {}", number);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(is);
+
+    }
 }
